@@ -35,3 +35,6 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### 리소스 폴더의 dev 설정 무시 ###
+/src/main/resources/application-dev.properties
