@@ -12,9 +12,18 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(
+        name = "members",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "UK_MEMBER_EMAIL",
+                        columnNames = {"email"}
+                )
+        }
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Member {
+public class Member extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
