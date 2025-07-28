@@ -1,4 +1,4 @@
-package com.susang.stellarVision.application.profile.domain;
+package com.susang.stellarVision.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

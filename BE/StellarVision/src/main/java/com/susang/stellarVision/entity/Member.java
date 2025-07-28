@@ -1,6 +1,5 @@
-package com.susang.stellarVision.application.member.domain;
+package com.susang.stellarVision.entity;
 
-import com.susang.stellarVision.application.profile.domain.Profile;
 import jakarta.persistence.Entity;
 import lombok.Builder;
 import lombok.Getter;
