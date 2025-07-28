@@ -1,22 +1,90 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
+import LandingView from '@/views/LandingView.vue'
+import LoginView from '@/views/LoginView.vue'
+import SignupView from '@/views/SignupView.vue'
+import ProfileView from '@/views/ProfileView.vue'
+import StreamingListView from '@/views/StreamingListView.vue'
+import MyGalleryView from '@/views/MyGalleryView.vue'
+import MyVideoView from '@/views/MyVideoView.vue'
+import LiveStreamingListView from '@/views/LiveStreamingListView.vue'
+import ReplayStreamingListView from '@/views/ReplayStreamingListView.vue'
+import RoomView from '@/views/RoomView.vue'
+import CalenderView from '@/views/CalenderView.vue'
+import BadgeView from '@/views/BadgeView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
-      name: 'home',
-      component: HomeView,
+      name: 'LandingView',
+      component: LandingView,
     },
     {
-      path: '/about',
-      name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import('../views/AboutView.vue'),
+      path: '/login',
+      name: 'LoginView',
+      component: LoginView,
     },
+    {
+      path: '/signup',
+      name: 'SignUpView',
+      component : SignupView,
+    },
+    {
+      path: '/main',
+      children: [
+        {
+          path: '',
+          name: 'StreamingListView',
+          component: StreamingListView,
+            children:[
+              {
+                path:'livestreaminglist',
+                name:'LiveStreamingListView',
+                component: LiveStreamingListView
+              },
+              {
+                path:'replay',
+                name: 'ReplayStreamingListView',
+                component: ReplayStreamingListView
+              },
+              {
+                path:'room/:id',
+                name: 'RoomView',
+                component: RoomView
+              }
+            ]
+        },
+        {
+          path: '/profile/:id',
+          name: 'profileView',
+          component: ProfileView,
+          children: [
+            {
+              path: 'mygallery',
+              name: 'MyGalleryView',
+              component: MyGalleryView
+            },
+            {
+              path: 'myvideo',
+              name: 'MyVideoView',
+              component : MyVideoView
+            },
+          ]
+        },
+
+        {
+          path: 'calender',
+          name: 'CalenderView',
+          component: CalenderView
+        },
+        {
+          path: 'badge',
+          name: 'BadgeView.vue',
+          component: BadgeView
+        }
+      ]
+    }
   ],
 })
 
