@@ -1,8 +1,10 @@
 <template>
-    <div>도감 페이지입니다.</div>
+  <p></p>
 </template>
 
 <script setup>
 
 </script>
 
+<style scoped>
+</style>

@@ -1,2 +1,24 @@
+<template>
+  <header class="header-wrap">
+    <div class="header">
+      <div class="header-left">
+        <img :src="logo" alt="로고" width="42" height="57" />
+        <RouterLink to="/">StellaVision</RouterLink>
+
+
+      </div>
+      <nav class="header-right">
+        <RouterLink to="/signup">회원가입</RouterLink>
+        <RouterLink to="/login">로그인</RouterLink>
+      </nav>
+    </div>
+  </header>
+</template>
+
+
 <script setup>
+import logo from "@/assets/pictures/stellabot/logo.png"
 </script>
+
+<style>
+</style>

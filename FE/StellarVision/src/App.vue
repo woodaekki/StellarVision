@@ -1,21 +1,24 @@
-<script setup>
-import { RouterLink, RouterView } from 'vue-router';
-</script>
-
 <template>
+  <MainHeader />
 
-  <header>
-    <div>
-      <nav>
-        <RouterLink to="/signup">회원가입</RouterLink>
-        <RouterView/>
-      </nav>
-    </div>
-  </header>
+  <MainSidebar />
 
+  <main>
+    <RouterView />
+  </main>
 
+  <!-- <MainFooter /> -->
 </template>
 
-<style scoped>
+<script setup>
+import { RouterView } from 'vue-router';
+import MainHeader from '@/components/common/MainHeader.vue'
+import MainSidebar from '@/components/common/MainSidebar.vue'
+// import MainFooter from '@/components/common/MainFooter.vue'
+
+</script>
+
+<style lang="scss">
+@use "@/assets/components.scss";
 
 </style>

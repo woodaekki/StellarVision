@@ -1,9 +1,11 @@
 <template>
-    <div>스트리밍 페이지입니다.</div>
+  <MainHeader />
 </template>
 
 <script setup>
+import MainHeader from '@/components/common/MainHeader.vue';
 
 </script>
 
-<style scoped lang="scss"></style>
+<style scoped>
+</style>

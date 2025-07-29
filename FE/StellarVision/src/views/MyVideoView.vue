@@ -1,4 +1,3 @@
-<!-- src/views/MyGalleryView.vue -->
 <template>
   <div>
     마이 비디오 페이지입니다.
