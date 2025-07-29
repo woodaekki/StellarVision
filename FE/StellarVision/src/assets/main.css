@@ -7,19 +7,20 @@
   font-weight: normal;
 }
 
-a,
-.green {
+a {
+  font-size: 20px;
   text-decoration: none;
-  color: hsla(160, 100%, 37%, 1);
-  transition: 0.4s;
-  padding: 3px;
-}
+  color: #fff;
+  font-weight: 600;
+  transition: color 0.3s ease;
+  padding: 8px 12px;
+  cursor: pointer;
 
-@media (hover: hover) {
-  a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
+  &:hover {
+    color: #bbbbbb;
   }
 }
+
 
 @media (min-width: 1024px) {
   body {
