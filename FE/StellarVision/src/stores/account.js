@@ -1,7 +1,6 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { useRouter } from 'vue-router'
-import axios from 'axios'
 import commonApi from '@/api/commonApi'
 
 
@@ -27,5 +26,15 @@ export const useAccountStore = defineStore('account', () => {
     })
   }
 
-  return { isLogin, signUp }
+  const logIn = function({userEmail, password}){
+    commonApi.post('/api/login', {userEmail, password})
+    .then(res =>{
+      console.log('로그인 성공', res.data)
+    })
+    .catch(err =>{
+      console.log(err)
+    })
+  }
+
+  return { isLogin, signUp, logIn }
 })
