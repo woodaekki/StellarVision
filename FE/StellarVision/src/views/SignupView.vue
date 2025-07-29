@@ -1,35 +1,41 @@
 <script setup>
 import { useAccountStore } from '@/stores/account';
-import { computed, ref, watch } from 'vue';
+import { computed, reactive, watch } from 'vue';
 
-  // 바인딩 변수\
+  // 바인딩 변수
+  // 수정 : 폼 데이터 하나의 reactive로 변경
+  const formData = reactive({
+  userId : '',
+  userDomain : '',
+  domainInput : '이메일을 선택해주세요',
+  nickname : '',
+  password1 : '',
+  password2 : '',
+  birthday : ''
+  })
 
-  const userId = ref('')
-  const userDomain = ref('')
-  const domainInput = ref('이메일을 선택해주세요')
-  const nickname = ref('')
-  const password1 = ref('')
-  const password2 = ref('')
-  const birthday = ref('')
+
   const accountStore = useAccountStore()
 
   //도메인 선택이 바뀌면 자동 반영
-  watch(userDomain, newVal =>{
-    domainInput.value = newVal
-  })
+  watch(() => formData.userDomain, (newVal) => {
+      formData.domainInput = newVal
+    }
+  )
+
 
   //비밀번호 일치 여부
   const isPasswordMatched = computed(
-    () => password1.value && password1.value === password2.value
+    () => formData.password1 && formData.password1 === formData.password2
   )
 
   // submit 이벤트 발생 시 바인딩된 회원 정보를 묶어 accountStore에 전달, 회원가입 로직 실행
   const onSignUp = function(){
     const userInfo = {
-      userEmail : `${userId.value}@${userDomain.value}`,
-      nickname : nickname.value,
-      password1 : password1.value,
-      password2 : password2.value
+      userEmail : `${formData.userId}@${formData.userDomain}`,
+      nickname :formData. nickname,
+      password : formData.password1,
+      birthday : formData.birthday
     }
     accountStore.signUp(userInfo)
   }
@@ -42,9 +48,22 @@ import { computed, ref, watch } from 'vue';
       <h2>회원가입</h2>
       <form class="signupForm" @submit.prevent="onSignUp">
         <div class="formGroup email-group">
-          <input type="text" id="userid" placeholder="Anonymous@email.com" v-model="userId">
-          <input class="box" id="email-text" type="text" v-model="domainInput">
-            <select class="box" id="email-box" v-model="userDomain">
+          <!-- email 입력폼 -->
+          <input
+          type="text"
+          id="userid"
+          placeholder="Anonymous@email.com"
+          v-model="formData.userId">
+
+          <input
+          class="box"
+          id="email-text"
+          type="text"
+          v-model="formData.domainInput">
+
+
+            <select class="box" id="email-box" v-model="formData.userDomain">
+              <option disabled value="">이메일을 선택해주세요</option>
               <option value="naver.com">naver.com</option>
               <option value="google.com">google.com</option>
               <option value="hanmail.net">hanmail.net</option>
@@ -52,23 +71,37 @@ import { computed, ref, watch } from 'vue';
               <option value="msn.com">msn.com</option>
             </select>
         </div>
-
+        <!-- 닉네임 입력 폼 -->
         <div class="formGroup">
-          <input type="text" id="nickname" placeholder="NickName..." v-model="nickname">
+          <input
+          type="text"
+          id="nickname"
+          placeholder="NickName..."
+          v-model="formData.nickname">
         </div>
-
+        <!-- 비밀번호 -->
         <div class="formGroup">
-          <input type="password" id="password" placeholder="Password..." v-model="password1">
+          <input
+          type="password"
+          id="password"
+          placeholder="Password..."
+          v-model="formData.password1">
         </div>
-
+        <!-- 비밀번호 2차 -->
         <div class="formGroup">
-          <input type="password" id="password-confirm" placeholder="Confirm Password..." v-model="password2">
+          <input
+          type="password"
+          id="password-confirm"
+          placeholder="Confirm Password..."
+          v-model="formData.password2">
+
           <p
           v-if="password2 && !isPasswordMatched"
           class="error"
           >
             비밀번호가 일치하지 않습니다.
           </p>
+
           <p
             v-else-if="isPasswordMatched"
             class="success"
@@ -78,7 +111,11 @@ import { computed, ref, watch } from 'vue';
         </div>
 
         <div class="formGroup">
-          <input type="date" id="birth" placeholder="YYYY.MM.DD" v-model="birthday">
+          <input
+          type="date"
+          id="birth" p
+          laceholder="YYYY.MM.DD"
+          v-model="formData.birthday">
         </div>
         <button type="submit">가입하기</button>
 
@@ -102,7 +139,7 @@ import { computed, ref, watch } from 'vue';
 button {
   width: 100%;
   padding: 12px;
-  background: #4a90e2;
+  background: #2C2C2C;
   color: white;
   border: none;
   border-radius: 4px;
@@ -120,4 +157,26 @@ button {
   color: #555;
   margin-top: 4px;
 }
+  input {
+  display: flex;
+  width: 400px;
+  height: 40px;
+  padding: 8px 16px;
+  align-items: center;
+  gap: 16px;
+  border-radius: 8px;
+  border: 1px solid #E0E0E0;
+  background: #FFF;
+}
+  .box {
+  display: flex;
+  width: 400px;
+  height: 40px;
+  padding: 8px 16px;
+  align-items: center;
+  gap: 16px;
+  border-radius: 8px;
+  border: 1px solid #E0E0E0;
+  background: #FFF;
+  }
 </style>
