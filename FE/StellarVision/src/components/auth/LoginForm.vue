@@ -42,7 +42,6 @@ import { ref } from 'vue';
 
 
         <button type="submit">로그인</button>
-        <hr></hr>
 
       </form>
     </div>

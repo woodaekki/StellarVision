@@ -2,12 +2,16 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { useRouter } from 'vue-router'
 import commonApi from '@/api/commonApi'
-
+import { jwtDecode } from 'jwt-decode'
 
 export const useAccountStore = defineStore('account', () => {
   // const ACCOUNT_URL = 'http://127.0.0.1:8080/accounts'   -> axios 생성 대체
   const router = useRouter()
-  const token = ref('')
+  // 1. _tokens를 선언하고 getter 제공
+  const _tokens = ref({})     //실제 토큰에 대한 정보
+  const tokens = computed(()=> _tokens.value) //외부에 오픈할 정보
+
+  // 2. 
 
   //token 소유 여부에 따라 로그인 상태를 나타 낼 isLogIn 변수 저장
   const isLogin = computed(()=>{
@@ -26,15 +30,16 @@ export const useAccountStore = defineStore('account', () => {
     })
   }
 
-  const logIn = function({userEmail, password}){
-    commonApi.post('/api/login', {userEmail, password})
+  const logIn = function({email, password}){
+    commonApi.post('/api/login', {email, password})
     .then(res =>{
       console.log('로그인 성공', res.data)
+      router.push({name:'LandingPageView'})
     })
     .catch(err =>{
       console.log(err)
     })
   }
 
-  return { isLogin, signUp, logIn }
+  return { isLogin, signUp, logIn, tokens }
 })

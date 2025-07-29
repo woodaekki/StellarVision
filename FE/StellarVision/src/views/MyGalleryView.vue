@@ -5,8 +5,5 @@
 </template>
 
 <script setup>
-// 갤러리 관련 로직 추가 예정
 </script>
 
-<style scoped>
-</style>
