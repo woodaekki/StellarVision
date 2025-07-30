@@ -13,13 +13,7 @@ import RoomView from '@/views/RoomView.vue'
 import CalenderView from '@/views/CalenderView.vue'
 import BadgeView from '@/views/BadgeView.vue'
 import MainView from '@/views/MainView.vue'
-import axios from "axios"
 
-const commonApi = axios.create({
-  baseURL: 'http://127.0.0.1:8080',   //개발 단계에서 사용할 도메인
-  timeout: 1000,
-  headers: {'Content-Type' : 'application/json'}    //HTTP에 JSON 전달임을 명시
-})
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -66,16 +60,7 @@ const router = createRouter({
           name: 'ProfileEdit',
           component: ProfileEdit
         },
-        {
-          path: 'calender',
-          name: 'CalenderView',
-          component: CalenderView
-        },
-        {
-          path: 'badge',
-          name: 'BadgeView',
-          component: BadgeView
-        }
+
       ]
     }
       ],
