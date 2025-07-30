@@ -31,7 +31,8 @@ public class Profile extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "profile_s3_key", nullable = false, unique = true, length = 20)
+    @Setter
+    @Column(name = "profile_s3_key", unique = true, length = 255)
     private String profileS3Key;
 
     @Column

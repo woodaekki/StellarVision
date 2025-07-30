@@ -1,13 +1,9 @@
 <template>
-  <p></p>
+  <p>수정</p>
 </template>
 
 <script setup>
-
 </script>
 
-<style lang="scss">
-
-
+<style scoped>
 </style>
-

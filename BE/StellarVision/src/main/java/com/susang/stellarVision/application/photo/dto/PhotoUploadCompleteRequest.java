@@ -5,7 +5,8 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class PhotoUploadResponseDTO {
-    private String uploadUrl;
+public class PhotoUploadCompleteRequest {
+    private Long memberId;
+    private String originalFilename;
     private String s3Key;
 }

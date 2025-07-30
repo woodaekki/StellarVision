@@ -1,11 +1,12 @@
 <template>
   <div>
-    프로필 페이지입니다.
+    <ProfileHeader />
   </div>
 </template>
 
 <script setup>
-// 추후 setup script 작성 예정
+import ProfileHeader from '@/components/profile/ProfileHeader.vue';
+
 </script>
 
 <style scoped>

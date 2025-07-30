@@ -6,7 +6,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class PhotoListResponseDTO {
-    private List<PhotoResponseDTO> photos;
+public class PhotoListResponse {
+    private List<PhotoResponse> photos;
     private long totalCount;
 }
