@@ -1,20 +1,40 @@
 <script setup>
+import router from '@/router';
 import { useAccountStore } from '@/stores/account';
 import { ref } from 'vue';
 
   const userEmail = ref('')
   const password = ref('')
+  const errorMsg = ref('')
+  const isLoading = ref(false)
+
   const accountStore = useAccountStore()
 
 
   // submit 이벤트 발생 시 바인딩된 회원 정보를 묶어 accountStore에 전달, 회원가입 로직 실행
-  const onLogin = function(){
-    const userInfo = {
-      email: userEmail.value,
-      password : password.value
+  const onLogin = async() => {
+    errorMsg.value = ''
+    if (!userEmail.value || password.value) {         //이메일 혹은 패스워드 중 하나가 비었을 경우
+      errorMsg.value = "이메일과 비밀번호를 모두 입력하세요."
+      return
     }
-    accountStore.logIn(userInfo)
-  }
+    isLoading = true
+    try {
+      await accountStore.logIn(
+        {
+          email: userEmail.value,
+          password : password.value
+        })
+        router.push({name:'LandingView'})
+      }
+      catch (err){
+      errorMsg.value = err.response?.data.message || '로그인에 실패했습니다.'
+    }
+      finally {
+      isLoading.value = false
+      }
+    }
+
 </script>
 
 
@@ -41,7 +61,10 @@ import { ref } from 'vue';
         </div>
 
 
-        <button type="submit">로그인</button>
+      <button type="submit" :disabled="isLoading">
+        {{ isLoading ? '로딩중...' : '로그인' }}
+      </button>
+      <p v-if="errorMsg" class="error">{{ errorMsg }}</p>
 
       </form>
     </div>

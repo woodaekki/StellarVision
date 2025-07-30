@@ -11,6 +11,9 @@ import ReplayStreamingListView from '@/views/ReplayStreamingListView.vue'
 import RoomView from '@/views/RoomView.vue'
 import CalenderView from '@/views/CalenderView.vue'
 import BadgeView from '@/views/BadgeView.vue'
+<<<<<<< HEAD
+import MainView from '@/views/MainView.vue'
+=======
 import axios from "axios"
 
 const commonApi = axios.create({
@@ -19,50 +22,32 @@ const commonApi = axios.create({
   headers: {'Content-Type' : 'application/json'}    //HTTP에 JSON 전달임을 명시
 })
 
+>>>>>>> origin
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    {
-      path: '/',
-      name: 'LandingView',
-      component: LandingView,
-    },
-    {
-      path: '/login',
-      name: 'LoginView',
-      component: LoginView,
-    },
-    {
-      path: '/signup',
-      name: 'SignUpView',
-      component : SignupView,
-    },
+    { path: '/', name: 'LandingView', component: LandingView,},
+    { path: '/login', name: 'LoginView', component: LoginView, },
+    { path: '/signup', name: 'SignUpView', component : SignupView, },
+
     {
       path: '/main',
+      name: 'MainView',
+      componen : MainView,
       children: [
         {
-          path: '',
-          name: 'StreamingListView',
+          path: 'streaming',
           component: StreamingListView,
-            children:[
-              {
-                path:'livestreaminglist',
-                name:'LiveStreamingListView',
-                component: LiveStreamingListView
-              },
-              {
-                path:'replay',
-                name: 'ReplayStreamingListView',
-                component: ReplayStreamingListView
-              },
-              {
-                path:'room/:id',
-                name: 'RoomView',
-                component: RoomView
-              }
+          children: [
+            { path: 'livestream', name: 'LiveStreamingListView',  component: LiveStreamingListView },
+            { path: '/replay',     name: 'ReplayStreamingListView', component: ReplayStreamingListView },
+
+            { path: 'room/:id',   name: 'RoomView',                component: RoomView, props: true },
             ]
         },
+
+
         {
           path: '/profile/:id',
           name: 'profileView',
@@ -80,19 +65,11 @@ const router = createRouter({
             },
           ]
         },
+      ],
+    },
+        { path: '/badge',   name: 'BadgeView',    component: BadgeView },
+        { path: '/calendar', name: 'CalendarView', component: CalenderView },
 
-        {
-          path: 'calender',
-          name: 'CalenderView',
-          component: CalenderView
-        },
-        {
-          path: 'badge',
-          name: 'BadgeView.vue',
-          component: BadgeView
-        }
-      ]
-    }
   ],
 })
 
