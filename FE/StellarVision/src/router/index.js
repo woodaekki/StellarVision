@@ -3,6 +3,7 @@ import LandingView from '@/views/LandingView.vue'
 import LoginView from '@/views/LoginView.vue'
 import SignupView from '@/views/SignupView.vue'
 import ProfileView from '@/views/ProfileView.vue'
+import ProfileHeader from '@/components/profile/ProfileHeader.vue'
 import ProfileEdit from '@/components/profile/ProfileEdit.vue'
 import StreamingListView from '@/views/StreamingListView.vue'
 import MyGalleryView from '@/views/MyGalleryView.vue'
@@ -20,6 +21,7 @@ const commonApi = axios.create({
   timeout: 1000,
   headers: {'Content-Type' : 'application/json'}    //HTTP에 JSON 전달임을 명시
 })
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -50,6 +52,11 @@ const router = createRouter({
           component: ProfileView,
           children: [
             {
+              path: '',
+              name: 'ProfileHeader',
+              component: ProfileHeader
+            },
+            {
               path: 'mygallery',
               name: 'MyGalleryView',
               component: MyGalleryView
@@ -79,9 +86,7 @@ const router = createRouter({
       ]
     }
       ],
-    },
-        { path: '/badge',   name: 'BadgeView',    component: BadgeView },
-        { path: '/calendar', name: 'CalendarView', component: CalenderView },
+    }
   )
 
 export default router
