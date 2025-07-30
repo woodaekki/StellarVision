@@ -3,6 +3,7 @@ import LandingView from '@/views/LandingView.vue'
 import LoginView from '@/views/LoginView.vue'
 import SignupView from '@/views/SignupView.vue'
 import ProfileView from '@/views/ProfileView.vue'
+import ProfileHeader from '@/components/profile/ProfileHeader.vue'
 import ProfileEdit from '@/components/profile/ProfileEdit.vue'
 import StreamingListView from '@/views/StreamingListView.vue'
 import MyGalleryView from '@/views/MyGalleryView.vue'
@@ -44,6 +45,11 @@ const router = createRouter({
           component: ProfileView,
           children: [
             {
+              path: '',
+              name: 'ProfileHeader',
+              component: ProfileHeader
+            },
+            {
               path: 'mygallery',
               name: 'MyGalleryView',
               component: MyGalleryView
@@ -60,13 +66,20 @@ const router = createRouter({
           name: 'ProfileEdit',
           component: ProfileEdit
         },
-
+        {
+          path: '/calender',
+          name: CalenderView,
+          component: CalenderView
+        },
+        {
+          path: '/badge',
+          name: BadgeView,
+          component: BadgeView
+        }
       ]
     }
       ],
-    },
-        { path: '/badge',   name: 'BadgeView',    component: BadgeView },
-        { path: '/calendar', name: 'CalendarView', component: CalenderView },
+    }
   )
 
 export default router
