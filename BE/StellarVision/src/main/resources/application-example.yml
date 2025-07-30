@@ -1,5 +1,22 @@
 spring:
   application:
     name:
-  profiles:
-    active:
+
+  datasource:
+    url:
+    username:
+    password:
+    driver-class-name:
+
+  jpa:
+    hibernate:
+      ddl-auto:
+    properties:
+      hibernate:
+        format_sql:
+        dialect:
+    show-sql: true
+
+openvidu:
+  url:
+  secret:

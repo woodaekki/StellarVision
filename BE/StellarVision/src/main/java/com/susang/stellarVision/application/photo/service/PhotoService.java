@@ -1,24 +1,27 @@
 package com.susang.stellarVision.application.photo.service;
 
-import com.susang.stellarVision.application.photo.dto.PhotoResponseDTO;
-import com.susang.stellarVision.application.photo.dto.PhotoUploadResponseDTO;
+import com.susang.stellarVision.application.photo.dto.PhotoResponse;
+import com.susang.stellarVision.application.photo.dto.PhotoUploadResponse;
 
-import java.util.List;
+import com.susang.stellarVision.common.s3.S3Directory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface PhotoService {
 
-    PhotoUploadResponseDTO getPresignedUploadUrl(Long memberId, String originalFilename);
-    String getPresignedDownloadUrl(String photoS3Key);
+    public PhotoUploadResponse generatePresignedUploadUrl(S3Directory directory, Long memberId,
+            String originalFilename);
 
-    // Todo : 메서드 구현
+    public PhotoUploadResponse getGalleryPresignedUploadUrl(Long memberId, String originalFilename);
+
+    public PhotoUploadResponse getProfilePresignedUploadUrl(Long memberId, String originalFilename);
+
     void savePhotoMeta(Long memberId, String originalFilename, String s3Key);
 
-    // 조회
-    PhotoResponseDTO getPhoto(Long photoId);
-    Page<PhotoResponseDTO> getPhotosByMemberId(Long memberId, Pageable pageable);
-    // 삭제
+    PhotoResponse getPhoto(Long photoId);
+
+    Page<PhotoResponse> getPhotosByMemberId(Long memberId, Pageable pageable);
+
     void deletePhoto(Long photoId);
 
 }
