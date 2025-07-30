@@ -60,16 +60,7 @@ const router = createRouter({
           name: 'ProfileEdit',
           component: ProfileEdit
         },
-        {
-          path: 'calender',
-          name: 'CalenderView',
-          component: CalenderView
-        },
-        {
-          path: 'badge',
-          name: 'BadgeView',
-          component: BadgeView
-        }
+
       ]
     }
       ],

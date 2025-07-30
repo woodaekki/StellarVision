@@ -18,7 +18,7 @@ export const useAccountStore = defineStore('account', () => {
 
   // 회원가입 로직
   const signUp = function({userEmail, nickname, password, birthday}){
-    commonApi.post('/api/signup', {userEmail, nickname, password, birthday})
+    commonApi.post('/api/account/signup', {userEmail, nickname, password, birthday})
     .then(res => {
       console.log('회원가입 성공', res.data)
       router.push({name:'LandingPageView'})
@@ -39,7 +39,7 @@ export const useAccountStore = defineStore('account', () => {
   // 로그인 로직
   async function logIn({email, password}) {
     try {
-      const res = await commonApi.post('/api/login', {email, password})
+      const res = await commonApi.post('/api/auth/login', {email, password})
       setToken(res.data.token)                // 토큰 저장
       router.push({name: 'StreamingListView'})
     } catch (err) {
