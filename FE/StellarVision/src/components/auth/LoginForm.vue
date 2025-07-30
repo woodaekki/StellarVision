@@ -1,10 +1,12 @@
 <script setup>
+import router from '@/router';
 import { useAccountStore } from '@/stores/account';
 import { ref } from 'vue';
 
   const userEmail = ref('')
   const password = ref('')
   const errorMsg = ref('')
+  const isLoading = ref(false)
 
   const accountStore = useAccountStore()
 
@@ -16,12 +18,14 @@ import { ref } from 'vue';
       errorMsg.value = "이메일과 비밀번호를 모두 입력하세요."
       return
     }
+    isLoading = true
     try {
       await accountStore.logIn(
         {
           email: userEmail.value,
           password : password.value
         })
+        router.push({name:'LandingView'})
       }
       catch (err){
       errorMsg.value = err.response?.data.message || '로그인에 실패했습니다.'
@@ -30,7 +34,6 @@ import { ref } from 'vue';
       isLoading.value = false
       }
     }
-
 
 </script>
 
@@ -58,8 +61,10 @@ import { ref } from 'vue';
         </div>
 
 
-        <button type="submit">로그인</button>
-        <p v-if="errorMsg" class="error">{{ errorMsg }}</p>
+      <button type="submit" :disabled="isLoading">
+        {{ isLoading ? '로딩중...' : '로그인' }}
+      </button>
+      <p v-if="errorMsg" class="error">{{ errorMsg }}</p>
 
       </form>
     </div>
