@@ -7,7 +7,7 @@
 <script setup>
 </script>
 
-<<<<<<< HEAD
+<style scoped>
+/* 필요시 스타일 작성 */
+</style>
 
-=======
->>>>>>> origin

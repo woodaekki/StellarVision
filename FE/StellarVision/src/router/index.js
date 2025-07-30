@@ -3,6 +3,7 @@ import LandingView from '@/views/LandingView.vue'
 import LoginView from '@/views/LoginView.vue'
 import SignupView from '@/views/SignupView.vue'
 import ProfileView from '@/views/ProfileView.vue'
+import ProfileEdit from '@/components/profile/ProfileEdit.vue'
 import StreamingListView from '@/views/StreamingListView.vue'
 import MyGalleryView from '@/views/MyGalleryView.vue'
 import MyVideoView from '@/views/MyVideoView.vue'
@@ -11,9 +12,7 @@ import ReplayStreamingListView from '@/views/ReplayStreamingListView.vue'
 import RoomView from '@/views/RoomView.vue'
 import CalenderView from '@/views/CalenderView.vue'
 import BadgeView from '@/views/BadgeView.vue'
-<<<<<<< HEAD
 import MainView from '@/views/MainView.vue'
-=======
 import axios from "axios"
 
 const commonApi = axios.create({
@@ -21,9 +20,6 @@ const commonApi = axios.create({
   timeout: 1000,
   headers: {'Content-Type' : 'application/json'}    //HTTP에 JSON 전달임을 명시
 })
-
->>>>>>> origin
-
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -65,12 +61,27 @@ const router = createRouter({
             },
           ]
         },
+        {
+          path: '/profile/:id/edit',
+          name: 'ProfileEdit',
+          component: ProfileEdit
+        },
+        {
+          path: 'calender',
+          name: 'CalenderView',
+          component: CalenderView
+        },
+        {
+          path: 'badge',
+          name: 'BadgeView',
+          component: BadgeView
+        }
+      ]
+    }
       ],
     },
         { path: '/badge',   name: 'BadgeView',    component: BadgeView },
         { path: '/calendar', name: 'CalendarView', component: CalenderView },
-
-  ],
-})
+  )
 
 export default router

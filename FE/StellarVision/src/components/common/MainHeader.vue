@@ -2,10 +2,8 @@
   <header class="header-wrap">
     <div class="header">
       <div class="header-left">
-        <img :src="logo" alt="로고" width="42" height="57" />
+        <img :src="logo" alt="로고" width="30px" height="42px" />
         <RouterLink to="/">StellaVision</RouterLink>
-
-
       </div>
       <nav class="header-right">
         <RouterLink to="/signup">회원가입</RouterLink>
@@ -17,8 +15,10 @@
 
 
 <script setup>
+import { RouterLink } from 'vue-router'
 import logo from "@/assets/pictures/stellabot/logo.png"
+
 </script>
 
-<style>
+<style lang="scss">
 </style>
