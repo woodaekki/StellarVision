@@ -1,10 +1,13 @@
 package com.susang.stellarVision.application.profile.controller;
 
-import com.susang.stellarVision.application.photo.dto.PhotoListResponseDTO;
-import com.susang.stellarVision.application.photo.dto.PhotoResponseDTO;
+import com.susang.stellarVision.application.photo.dto.PhotoListResponse;
+import com.susang.stellarVision.application.photo.dto.PhotoResponse;
+import com.susang.stellarVision.application.photo.dto.PhotoUploadCompleteRequest;
+import com.susang.stellarVision.application.photo.dto.PhotoUploadRequest;
+import com.susang.stellarVision.application.photo.dto.PhotoUploadResponse;
 import com.susang.stellarVision.application.photo.service.PhotoService;
+import com.susang.stellarVision.application.profile.service.ProfileService;
 import com.susang.stellarVision.common.dto.APIResponse;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -12,6 +15,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -21,16 +26,46 @@ import org.springframework.web.bind.annotation.RestController;
 public class ProfileController {
 
     private final PhotoService photoService;
+    private final ProfileService profileService;
+
+
+    @PostMapping("/presignedUrl")
+    public APIResponse<PhotoUploadResponse> getProfilePresignedUploadUrl(
+            @RequestBody PhotoUploadRequest request) {
+        PhotoUploadResponse response = photoService.getProfilePresignedUploadUrl(
+                request.getMemberId(), request.getOriginalFilename());
+        return APIResponse.success(response);
+    }
+
+    @PostMapping("/complete")
+    public APIResponse<String> completeUpload(@RequestBody PhotoUploadCompleteRequest request) {
+
+        profileService.saveProfileImageMeta(
+                request.getMemberId(),
+                request.getOriginalFilename(),
+                request.getS3Key());
+
+        return APIResponse.success("프로필 이미지 업로드 완료 및 메타데이터 저장 성공", null);
+    }
 
 
     @GetMapping("/{memberId}/photos")
-    public APIResponse<PhotoListResponseDTO> getPhotosByMemberId(
+    public APIResponse<PhotoListResponse> getPhotosByMemberId(
             @PathVariable Long memberId,
             @PageableDefault(size = 3, sort = "createdAt", direction = Sort.Direction.DESC)
             Pageable pageable) {
 
-        Page<PhotoResponseDTO> page = photoService.getPhotosByMemberId(memberId, pageable);
-        PhotoListResponseDTO response = new PhotoListResponseDTO(page.getContent(), page.getTotalElements());
+        Page<PhotoResponse> page = photoService.getPhotosByMemberId(memberId, pageable);
+        PhotoListResponse response = new PhotoListResponse(page.getContent(),
+                page.getTotalElements());
         return APIResponse.success(response);
     }
+
+    @GetMapping("/{memberId}/image")
+    public APIResponse<String> getProfileImage(@PathVariable Long memberId) {
+        String downloadUrl = profileService.getProfileImage(memberId);
+        return APIResponse.success(downloadUrl);
+    }
+
+
 }
