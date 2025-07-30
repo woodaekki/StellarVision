@@ -37,7 +37,7 @@ public class Member extends BaseEntity {
     private String password;
 
     @Column(nullable = false, length = 10)
-    private String nickname;
+    private String name;
 
     @Column(nullable = false)
     private LocalDate birth;
@@ -64,12 +64,12 @@ public class Member extends BaseEntity {
     private Profile profile;
 
     @Builder
-    public Member(String email, String password, String nickname, LocalDate birth,
+    public Member(String email, String password, String name, LocalDate birth,
             LocalDateTime createdAt, LocalDateTime latestLogin, Long followerCount,
             Long followingCount, Boolean isDeleted, Profile profile) {
         this.email = email;
         this.password = password;
-        this.nickname = nickname;
+        this.name = name;
         this.birth = birth;
         this.createdAt = createdAt;
         this.latestLogin = latestLogin;
