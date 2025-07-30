@@ -11,6 +11,8 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@babylonjs/core": "^8.18.0",
+    "@babylonjs/loaders": "^8.18.0",
     "axios": "^1.11.0",
     "jwt-decode": "^4.0.0",
     "pinia": "^3.0.3",

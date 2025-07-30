@@ -9,12 +9,13 @@
 
 .header {
   width: 100%;
-  padding: 20px;
+  padding: 8px 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   box-sizing: border-box;
   color: #fff;
+  font-size: 12px;
 }
 
 .header-left {
@@ -24,12 +25,15 @@
 }
 
 @media (max-width: 768px) {
-  .header {
-    padding: 15px 16px;
+   .header {
+    padding: 6px 10px;
+    font-size: 13px;
   }
-  .header-left {
-    gap: 8px;
+  .header-left img {
+    width: 28px;
+    height: 40px;
   }
+
   a {
     font-size: 16px;
     padding: 6px 8px;
@@ -40,7 +44,7 @@
   .header {
     flex-direction: column;
     align-items: flex-start;
-    padding: 12px ;
+    padding: 6px ;
     gap: 10px;
   }
   .header-left {
@@ -95,14 +99,13 @@
   display: flex;
   flex-direction: column;
   position: fixed;
-  width: 240px;
+  width: 150px;
   height: 100vh;
   top: 0;
   left: 0;
   background-color: #0b0c10;
-  padding: 2rem 1rem;
+  padding: 3rem 0.8rem 1.5rem 0.8rem;
   gap: 1rem;
-  padding: 5rem 1rem 2rem 1rem;
   transform: translateX(-100%); // 닫혀 있을때, 자기 너비만큼 왼쪽으로 이동
   transition: transform 0.3s ease;
 
@@ -118,12 +121,12 @@
   position: fixed;
   bottom: 1rem;
   left: 1rem;
-  width: 50px;
-  height: 50px;
+   width: 40px;
+  height: 40px;
+  font-size: 12px;
   border: none;
   background-color: #0b0c10;
   color: #fff;
-  font-size: 1.8rem;
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.2s ease, color 0.2s ease;
