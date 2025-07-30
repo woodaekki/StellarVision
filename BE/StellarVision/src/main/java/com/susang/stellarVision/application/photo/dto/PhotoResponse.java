@@ -7,7 +7,7 @@ import lombok.Getter;
 @Getter
 @Builder
 
-public class PhotoResponseDTO {
+public class PhotoResponse {
     private Long id;
     private String originalFilename;
     private String extension;
