@@ -14,11 +14,11 @@ import { ref } from 'vue';
   // submit 이벤트 발생 시 바인딩된 회원 정보를 묶어 accountStore에 전달, 회원가입 로직 실행
   const onLogin = async() => {
     errorMsg.value = ''
-    if (!userEmail.value || password.value) {         //이메일 혹은 패스워드 중 하나가 비었을 경우
+    if (!userEmail.value || !password.value) {         //이메일 혹은 패스워드 중 하나가 비었을 경우
       errorMsg.value = "이메일과 비밀번호를 모두 입력하세요."
       return
     }
-    isLoading = true
+    isLoading.value = true
     try {
       await accountStore.logIn(
         {
