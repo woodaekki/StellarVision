@@ -1,14 +1,15 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { useRouter } from 'vue-router'
-import axios from 'axios'
 import commonApi from '@/api/commonApi'
-
 
 export const useAccountStore = defineStore('account', () => {
   // const ACCOUNT_URL = 'http://127.0.0.1:8080/accounts'   -> axios 생성 대체
   const router = useRouter()
-  const token = ref('')
+  // 1. 로컬 저장소에서 토큰을 가져온다. 없으면 빈 문자열 반환
+  const token = ref(localStorage.getItem('jwt') || '')
+
+  // 2.
 
   //token 소유 여부에 따라 로그인 상태를 나타 낼 isLogIn 변수 저장
   const isLogin = computed(()=>{
@@ -27,5 +28,25 @@ export const useAccountStore = defineStore('account', () => {
     })
   }
 
-  return { isLogin, signUp }
+
+  //토큰 셋
+  function setToken(t) {
+    token.value = t
+    localStorage.setItem('jwt', t)
+    commonApi.defaults.headers.common.Authorization = `Bearer ${t}`    //  토큰이 있다면 모든 요청에 인증 헤더를 자동으로 붙이도록 한다.
+  }
+
+  // 로그인 로직
+  async function logIn({email, password}) {
+    try {
+      const res = await commonApi.post('/api/login', {email, password})
+      setToken(res.data.token)                // 토큰 저장
+      router.push({name: 'StreamingListView'})
+    } catch (err) {
+      console.error('로그인 실패', err)
+      throw err
+    }
+  }
+
+  return { isLogin, signUp, logIn, isLogin, token }
 })
