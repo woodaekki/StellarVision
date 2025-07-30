@@ -10,19 +10,16 @@
       </div>
     </div>
 
-
     <div class="profile-header-right">
       <button @click="goEditProfile">수정</button>
     </div>
  </div>
 
-
-
 </template>
 
 <script setup>
 import { useRouter } from 'vue-router';
-import { useAccountStore } from '@/stores/account.js'
+// import { useAccountStore } from '@/stores/account.js'
 
 const router = useRouter();
 const member_id = 1; //테스트용 가상 사용자 id

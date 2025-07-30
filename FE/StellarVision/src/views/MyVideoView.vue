@@ -1,13 +1,57 @@
 <template>
-  <div>
-    마이 비디오 페이지입니다.
+  <p class="title">My Video</p>
+
+  <div class="Video-frames">
+    <div class="Video-frame" v-for="n in 3" :key="n">
+      <div class="placeholder">+</div>
+    </div>
   </div>
 </template>
 
-<script setup>
-// 갤러리 관련 로직 추가 예정
-</script>
-
 <style scoped>
-/* 필요시 스타일 작성 */
+.title {
+  text-align: center;
+  font-size: 36px;
+  font-weight: 700;
+  margin-top: 60px;
+  margin-bottom: 32px;
+  color: #fff;
+}
+
+.Video-frames {
+  display: flex;
+  gap: 32px;
+  justify-content: center;
+  padding: 60px 20px;
+  flex-wrap: wrap;
+}
+
+.Video-frame {
+  width: 480px;
+  height: 300px;
+  background: #fff;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+}
+
+.Video-frame:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+}
+
+.placeholder {
+  font-size: 96px;
+  color: #ccc;
+  user-select: none;
+  font-weight: 300;
+  transition: color 0.3s ease;
+}
+
+.photo-frame:hover .placeholder {
+  color: #999;
+}
 </style>
