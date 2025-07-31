@@ -6,6 +6,7 @@ import com.susang.stellarVision.application.photo.error.S3DeletionFailedExceptio
 import com.susang.stellarVision.common.s3.S3FileManager;
 import com.susang.stellarVision.entity.Member;
 import com.susang.stellarVision.entity.Profile;
+import com.susang.stellarVision.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,10 +20,10 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     @Transactional
-    public void saveProfileImageMeta(Long memberId, String originalFilename, String s3Key) {
+    public void saveProfileImageMeta(Long memberId, String originalFilename, String s3Key) throws S3DeletionFailedException, MemberNotFoundException  {
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new MemberNotFoundException("존재하지 않는 회원입니다"));
-
+                .orElseThrow(() -> new MemberNotFoundException(memberId.toString()) {
+                });
         Profile profile = member.getProfile();
 
         String oldS3Key = profile.getProfileS3Key();
@@ -42,9 +43,10 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
-    public String getProfileImage(Long memberId) {
+    public String getProfileImage(Long memberId) throws MemberNotFoundException {
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new MemberNotFoundException("존재하지 않는 회원입니다"));
+                .orElseThrow(() -> new MemberNotFoundException(memberId.toString()) {
+                });
 
         Profile profile = member.getProfile();
         String s3Key = profile.getProfileS3Key();

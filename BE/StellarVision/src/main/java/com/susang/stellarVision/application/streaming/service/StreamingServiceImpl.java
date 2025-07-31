@@ -45,6 +45,7 @@ public class StreamingServiceImpl implements StreamingService {
                 .title(request.getTitle())
                 .longitude(request.getLongitude())
                 .latitude(request.getLatitude())
+                .member(member)
                 .build();
 
         streamingRepository.save(streamingRoom);

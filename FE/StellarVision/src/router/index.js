@@ -16,15 +16,6 @@ import CalenderView from '@/views/CalenderView.vue'
 import BadgeView from '@/views/BadgeView.vue'
 import ProfileEdit from '@/components/profile/ProfileEdit.vue'
 import ProfileHeader from '@/components/profile/ProfileHeader.vue'
-import axios from "axios"
-
-
-const commonApi = axios.create({
-  baseURL: 'http://127.0.0.1:8080',   //개발 단계에서 사용할 도메인
-  timeout: 1000,
-  headers: {'Content-Type' : 'application/json'}    //HTTP에 JSON 전달임을 명시
-})
-
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -60,7 +51,7 @@ const router = createRouter({
 
       ]
     },
-    {
+      {
       path: '/profile/:id',
       name: 'profileView',
       component: ProfileView,
