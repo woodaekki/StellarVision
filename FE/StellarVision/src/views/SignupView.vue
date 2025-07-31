@@ -117,7 +117,7 @@ import { computed, reactive, watch } from 'vue';
           laceholder="YYYY.MM.DD"
           v-model="formData.birthday">
         </div>
-        <button type="submit">가입하기</button>
+        <button type="submit" class="btn">가입하기</button>
 
       </form>
     </div>
@@ -136,7 +136,8 @@ import { computed, reactive, watch } from 'vue';
 .formGroup {
   margin: 16px 0;
 }
-button {
+
+.btn {
   width: 100%;
   padding: 12px;
   background: #2C2C2C;

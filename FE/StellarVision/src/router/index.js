@@ -6,8 +6,10 @@ import ProfileView from '@/views/ProfileView.vue'
 import ProfileHeader from '@/components/profile/ProfileHeader.vue'
 import ProfileEdit from '@/components/profile/ProfileEdit.vue'
 import StreamingListView from '@/views/StreamingListView.vue'
-import MyGalleryView from '@/views/MyGalleryView.vue'
-import MyVideoView from '@/views/MyVideoView.vue'
+import MyGalleryView from '@/views/Profile/MyGalleryView.vue'
+import MyGalleryListView from '@/views/Profile/MyGalleryListView.vue'
+import MyVideoView from '@/views/Profile/MyVideoView.vue'
+import MyVideoListView from '@/views/Profile/MyVideoListView.vue'
 import LiveStreamingListView from '@/views/LiveStreamingListView.vue'
 import ReplayStreamingListView from '@/views/ReplayStreamingListView.vue'
 import RoomView from '@/views/RoomView.vue'
@@ -77,8 +79,18 @@ const router = createRouter({
           component: BadgeView
         }
       ]
+    },
+    {
+      path: '/mygallerylist',
+      name: MyGalleryListView,
+      component: MyGalleryListView
+    },
+    {
+      path: '/myvideolist',
+      name: MyVideoListView,
+      component: MyVideoListView
     }
-      ],
+  ],
     }
   )
 

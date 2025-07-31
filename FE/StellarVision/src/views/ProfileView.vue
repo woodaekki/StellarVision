@@ -11,8 +11,8 @@
 
 <script setup>
 import ProfileHeader from '@/components/profile/ProfileHeader.vue'
-import MyGalleryView from '@/views/MyGalleryView.vue'
-import MyVideoView from '@/views/MyVideoView.vue'
+import MyGalleryView from '@/views/Profile/MyGalleryView.vue'
+import MyVideoView from '@/views/Profile/MyVideoView.vue'
 </script>
 
 <style scoped>

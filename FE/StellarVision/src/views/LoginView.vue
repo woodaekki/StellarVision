@@ -9,8 +9,4 @@ import LoginForm from '@/components/auth/LoginForm.vue';
 
 </template>
 
-<<<<<<< HEAD
 <style scoped lang="scss"></style>
-=======
-<style scoped lang="scss"></style>
->>>>>>> origin
