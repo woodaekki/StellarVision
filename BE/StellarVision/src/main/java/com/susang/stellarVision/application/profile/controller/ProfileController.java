@@ -7,6 +7,9 @@ import com.susang.stellarVision.application.photo.dto.PhotoUploadRequest;
 import com.susang.stellarVision.application.photo.dto.PhotoUploadResponse;
 import com.susang.stellarVision.application.photo.service.PhotoService;
 import com.susang.stellarVision.application.profile.service.ProfileService;
+import com.susang.stellarVision.application.video.dto.VideoListResponse;
+import com.susang.stellarVision.application.video.dto.VideoResponse;
+import com.susang.stellarVision.application.video.service.VideoService;
 import com.susang.stellarVision.common.dto.APIResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -27,6 +30,7 @@ public class ProfileController {
 
     private final PhotoService photoService;
     private final ProfileService profileService;
+    private final VideoService videoService;
 
 
     @PostMapping("/presignedUrl")
@@ -60,6 +64,19 @@ public class ProfileController {
                 page.getTotalElements());
         return APIResponse.success(response);
     }
+
+    @GetMapping("{memberId}/videos")
+    public APIResponse<VideoListResponse> getVideosByMemberId(@PathVariable Long memberId,
+            @PageableDefault(size = 3, sort = "createdAt", direction = Sort.Direction.DESC)
+            Pageable pageable){
+
+        Page<VideoResponse> page = videoService.getVideosByMemberId(memberId, pageable);
+        VideoListResponse response = new VideoListResponse(page.getContent(),
+                page.getTotalElements());
+
+        return APIResponse.success(response);
+    }
+
 
     @GetMapping("/{memberId}/image")
     public APIResponse<String> getProfileImage(@PathVariable Long memberId) {
