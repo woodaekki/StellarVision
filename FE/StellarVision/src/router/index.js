@@ -3,20 +3,6 @@ import LandingView from '@/views/LandingView.vue'
 import LoginView from '@/views/LoginView.vue'
 import SignupView from '@/views/SignupView.vue'
 import ProfileView from '@/views/ProfileView.vue'
-
-import ProfileHeader from '@/components/profile/ProfileHeader.vue'
-import ProfileEdit from '@/components/profile/ProfileEdit.vue'
-import StreamingListView from '@/views/Streaming/StreamingListView.vue'
-import MyGalleryView from '@/views/MyGalleryView.vue'
-import MyVideoView from '@/views/MyVideoView.vue'
-import LiveStreamingListView from '@/views/Streaming/LiveStreamingListView.vue'
-import ReplayStreamingListView from '@/views/Streaming/ReplayStreamingListView.vue'
-import RoomView from '@/views/Streaming/RoomView.vue'
-import CalenderView from '@/views/CalenderView.vue'
-import BadgeView from '@/views/BadgeView.vue'
-import MainView from '@/views/MainView.vue'
-import PreRoomView from '@/views/Streaming/PreRoomView.vue'
-
 import MainView from '@/views/MainView.vue'
 import StreamingListView from '@/views/StreamingListView.vue'
 import MyGalleryView from '@/views/Profile/MyGalleryView.vue'
@@ -48,59 +34,66 @@ const router = createRouter({
     { path: '/signup', name: 'SignUpView', component : SignupView, },
     {
       path: '/main',
+      name: 'MainView',
       component: MainView,
-      children: [
-        {
-          path: 'streaming',
-          component: StreamingListView,
-
-          children: [
-            { path: 'livestream', name: 'LiveStreamingListView',  component: LiveStreamingListView },
-            { path: '/replay',     name: 'ReplayStreamingListView', component: ReplayStreamingListView },
-            { path: 'room/:id',   name: 'RoomView',                component: RoomView, props: true },
-            { path: 'room/:id/prejoin', name: 'PreRoomView', component: PreRoomView},
-
-
-
-        {
-          path: '/profile/:id',
-          name: 'profileView',
-          component: ProfileView,
-          children: [
-            {
-              path: '',
-              name: 'ProfileHeader',
-              component: ProfileHeader
-            },
-            {
-              path: 'mygallery',
-              name: 'MyGalleryView',
-              component: MyGalleryView
-            },
-            {
-              path: 'myvideo',
-              name: 'MyVideoView',
-              component : MyVideoView
-            },
-          ]
-        },
-        {
-          path: '/profile/:id/edit',
-          name: 'ProfileEdit',
-          component: ProfileEdit
-        },
-        {
-          path: 'calender',
-          name: CalenderView,
-          component: CalenderView
-        },
-        {
-          path: 'badge',
-          name: 'BadgeView.vue',
-          component: BadgeView
-        }
-      ]
     },
+    {
+      path: 'streaming',
+      component: StreamingListView,
+    },
+    {
+      path:'livestreaminglist',
+      name:'LiveStreamingListView',
+      component: LiveStreamingListView
+    },
+    {
+      path:'replay',
+      name: 'ReplayStreamingListView',
+      component: ReplayStreamingListView
+    },
+    {
+      path:'room/:id',
+      name: 'RoomView',
+      component: RoomView
+    },
+    {
+    path: '/profile/:id',
+    name: 'profileView',
+    component: ProfileView,
+    children: [
+      {
+        path: '',
+        name: 'ProfileHeader',
+        component: ProfileHeader
+      },
+      {
+        path: 'mygallery',
+        name: 'MyGalleryView',
+        component: MyGalleryView
+      },
+      {
+        path: 'myvideo',
+        name: 'MyVideoView',
+        component : MyVideoView
+      },
+    ]
+    },
+    {
+      path: '/profile/:id/edit',
+      name: 'ProfileEdit',
+      component: ProfileEdit
+    },
+    {
+      path: '/calender',
+      name: CalenderView,
+      component: CalenderView
+    },
+    {
+      path: '/badge',
+      name: 'BadgeView',
+      component: BadgeView
+    },
+
     {
       path: '/mygallerylist',
       name: MyGalleryListView,
@@ -113,9 +106,6 @@ const router = createRouter({
     }
   ],
     }
-  ]
-  }
-
   )
 
 export default router
