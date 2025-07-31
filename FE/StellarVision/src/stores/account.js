@@ -58,5 +58,6 @@ export const useAccountStore = defineStore('account', () => {
     }
   }
 
-  return { isLogin, signUp, logIn, isLogin, token }
+  return { isLogin, signUp, logIn, token }
 })
+
