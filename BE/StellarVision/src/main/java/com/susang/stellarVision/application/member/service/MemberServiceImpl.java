@@ -16,6 +16,6 @@ public class MemberServiceImpl implements MemberService{
     @Override
     public Member getMemberByEmail(String email) {
         Optional<Member> findMember = memberRepository.findByEmail(email);
-        return findMember.orElseThrow( () -> new MemberNotFoundException("해당 사용자를 찾을 수 없습니다."));
+        return findMember.orElseThrow( () -> new MemberNotFoundException(email));
     }
 }

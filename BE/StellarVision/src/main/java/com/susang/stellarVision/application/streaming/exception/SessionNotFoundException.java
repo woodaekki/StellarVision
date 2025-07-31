@@ -1,8 +1,10 @@
 package com.susang.stellarVision.application.streaming.exception;
 
-public class SessionNotFoundException extends RuntimeException {
+import com.susang.stellarVision.exception.NotFoundException;
 
-    public SessionNotFoundException(String message) {
-        super(message);
+public class SessionNotFoundException extends NotFoundException {
+
+    public SessionNotFoundException(String id) {
+        super("Session", id);
     }
 }

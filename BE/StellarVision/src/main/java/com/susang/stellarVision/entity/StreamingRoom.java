@@ -14,6 +14,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 
 @Entity
@@ -47,17 +48,25 @@ public class StreamingRoom extends BaseEntity {
     @Column(nullable = false, precision = 9, scale = 6)
     private BigDecimal longitude;
 
+    @Column(name = "is_deleted", nullable = false)
+    private boolean isDeleted;
+
     @ManyToOne
     @JoinColumn(name = "owner_member_id", nullable = false)
     private Member member;
 
     @Builder
     public StreamingRoom(String sessionId, String title, BigDecimal latitude, BigDecimal longitude,
-            Member member) {
+            boolean isDeleted, Member member) {
         this.sessionId = sessionId;
         this.title = title;
         this.latitude = latitude;
         this.longitude = longitude;
+        this.isDeleted = false;
         this.member = member;
+    }
+
+    public void endSession() {
+        this.isDeleted = true;
     }
 }

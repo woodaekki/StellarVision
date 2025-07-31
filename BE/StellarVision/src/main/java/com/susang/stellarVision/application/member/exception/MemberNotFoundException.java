@@ -1,8 +1,10 @@
 package com.susang.stellarVision.application.member.exception;
 
-public class MemberNotFoundException extends RuntimeException {
+import com.susang.stellarVision.exception.NotFoundException;
 
-    public MemberNotFoundException(String message) {
-        super(message);
+public class MemberNotFoundException extends NotFoundException {
+
+    public MemberNotFoundException(String id) {
+        super("Member", id);
     }
 }

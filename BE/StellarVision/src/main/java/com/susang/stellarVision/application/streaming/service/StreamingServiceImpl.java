@@ -1,6 +1,7 @@
 package com.susang.stellarVision.application.streaming.service;
 
 import com.susang.stellarVision.application.streaming.dto.CreateStreamingSessionRequest;
+import com.susang.stellarVision.application.streaming.exception.AccessDeniedException;
 import com.susang.stellarVision.application.streaming.exception.SessionNotFoundException;
 import com.susang.stellarVision.application.streaming.repository.StreamingRepository;
 import com.susang.stellarVision.entity.Member;
@@ -56,9 +57,13 @@ public class StreamingServiceImpl implements StreamingService {
     public String createToken(String sessionId, Member member)
             throws OpenViduJavaClientException, OpenViduHttpException {
         StreamingRoom streamingRoom = streamingRepository.findBySessionId(sessionId)
-                .orElseThrow(() -> new SessionNotFoundException("해당 세션을 찾을 수 없습니다."));
+                .orElseThrow(() -> new SessionNotFoundException(sessionId));
 
         Session session = openVidu.getActiveSession(streamingRoom.getSessionId());
+
+        if(session == null) {
+            throw new SessionNotFoundException(sessionId);
+        }
 
         OpenViduRole role;
         if (Objects.equals(member.getId(), streamingRoom.getMember()
@@ -77,5 +82,31 @@ public class StreamingServiceImpl implements StreamingService {
         Connection connection = session.createConnection(connectionProperties);
 
         return connection.getToken();
+    }
+
+    @Override
+    @Transactional
+    public void deleteSession(String sessionId, Member member)
+            throws OpenViduJavaClientException, OpenViduHttpException {
+
+        StreamingRoom streamingRoom = streamingRepository.findBySessionId(sessionId)
+                .orElseThrow(() -> new SessionNotFoundException(sessionId));
+
+        // 스트리밍을 시작한 사람과 다르면 끌 수 없음
+        if (!member.getId()
+                .equals(streamingRoom.getMember()
+                        .getId())) {
+            throw new AccessDeniedException("생성한 멤버만 종료할 수 있습니다.");
+        }
+
+        Session activeSession = openVidu.getActiveSession(sessionId);
+
+        if (activeSession == null) {
+            throw new SessionNotFoundException(sessionId);
+        }
+
+        activeSession.close();
+
+        streamingRoom.endSession();
     }
 }

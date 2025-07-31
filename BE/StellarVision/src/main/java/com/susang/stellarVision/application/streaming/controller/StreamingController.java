@@ -1,6 +1,7 @@
 package com.susang.stellarVision.application.streaming.controller;
 
 import com.susang.stellarVision.application.streaming.dto.CreateStreamingSessionRequest;
+import com.susang.stellarVision.application.streaming.exception.AccessDeniedException;
 import com.susang.stellarVision.application.streaming.service.StreamingService;
 import com.susang.stellarVision.common.dto.APIResponse;
 import com.susang.stellarVision.common.security.dto.CustomUserDetails;
@@ -13,13 +14,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/streamings")
@@ -56,6 +56,24 @@ public class StreamingController {
         } catch (OpenViduJavaClientException | OpenViduHttpException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(APIResponse.fail("STREAM", "스트리밍 토큰 생성에 실패했습니다.", e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/{sessionId}")
+    public ResponseEntity<APIResponse<String>> deleteStreamingSession(
+            @PathVariable String sessionId,
+            @AuthenticationPrincipal CustomUserDetails customUserDetails
+    ) {
+        try {
+            Member member = customUserDetails.getMember();
+            streamingService.deleteSession(sessionId, member);
+            return ResponseEntity.ok(APIResponse.success(null));
+        } catch (OpenViduJavaClientException | OpenViduHttpException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(APIResponse.fail("STREAM", "스트리밍 종료에 실패했습니다.", e.getMessage()));
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(APIResponse.fail("STREAM", e.getMessage()));
         }
     }
 }

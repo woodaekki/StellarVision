@@ -14,4 +14,7 @@ public interface StreamingService {
 
     String createToken(String sessionId, Member member)
             throws OpenViduJavaClientException, OpenViduHttpException;
+
+    void deleteSession(String sessionId, Member member)
+            throws OpenViduJavaClientException, OpenViduHttpException;
 }
