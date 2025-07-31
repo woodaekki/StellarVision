@@ -1,5 +1,5 @@
 <template>
-  <p></p>
+  <p>배지</p>
 </template>
 
 <script setup>

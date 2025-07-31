@@ -4,20 +4,18 @@ import LoginView from '@/views/LoginView.vue'
 import SignupView from '@/views/SignupView.vue'
 import ProfileView from '@/views/ProfileView.vue'
 import MainView from '@/views/MainView.vue'
-import StreamingListView from '@/views/Streaming/StreamingListView.vue'
+import StreamingListView from '@/views/StreamingListView.vue'
 import MyGalleryView from '@/views/Profile/MyGalleryView.vue'
 import MyGalleryListView from '@/views/Profile/MyGalleryListView.vue'
 import MyVideoView from '@/views/Profile/MyVideoView.vue'
 import MyVideoListView from '@/views/Profile/MyVideoListView.vue'
-import LiveStreamingListView from '@/views/Streaming/LiveStreamingListView.vue'
-import ReplayStreamingListView from '@/views/Streaming/ReplayStreamingListView.vue'
-import RoomView from '@/views/Streaming/RoomView.vue'
+import LiveStreamingListView from '@/views/LiveStreamingListView.vue'
+import ReplayStreamingListView from '@/views/ReplayStreamingListView.vue'
+import RoomView from '@/views/RoomView.vue'
 import CalenderView from '@/views/CalenderView.vue'
 import BadgeView from '@/views/BadgeView.vue'
 import ProfileEdit from '@/components/profile/ProfileEdit.vue'
 import ProfileHeader from '@/components/profile/ProfileHeader.vue'
-import axios from "axios"
-
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -27,49 +25,53 @@ const router = createRouter({
     { path: '/signup', name: 'SignUpView', component : SignupView, },
     {
       path: '/main',
-      name: 'MainView',
       component: MainView,
+      children: [
+        {
+          path: 'streaming',
+          component: StreamingListView,
+            children:[
+              {
+                path:'livestreaminglist',
+                name:'LiveStreamingListView',
+                component: LiveStreamingListView
+              },
+              {
+                path:'replay',
+                name: 'ReplayStreamingListView',
+                component: ReplayStreamingListView
+              },
+              {
+                path:'room/:id',
+                name: 'RoomView',
+                component: RoomView
+              }
+            ]
+        },
+
+      ]
     },
-    {
-      path: '/streaming',
-      component: StreamingListView,
-    },
-    {
-      path:'/livestreaminglist',
-      name:'LiveStreamingListView',
-      component: LiveStreamingListView
-    },
-    {
-      path:'/replay',
-      name: 'ReplayStreamingListView',
-      component: ReplayStreamingListView
-    },
-    {
-      path:'/room/:id',
-      name: 'RoomView',
-      component: RoomView
-    },
-    {
-    path: '/profile/:id',
-    name: 'profileView',
-    component: ProfileView,
-    children: [
       {
-        path: '',
-        name: 'ProfileHeader',
-        component: ProfileHeader
-      },
-      {
-        path: 'mygallery',
-        name: 'MyGalleryView',
-        component: MyGalleryView
-      },
-      {
-        path: 'myvideo',
-        name: 'MyVideoView',
-        component : MyVideoView
-      },
-    ]
+      path: '/profile/:id',
+      name: 'profileView',
+      component: ProfileView,
+      children: [
+        {
+          path: '',
+          name: 'ProfileHeader',
+          component: ProfileHeader
+        },
+        {
+          path: 'mygallery',
+          name: 'MyGalleryView',
+          component: MyGalleryView
+        },
+        {
+          path: 'myvideo',
+          name: 'MyVideoView',
+          component : MyVideoView
+        },
+      ]
     },
     {
       path: '/profile/:id/edit',

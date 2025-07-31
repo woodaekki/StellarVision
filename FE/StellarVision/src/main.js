@@ -6,7 +6,15 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 
+// 캘린더 라이브러리
+import VCalendar from 'v-calendar'
+import 'v-calendar/style.css'
+
 const app = createApp(App)
+
+app.use(VCalendar, {
+  componentPrefix: 'vc',
+})
 
 app.use(createPinia())
 app.use(router)
