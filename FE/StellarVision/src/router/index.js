@@ -4,26 +4,19 @@ import LoginView from '@/views/LoginView.vue'
 import SignupView from '@/views/SignupView.vue'
 import ProfileView from '@/views/ProfileView.vue'
 import MainView from '@/views/MainView.vue'
-import StreamingListView from '@/views/StreamingListView.vue'
+import StreamingListView from '@/views/Streaming/StreamingListView.vue'
 import MyGalleryView from '@/views/Profile/MyGalleryView.vue'
 import MyGalleryListView from '@/views/Profile/MyGalleryListView.vue'
 import MyVideoView from '@/views/Profile/MyVideoView.vue'
 import MyVideoListView from '@/views/Profile/MyVideoListView.vue'
-import LiveStreamingListView from '@/views/LiveStreamingListView.vue'
-import ReplayStreamingListView from '@/views/ReplayStreamingListView.vue'
-import RoomView from '@/views/RoomView.vue'
+import LiveStreamingListView from '@/views/Streaming/LiveStreamingListView.vue'
+import ReplayStreamingListView from '@/views/Streaming/ReplayStreamingListView.vue'
+import RoomView from '@/views/Streaming/RoomView.vue'
 import CalenderView from '@/views/CalenderView.vue'
 import BadgeView from '@/views/BadgeView.vue'
 import ProfileEdit from '@/components/profile/ProfileEdit.vue'
 import ProfileHeader from '@/components/profile/ProfileHeader.vue'
 import axios from "axios"
-
-
-const commonApi = axios.create({
-  baseURL: 'http://127.0.0.1:8080',   //개발 단계에서 사용할 도메인
-  timeout: 1000,
-  headers: {'Content-Type' : 'application/json'}    //HTTP에 JSON 전달임을 명시
-})
 
 
 const router = createRouter({
