@@ -38,21 +38,21 @@ const router = createRouter({
       component: MainView,
     },
     {
-      path: 'streaming',
+      path: '/streaming',
       component: StreamingListView,
     },
     {
-      path:'livestreaminglist',
+      path:'/livestreaminglist',
       name:'LiveStreamingListView',
       component: LiveStreamingListView
     },
     {
-      path:'replay',
+      path:'/replay',
       name: 'ReplayStreamingListView',
       component: ReplayStreamingListView
     },
     {
-      path:'room/:id',
+      path:'/room/:id',
       name: 'RoomView',
       component: RoomView
     },
