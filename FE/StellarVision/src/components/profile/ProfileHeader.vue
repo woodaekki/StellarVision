@@ -11,7 +11,7 @@
     </div>
 
     <div class="profile-header-right">
-      <button @click="goEditProfile">수정</button>
+      <button @click="goEditProfile" class="account-edit">수정</button>
     </div>
  </div>
 
@@ -79,7 +79,7 @@ const goEditProfile = () => {
   margin-top: 4px;
 }
 
-.profile-header-right button {
+.account-edit {
   padding: 8px 16px;
   background-color: #444;
   color: #fff;
