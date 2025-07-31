@@ -58,46 +58,46 @@ const router = createRouter({
             ]
         },
 
-
-        {
-          path: '/profile/:id',
-          name: 'profileView',
-          component: ProfileView,
-          children: [
-            {
-              path: '',
-              name: 'ProfileHeader',
-              component: ProfileHeader
-            },
-            {
-              path: 'mygallery',
-              name: 'MyGalleryView',
-              component: MyGalleryView
-            },
-            {
-              path: 'myvideo',
-              name: 'MyVideoView',
-              component : MyVideoView
-            },
-          ]
-        },
-        {
-          path: '/profile/:id/edit',
-          name: 'ProfileEdit',
-          component: ProfileEdit
-        },
-        {
-          path: '/calender',
-          name: CalenderView,
-          component: CalenderView
-        },
-        {
-          path: 'badge',
-          name: 'BadgeView.vue',
-          component: BadgeView
-        }
       ]
     },
+    {
+      path: '/profile/:id',
+      name: 'profileView',
+      component: ProfileView,
+      children: [
+        {
+          path: '',
+          name: 'ProfileHeader',
+          component: ProfileHeader
+        },
+        {
+          path: 'mygallery',
+          name: 'MyGalleryView',
+          component: MyGalleryView
+        },
+        {
+          path: 'myvideo',
+          name: 'MyVideoView',
+          component : MyVideoView
+        },
+      ]
+    },
+    {
+      path: '/profile/:id/edit',
+      name: 'ProfileEdit',
+      component: ProfileEdit
+    },
+    {
+      path: '/calender',
+      name: CalenderView,
+      component: CalenderView
+    },
+    {
+      path: '/badge',
+      name: 'BadgeView',
+      component: BadgeView
+    },
+
     {
       path: '/mygallerylist',
       name: MyGalleryListView,
