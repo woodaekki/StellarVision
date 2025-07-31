@@ -9,12 +9,14 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "thumbnails", uniqueConstraints = {
         @UniqueConstraint(name = "UK_THUMBNAIL_S3_KEY", columnNames = {"thumbnail_s3_key"})})
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Getter
 public class Thumbnail extends BaseEntity {
 
     @Id

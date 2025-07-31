@@ -15,6 +15,7 @@ import com.susang.stellarVision.common.s3.S3KeyGenerator;
 import com.susang.stellarVision.entity.Member;
 import com.susang.stellarVision.entity.Photo;
 
+import com.susang.stellarVision.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -53,9 +54,10 @@ public class PhotoServiceImpl implements PhotoService {
 
 
     @Override
-    public PhotoResponse getPhoto(Long photoId) {
+    public PhotoResponse getPhoto(Long photoId) throws PhotoNotFoundException  {
         Photo photo = photoRepository.findById(photoId)
-                .orElseThrow(() -> new PhotoNotFoundException(photoId));
+                .orElseThrow(() -> new PhotoNotFoundException(photoId.toString()) {
+                });
 
         return PhotoResponse.builder().id(photo.getId()).originalFilename(photo.getTitle())
                 .extension(photo.getFileExtension()).createdAt(photo.getCreatedAt())
@@ -76,13 +78,14 @@ public class PhotoServiceImpl implements PhotoService {
 
     @Override
     @Transactional
-    public void savePhotoMeta(Long memberId, String originalFilename, String s3Key) {
+    public void savePhotoMeta(Long memberId, String originalFilename, String s3Key) throws MemberNotFoundException  {
         if (photoRepository.existsByPhotoS3Key(s3Key)) {
             throw new DuplicatedPhotoException(s3Key);
         }
 
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new MemberNotFoundException("존재하지 않는 회원입니다"));
+                .orElseThrow(() -> new MemberNotFoundException(memberId.toString()) {
+                });
         String extension = FileExtensionUtil.extractExtension(originalFilename);
 
         Photo photo = Photo.builder().photoS3Key(s3Key).title(originalFilename)
@@ -92,10 +95,10 @@ public class PhotoServiceImpl implements PhotoService {
     }
 
     @Transactional
-    public void deletePhoto(Long photoId) {
+    public void deletePhoto(Long photoId) throws PhotoNotFoundException  {
         Photo photo = photoRepository.findById(photoId)
-                .orElseThrow(() -> new PhotoNotFoundException(photoId));
-
+                .orElseThrow(() -> new PhotoNotFoundException(photoId.toString()) {
+                });
         s3FileManager.delete(photo.getPhotoS3Key());
         photoRepository.delete(photo);
     }
