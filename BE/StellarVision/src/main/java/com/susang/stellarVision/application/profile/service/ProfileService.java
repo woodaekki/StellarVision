@@ -7,5 +7,5 @@ public interface ProfileService {
 
     void saveProfileImageMeta(Long memberId, String originalFilename, String s3Key) throws S3DeletionFailedException, MemberNotFoundException;
 
-    public String getProfileImage(Long photoId) throws MemberNotFoundException;
+    String getProfileImage(Long photoId) throws MemberNotFoundException;
 }
