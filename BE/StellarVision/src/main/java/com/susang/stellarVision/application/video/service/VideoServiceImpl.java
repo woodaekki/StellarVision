@@ -1,11 +1,11 @@
 package com.susang.stellarVision.application.video.service;
 
 
-import com.susang.stellarVision.application.photo.dto.PhotoResponse;
 import com.susang.stellarVision.application.video.dto.VideoResponse;
 import com.susang.stellarVision.application.video.dto.VideoTagListResponse;
 import com.susang.stellarVision.application.video.dto.VideoTagRequest;
 import com.susang.stellarVision.application.video.dto.VideoTagResponse;
+import com.susang.stellarVision.application.video.dto.VideoUpdateRequest;
 import com.susang.stellarVision.application.video.error.DuplicatedVideoTagNameException;
 import com.susang.stellarVision.application.video.error.VideoTagMismatchException;
 import com.susang.stellarVision.application.video.error.VideoTagNotFoundException;
@@ -13,11 +13,8 @@ import com.susang.stellarVision.application.video.repository.VideoTagRepository;
 import com.susang.stellarVision.common.s3.S3FileManager;
 import com.susang.stellarVision.application.video.error.VideoNotFoundException;
 import com.susang.stellarVision.application.video.repository.VideoRepository;
-import com.susang.stellarVision.entity.Photo;
-import com.susang.stellarVision.entity.Thumbnail;
 import com.susang.stellarVision.entity.Video;
 import com.susang.stellarVision.entity.VideoTag;
-import com.susang.stellarVision.exception.NotFoundException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -62,7 +59,7 @@ public class VideoServiceImpl implements VideoService {
     }
 
     @Override
-    public void addVideoTag(Long videoId,VideoTagRequest request) {
+    public void addVideoTag(Long videoId, VideoTagRequest request) {
 
         Video video = videoRepository.findById(videoId)
                 .orElseThrow(() -> new VideoNotFoundException("해당 영상이 존재하지 않습니다."));
@@ -92,8 +89,7 @@ public class VideoServiceImpl implements VideoService {
 
     @Override
     @Transactional
-    public void deleteVideoTag(Long videoId, Long tagId)
-            throws VideoTagNotFoundException {
+    public void deleteVideoTag(Long videoId, Long tagId) throws VideoTagNotFoundException {
         VideoTag tag = videoTagRepository.findById(tagId)
                 .orElseThrow(() -> new VideoTagNotFoundException(tagId.toString()));
 
@@ -101,6 +97,24 @@ public class VideoServiceImpl implements VideoService {
             throw new VideoTagMismatchException("해당 태그는 요청한 비디오에 속하지 않습니다");
         }
         videoTagRepository.delete(tag);
+    }
+
+    @Override
+    @Transactional
+    public void updateVideoContent(Long videoId,VideoUpdateRequest request) throws VideoNotFoundException {
+
+        Video video = videoRepository.findById(videoId)
+                .orElseThrow(() -> new VideoNotFoundException(videoId.toString()));
+
+        videoTagRepository.deleteAllByVideoId(video.getId());
+
+        video.updateTitle(request.getTitle());
+
+        videoTagRepository.deleteAllByVideoId(videoId);
+        List<VideoTag> tags = request.getTags().stream()
+                .map(tagName -> new VideoTag(tagName.getTagName(), video)).toList();
+
+        videoTagRepository.saveAll(tags);
     }
 
 

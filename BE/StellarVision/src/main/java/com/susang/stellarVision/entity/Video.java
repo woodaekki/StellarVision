@@ -42,4 +42,8 @@ public class Video extends BaseEntity {
         this.member = member;
         this.thumbnail = thumbnail;
     }
+
+    public void updateTitle(String newTitle) {
+        this.title = newTitle;
+    }
 }
