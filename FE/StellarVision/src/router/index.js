@@ -16,6 +16,7 @@ import CalenderView from '@/views/CalenderView.vue'
 import BadgeView from '@/views/BadgeView.vue'
 import ProfileEdit from '@/components/profile/ProfileEdit.vue'
 import ProfileHeader from '@/components/profile/ProfileHeader.vue'
+import PreRoomView from '@/views/Streaming/PreRoomView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -26,9 +27,9 @@ const router = createRouter({
     {
       path: '/main',
       component: MainView,
-      children: [
-        {
-          path: 'streaming',
+    },
+    {
+          path: '/streaming',
           component: StreamingListView,
             children:[
               {
@@ -45,12 +46,14 @@ const router = createRouter({
                 path:'room/:id',
                 name: 'RoomView',
                 component: RoomView
+              },
+              {
+                path:'pre',
+                name:'PreRoomView',
+                component:PreRoomView
               }
             ]
         },
-
-      ]
-    },
       {
       path: '/profile/:id',
       name: 'profileView',

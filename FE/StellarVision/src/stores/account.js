@@ -21,7 +21,7 @@ export const useAccountStore = defineStore('account', () => {
     commonApi.post('/api/account/signup', {userEmail, nickname, password, birthday})
     .then(res => {
       console.log('회원가입 성공', res.data)
-      router.push({name:'LandingPageView'})
+      router.push({name:'LandingView'})
     })
     .catch(err => {
       console.log(err)
@@ -33,13 +33,13 @@ export const useAccountStore = defineStore('account', () => {
   function setToken(accessToken) {
     token.value = accessToken
     localStorage.setItem('jwt', accessToken)
-    commonApi.defaults.headers.common.Authorization = `Bearer ${t}`    //  토큰이 있다면 모든 요청에 인증 헤더를 자동으로 붙이도록 한다.
+    commonApi.defaults.headers.common.Authorization = `Bearer ${accessToken}`    //  토큰이 있다면 모든 요청에 인증 헤더를 자동으로 붙이도록 한다.
   }
 
   // 로그인 로직
   async function logIn({email, password}) {
 
-    const formData = FormData()
+    const formData = new FormData()
     formData.append('email', email)
     formData.append('password', password)
 
@@ -50,8 +50,10 @@ export const useAccountStore = defineStore('account', () => {
       { headers: { 'Content-Type' : 'multipart/form-data' }}
     )
       const {accessToken, refreshToken} = res.data.data
-      setToken(res.data.token)                // 토큰 저장
-      router.push({name: 'StreamingListView'})
+      setToken(accessToken)                // 토큰 저장
+      localStorage.setItem('refreshToken', refreshToken)
+
+      router.push({name: 'LandingView'})
     } catch (err) {
       console.error('로그인 실패', err)
       throw err

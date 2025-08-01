@@ -25,10 +25,13 @@ import { ref } from 'vue';
           email: userEmail.value,
           password : password.value
         })
+        console.log(userEmail.value)
+        console.log(password.value)
         router.push({name:'LandingView'})
       }
       catch (err){
       errorMsg.value = err.response?.data.message || '로그인에 실패했습니다.'
+      console.log(err)
     }
       finally {
       isLoading.value = false

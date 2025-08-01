@@ -4,6 +4,7 @@
       <div class="header-left">
         <img :src="logo" alt="로고" width="30px" height="42px" />
         <RouterLink to="/">StellaVision</RouterLink>
+        <RouterLink to="pre">시작</RouterLink>
       </div>
       <nav class="header-right">
         <RouterLink to="/signup">회원가입</RouterLink>
