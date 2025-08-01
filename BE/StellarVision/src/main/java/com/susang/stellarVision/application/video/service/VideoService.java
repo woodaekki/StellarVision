@@ -5,6 +5,7 @@ package com.susang.stellarVision.application.video.service;
 import com.susang.stellarVision.application.video.dto.VideoResponse;
 import com.susang.stellarVision.application.video.dto.VideoTagListResponse;
 import com.susang.stellarVision.application.video.dto.VideoTagRequest;
+import com.susang.stellarVision.application.video.dto.VideoUpdateRequest;
 import com.susang.stellarVision.application.video.error.VideoNotFoundException;
 import com.susang.stellarVision.application.video.error.VideoTagNotFoundException;
 import org.springframework.data.domain.Page;
@@ -19,4 +20,5 @@ public interface VideoService {
     void addVideoTag(Long videoId,VideoTagRequest videoTagRequest) throws VideoNotFoundException;
     VideoTagListResponse getTagsByVideoId(Long videoId) throws VideoNotFoundException;
     void deleteVideoTag(Long videoId, Long tagId) throws VideoNotFoundException , VideoTagNotFoundException;
+    void updateVideoContent(Long videoId,VideoUpdateRequest videoUpdateRequest) throws VideoNotFoundException;
 }

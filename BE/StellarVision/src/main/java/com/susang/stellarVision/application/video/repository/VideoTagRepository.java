@@ -12,4 +12,6 @@ public interface VideoTagRepository extends JpaRepository<VideoTag, Long> {
     List<VideoTag> findAllByVideoId(Long videoId);
 
     void deleteByIdAndVideoId(Long videoId,Long tagId);
+
+    void deleteAllByVideoId(Long videoId);
 }
