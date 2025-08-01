@@ -5,7 +5,12 @@ import lombok.*;
 
 @Entity
 @Getter
-@Table (name = "video_tags")
+@Table(
+        name = "video_tags",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "UK_video_tag", columnNames = {"video_id", "tag_name"})
+        }
+)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class VideoTag extends BaseEntity {
 

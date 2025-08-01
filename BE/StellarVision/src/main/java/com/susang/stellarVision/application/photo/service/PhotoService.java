@@ -10,12 +10,12 @@ import org.springframework.data.domain.Pageable;
 
 public interface PhotoService {
 
-    public PhotoUploadResponse generatePresignedUploadUrl(S3Directory directory, Long memberId,
+    PhotoUploadResponse generatePresignedUploadUrl(S3Directory directory, Long memberId,
             String originalFilename);
 
-    public PhotoUploadResponse getGalleryPresignedUploadUrl(Long memberId, String originalFilename);
+    PhotoUploadResponse getGalleryPresignedUploadUrl(Long memberId, String originalFilename);
 
-    public PhotoUploadResponse getProfilePresignedUploadUrl(Long memberId, String originalFilename);
+    PhotoUploadResponse getProfilePresignedUploadUrl(Long memberId, String originalFilename);
 
     void savePhotoMeta(Long memberId, String originalFilename, String s3Key);
 
