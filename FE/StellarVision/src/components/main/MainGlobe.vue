@@ -216,7 +216,11 @@ async function createScene() {
 }
 </script>
 
+<<<<<<< HEAD
+<style scoped>
+=======
 <style>
+>>>>>>> b772b0b1caa4a23035b5735d2a3ec0dd2efe4517
 .globe-wrapper {
   position: absolute;
   top: 60px;

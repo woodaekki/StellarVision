@@ -1,5 +1,5 @@
 <script setup>
-import { watch, defineEmits } from 'vue'
+import { watch } from 'vue'
 import { Vector3, MeshBuilder, StandardMaterial, Color3, PointerEventTypes } from '@babylonjs/core'
 
 const emit = defineEmits(['pin-click'])
