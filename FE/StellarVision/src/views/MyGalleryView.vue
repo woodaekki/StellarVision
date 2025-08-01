@@ -55,8 +55,3 @@
   color: #999;
 }
 </style>
-
-<style scoped>
-/* 필요시 스타일 작성 */
-</style>
-

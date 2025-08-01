@@ -1,3 +1,4 @@
+<!-- 아직 기능 지원x -->
 <template>
   <p class="title">My Gallery</p>
 
