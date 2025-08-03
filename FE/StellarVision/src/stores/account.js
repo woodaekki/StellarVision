@@ -63,6 +63,8 @@ export const useAccountStore = defineStore('account', () => {
       const {accessToken, refreshToken, memberInfo} = res.data.data
       setToken(accessToken, refreshToken, memberInfo)                // 토큰 및 정보 저장
       console.log('로그인 성공')
+      console.log('accessToken:', accessToken)
+      console.log(memberInfo)
       router.push({name: 'LandingView'})
     } catch (err) {
       console.error('로그인 실패', err)
