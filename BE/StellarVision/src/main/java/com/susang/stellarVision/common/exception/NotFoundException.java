@@ -1,4 +1,4 @@
-package com.susang.stellarVision.exception;
+package com.susang.stellarVision.common.exception;
 
 public abstract class NotFoundException extends RuntimeException {
 

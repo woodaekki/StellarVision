@@ -1,6 +1,6 @@
 package com.susang.stellarVision.application.video.error;
 
-import com.susang.stellarVision.exception.NotFoundException;
+import com.susang.stellarVision.common.exception.NotFoundException;
 
 public class VideoNotFoundException extends NotFoundException {
 

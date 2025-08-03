@@ -1,12 +1,12 @@
-package com.susang.stellarVision.common.jwt.filter;
+package com.susang.stellarVision.config.security.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.susang.stellarVision.common.dto.APIResponse;
-import com.susang.stellarVision.common.jwt.dto.MemberInfoDTO;
-import com.susang.stellarVision.common.jwt.dto.TokenResponseDTO;
-import com.susang.stellarVision.common.jwt.service.RefreshTokenService;
-import com.susang.stellarVision.common.security.dto.CustomUserDetails;
-import com.susang.stellarVision.common.jwt.util.JWTUtil;
+import com.susang.stellarVision.application.auth.jwt.dto.MemberInfoDTO;
+import com.susang.stellarVision.application.auth.jwt.dto.TokenResponseDTO;
+import com.susang.stellarVision.application.auth.jwt.service.RefreshTokenService;
+import com.susang.stellarVision.config.security.authentication.CustomUserDetails;
+import com.susang.stellarVision.common.util.JWTUtil;
 import com.susang.stellarVision.entity.Member;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.Cookie;

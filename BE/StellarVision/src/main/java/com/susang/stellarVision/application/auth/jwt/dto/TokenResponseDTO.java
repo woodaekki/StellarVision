@@ -1,4 +1,4 @@
-package com.susang.stellarVision.common.jwt.dto;
+package com.susang.stellarVision.application.auth.jwt.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

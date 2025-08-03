@@ -6,7 +6,6 @@ import com.susang.stellarVision.application.photo.error.S3DeletionFailedExceptio
 import com.susang.stellarVision.common.s3.S3FileManager;
 import com.susang.stellarVision.entity.Member;
 import com.susang.stellarVision.entity.Profile;
-import com.susang.stellarVision.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

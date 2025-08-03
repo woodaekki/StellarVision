@@ -1,4 +1,4 @@
-package com.susang.stellarVision.common.jwt.service;
+package com.susang.stellarVision.application.auth.jwt.service;
 
 import java.time.Duration;
 import java.util.Objects;

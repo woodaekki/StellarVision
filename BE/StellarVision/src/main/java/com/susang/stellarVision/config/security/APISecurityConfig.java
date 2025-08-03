@@ -1,9 +1,9 @@
-package com.susang.stellarVision.config;
+package com.susang.stellarVision.config.security;
 
-import com.susang.stellarVision.common.jwt.filter.JWTAuthenticationFilter;
-import com.susang.stellarVision.common.jwt.filter.JWTVerificationFilter;
-import com.susang.stellarVision.common.security.filter.SecurityExceptionHandlingFilter;
-import com.susang.stellarVision.common.security.service.CustomUserDetailsService;
+import com.susang.stellarVision.config.security.filter.JWTAuthenticationFilter;
+import com.susang.stellarVision.config.security.filter.JWTVerificationFilter;
+import com.susang.stellarVision.config.security.filter.SecurityExceptionHandlingFilter;
+import com.susang.stellarVision.config.security.authentication.CustomUserDetailsService;
 import java.util.Arrays;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
