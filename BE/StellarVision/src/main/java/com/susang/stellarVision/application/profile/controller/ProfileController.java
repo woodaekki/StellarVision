@@ -6,17 +6,20 @@ import com.susang.stellarVision.application.photo.dto.PhotoUploadCompleteRequest
 import com.susang.stellarVision.application.photo.dto.PhotoUploadRequest;
 import com.susang.stellarVision.application.photo.dto.PhotoUploadResponse;
 import com.susang.stellarVision.application.photo.service.PhotoService;
+import com.susang.stellarVision.application.profile.dto.ProfileResponse;
 import com.susang.stellarVision.application.profile.service.ProfileService;
 import com.susang.stellarVision.application.video.dto.VideoListResponse;
 import com.susang.stellarVision.application.video.dto.VideoResponse;
 import com.susang.stellarVision.application.video.dto.VideoUpdateRequest;
 import com.susang.stellarVision.application.video.service.VideoService;
 import com.susang.stellarVision.common.dto.APIResponse;
+import com.susang.stellarVision.config.security.authentication.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -91,6 +94,20 @@ public class ProfileController {
         videoService.updateVideoContent(videoId,request);
         return APIResponse.success("다시보기 제목,태그 수정 성공", null);
     }
+
+    @GetMapping("/me")
+    public APIResponse<ProfileResponse> getMyProfile(@AuthenticationPrincipal CustomUserDetails userDetails)  {
+        ProfileResponse response = profileService.getMyProfileInfo(userDetails);
+        return APIResponse.success("내 프로필 정보 조회 성공" ,response );
+    }
+
+
+    @GetMapping("/{memberId}")
+    public APIResponse<ProfileResponse> getProfileInfo(@PathVariable Long memberId) {
+        ProfileResponse response = profileService.getProfileInfo(memberId);
+        return APIResponse.success("프로필 정보 조회 성공", response);
+    }
+
 
 
 
