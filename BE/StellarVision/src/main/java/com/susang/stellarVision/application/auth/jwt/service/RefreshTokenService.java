@@ -1,30 +1,28 @@
 package com.susang.stellarVision.application.auth.jwt.service;
 
 import java.time.Duration;
-import java.util.Objects;
+
+import com.susang.stellarVision.application.auth.jwt.error.RefreshTokenError;
+import com.susang.stellarVision.application.auth.jwt.repository.RefreshTokenRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class RefreshTokenService {
 
-    private final RedisTemplate<String, Object> redisTemplate;
-    private static final String PREFIX = "refreshToken:";
+    private final RefreshTokenRepository refreshTokenRepository;
 
     public void store(String email, String refreshToken, Duration ttl) {
-        String key = PREFIX + email;
-        redisTemplate.opsForValue().set(key, refreshToken, ttl);
+        refreshTokenRepository.save(email, refreshToken, ttl);
     }
 
     public String get(String email) {
-        return Objects.requireNonNull(redisTemplate.opsForValue()
-                        .get(PREFIX + email))
-                .toString();
+        return refreshTokenRepository.findByEmail(email)
+                .orElseThrow(RefreshTokenError.NotFound::new);
     }
 
     public void delete(String email) {
-        redisTemplate.delete(PREFIX + email);
+        refreshTokenRepository.deleteByEmail(email);
     }
 }
