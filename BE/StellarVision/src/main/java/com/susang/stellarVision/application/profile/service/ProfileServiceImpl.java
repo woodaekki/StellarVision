@@ -3,7 +3,9 @@ package com.susang.stellarVision.application.profile.service;
 import com.susang.stellarVision.application.member.exception.MemberNotFoundException;
 import com.susang.stellarVision.application.member.repository.MemberRepository;
 import com.susang.stellarVision.application.photo.error.S3DeletionFailedException;
+import com.susang.stellarVision.application.profile.dto.ProfileResponse;
 import com.susang.stellarVision.common.s3.S3FileManager;
+import com.susang.stellarVision.config.security.authentication.CustomUserDetails;
 import com.susang.stellarVision.entity.Member;
 import com.susang.stellarVision.entity.Profile;
 import lombok.RequiredArgsConstructor;
@@ -54,6 +56,44 @@ public class ProfileServiceImpl implements ProfileService {
             // Todo : 기본이미지
         }
         return s3FileManager.getPresignedDownloadUrl(s3Key);
+    }
+
+    @Override
+    public ProfileResponse getMyProfileInfo(CustomUserDetails userDetails) throws MemberNotFoundException {
+        Member member = userDetails.getMember();
+        if (member == null) {
+            throw new MemberNotFoundException("존재하지 않는 멤버입니다.");
+        }
+        Profile profile = member.getProfile();
+
+        ProfileResponse response = ProfileResponse.builder()
+                .memberId(member.getId())
+                .profileImageUrl(s3FileManager.getPresignedDownloadUrl(profile.getProfileS3Key()))
+                .description(profile.getDescription())
+                .isGalleryPublic(profile.isGalleryPublic())
+                .isVideoPublic(profile.isVideoPublic())
+                .isCollectionPublic(profile.isCollectionPublic())
+                .build();
+
+        return response;
+    }
+
+    @Override
+    public ProfileResponse getProfileInfo(Long memberId) throws MemberNotFoundException, MemberNotFoundException {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new MemberNotFoundException(memberId.toString()) {
+                });
+        Profile profile = member.getProfile();
+
+        ProfileResponse response = ProfileResponse.builder()
+                .memberId(memberId)
+                .profileImageUrl(s3FileManager.getPresignedDownloadUrl(profile.getProfileS3Key()))
+                .description(profile.getDescription())
+                .isGalleryPublic(profile.isGalleryPublic())
+                .isVideoPublic(profile.isVideoPublic())
+                .isCollectionPublic(profile.isCollectionPublic())
+                .build();
+        return response;
     }
 
 
