@@ -25,8 +25,7 @@ import { ref } from 'vue';
           email: userEmail.value,
           password : password.value
         })
-        console.log(userEmail.value)
-        console.log(password.value)
+
         router.push({name:'LandingView'})
       }
       catch (err){

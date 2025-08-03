@@ -47,13 +47,13 @@ const router = createRouter({
                 name: 'RoomView',
                 component: RoomView
               },
-              {
-                path:'pre',
-                name:'PreRoomView',
-                component:PreRoomView
-              }
             ]
         },
+      {
+        path:'/pre',
+        name:'PreRoomView',
+        component:PreRoomView
+      },
       {
       path: '/profile/:id',
       name: 'profileView',
