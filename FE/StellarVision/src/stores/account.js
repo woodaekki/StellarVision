@@ -34,8 +34,6 @@ export const useAccountStore = defineStore('account', () => {
   }
 
 
-
-
   // 회원가입 로직
   const signUp = function({userEmail, nickname, password, birthday}){
     commonApi.post('/api/account/signup', {userEmail, nickname, password, birthday})
@@ -63,10 +61,8 @@ export const useAccountStore = defineStore('account', () => {
       { headers: { 'Content-Type' : 'multipart/form-data' }}
     )
       const {accessToken, refreshToken, memberInfo} = res.data.data
-      setToken(accessToken)                // 토큰 저장
-      localStorage.setItem('refreshToken', refreshToken)
-      user.value = res.data.data.memberInfo
-      console.log(user.value)
+      setToken(accessToken, refreshToken, memberInfo)                // 토큰 및 정보 저장
+      console.log('로그인 성공')
       router.push({name: 'LandingView'})
     } catch (err) {
       console.error('로그인 실패', err)
@@ -88,7 +84,38 @@ export const useAccountStore = defineStore('account', () => {
     router.push({ name: 'LandingView' })
   }
 
+  // 내 프로필 정보 조회 
+  async function fetchMyProfile() {
+    // 로그인 유무 확인
+    if (!isLogin.value) return
 
-  return { isLogin, signUp, logIn, logOut, token, userInfo }
+    try{
+      const res = await commonApi.get('/api/profiles/me')
+      myProfile.value = res.data.data
+      console.log('내 프로필 정보', myProfile.value)
+    } catch (err) {
+      console.error('조회 실패', err)
+    }
+  }
+
+
+  // 다른 사용자 프로필 정보 조회
+  async function fetchUserProfile(memberId) {
+    try {
+      const res = await commonApi.get(`/api/profiles/${memberId}`)    // api 명세서 참조 경로
+      return res.data.data
+    } catch(err){
+      console.error(`${memberId} 프로필 정보 조회 실패`, err)
+      return null
+    }
+  }
+
+  // 새로고침 시 로그인 상태 유지
+  if(token.value){
+    commonApi.defaults.headers.common.Authorization = `Bearer ${token.value}`
+  }
+
+
+  return { isLogin, signUp, logIn, logOut, token, userInfo, myProfile, fetchMyProfile, fetchUserProfile }
 })
 
