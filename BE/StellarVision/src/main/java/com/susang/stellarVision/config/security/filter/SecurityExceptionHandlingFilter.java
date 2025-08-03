@@ -1,4 +1,4 @@
-package com.susang.stellarVision.common.security.filter;
+package com.susang.stellarVision.config.security.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.JwtException;

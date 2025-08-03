@@ -1,7 +1,6 @@
-package com.susang.stellarVision.common.security.service;
+package com.susang.stellarVision.config.security.authentication;
 
 import com.susang.stellarVision.application.member.service.MemberService;
-import com.susang.stellarVision.common.security.dto.CustomUserDetails;
 import com.susang.stellarVision.entity.Member;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

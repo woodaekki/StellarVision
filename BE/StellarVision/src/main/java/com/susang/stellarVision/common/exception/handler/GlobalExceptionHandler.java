@@ -1,7 +1,7 @@
-package com.susang.stellarVision.exception.handler;
+package com.susang.stellarVision.common.exception.handler;
 
 import com.susang.stellarVision.common.dto.APIResponse;
-import com.susang.stellarVision.exception.NotFoundException;
+import com.susang.stellarVision.common.exception.NotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;

@@ -2,7 +2,7 @@ package com.susang.stellarVision.application.member.controller;
 
 import com.susang.stellarVision.application.member.dto.MemberAccountInfoDTO;
 import com.susang.stellarVision.common.dto.APIResponse;
-import com.susang.stellarVision.common.security.dto.CustomUserDetails;
+import com.susang.stellarVision.config.security.authentication.CustomUserDetails;
 import com.susang.stellarVision.entity.Member;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

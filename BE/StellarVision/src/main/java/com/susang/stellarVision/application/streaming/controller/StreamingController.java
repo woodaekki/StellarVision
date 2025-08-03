@@ -4,7 +4,7 @@ import com.susang.stellarVision.application.streaming.dto.CreateStreamingSession
 import com.susang.stellarVision.application.streaming.exception.AccessDeniedException;
 import com.susang.stellarVision.application.streaming.service.StreamingService;
 import com.susang.stellarVision.common.dto.APIResponse;
-import com.susang.stellarVision.common.security.dto.CustomUserDetails;
+import com.susang.stellarVision.config.security.authentication.CustomUserDetails;
 import com.susang.stellarVision.entity.Member;
 import io.openvidu.java.client.OpenViduHttpException;
 import io.openvidu.java.client.OpenViduJavaClientException;

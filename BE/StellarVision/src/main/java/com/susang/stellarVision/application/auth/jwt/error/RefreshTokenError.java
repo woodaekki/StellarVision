@@ -1,4 +1,4 @@
-package com.susang.stellarVision.common.jwt.error;
+package com.susang.stellarVision.application.auth.jwt.error;
 
 import org.springframework.http.HttpStatus;
 

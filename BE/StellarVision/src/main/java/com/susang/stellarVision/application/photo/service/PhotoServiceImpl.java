@@ -15,7 +15,6 @@ import com.susang.stellarVision.common.s3.S3KeyGenerator;
 import com.susang.stellarVision.entity.Member;
 import com.susang.stellarVision.entity.Photo;
 
-import com.susang.stellarVision.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

@@ -1,4 +1,4 @@
-package com.susang.stellarVision.common.jwt.util;
+package com.susang.stellarVision.common.util;
 
 import com.susang.stellarVision.entity.Member;
 import io.jsonwebtoken.Claims;

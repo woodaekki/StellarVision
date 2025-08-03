@@ -1,8 +1,8 @@
-package com.susang.stellarVision.common.jwt.filter;
+package com.susang.stellarVision.config.security.filter;
 
-import com.susang.stellarVision.common.security.dto.CustomUserDetails;
-import com.susang.stellarVision.common.security.service.CustomUserDetailsService;
-import com.susang.stellarVision.common.jwt.util.JWTUtil;
+import com.susang.stellarVision.config.security.authentication.CustomUserDetails;
+import com.susang.stellarVision.config.security.authentication.CustomUserDetailsService;
+import com.susang.stellarVision.common.util.JWTUtil;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
