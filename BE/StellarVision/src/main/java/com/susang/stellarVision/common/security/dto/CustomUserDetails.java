@@ -34,4 +34,8 @@ public class CustomUserDetails implements UserDetails {
         return member.getPassword();
     }
 
+    @Override
+    public boolean isEnabled() {
+        return !member.getIsDeleted();
+    }
 }
