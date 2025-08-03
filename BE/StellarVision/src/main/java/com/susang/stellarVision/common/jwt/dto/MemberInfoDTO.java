@@ -5,10 +5,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
-@NoArgsConstructor
 @AllArgsConstructor
-public class TokenResponseDTO {
-    private String accessToken;
-    private String refreshToken;
-    private MemberInfoDTO memberInfo;
+@NoArgsConstructor
+public class MemberInfoDTO {
+    private String email;
+    private String name;
 }

@@ -2,6 +2,7 @@ package com.susang.stellarVision.common.jwt.controller;
 
 import com.susang.stellarVision.application.member.service.MemberService;
 import com.susang.stellarVision.common.dto.APIResponse;
+import com.susang.stellarVision.common.jwt.dto.MemberInfoDTO;
 import com.susang.stellarVision.common.jwt.dto.TokenResponseDTO;
 import com.susang.stellarVision.common.jwt.error.RefreshTokenError;
 import com.susang.stellarVision.common.jwt.service.RefreshTokenService;
@@ -51,13 +52,14 @@ public class JWTController {
 
         refreshTokenService.store(email, newRefreshToken, Duration.ofMinutes(refreshExpMin));
 
-        TokenResponseDTO tokenResponseDTO = new TokenResponseDTO(accessToken, newRefreshToken);
+        MemberInfoDTO memberInfoDTO = new MemberInfoDTO(member.getEmail(), member.getName());
+        TokenResponseDTO tokenResponseDTO = new TokenResponseDTO(accessToken, newRefreshToken, memberInfoDTO);
 
         return ResponseEntity.ok(APIResponse.success("토큰 재발급에 성공했습니다.", tokenResponseDTO));
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(@RequestHeader("Refresh-Token") String refreshToken) {
+    public ResponseEntity<APIResponse<Void>> logout(@RequestHeader("Refresh-Token") String refreshToken) {
 
         String email = resolveRefreshEmail(refreshToken);
 

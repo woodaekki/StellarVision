@@ -2,6 +2,7 @@ package com.susang.stellarVision.common.jwt.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.susang.stellarVision.common.dto.APIResponse;
+import com.susang.stellarVision.common.jwt.dto.MemberInfoDTO;
 import com.susang.stellarVision.common.jwt.dto.TokenResponseDTO;
 import com.susang.stellarVision.common.jwt.service.RefreshTokenService;
 import com.susang.stellarVision.common.security.dto.CustomUserDetails;
@@ -73,7 +74,8 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         refreshTokenService.store(member.getEmail(), refreshToken,
                 Duration.ofMinutes(refreshExpMin));
 
-        TokenResponseDTO dto = new TokenResponseDTO(accessToken, refreshToken);
+        MemberInfoDTO memberInfoDTO = new MemberInfoDTO(member.getEmail(), member.getName());
+        TokenResponseDTO dto = new TokenResponseDTO(accessToken, refreshToken, memberInfoDTO);
         APIResponse<TokenResponseDTO> apiResponse = APIResponse.success("로그인에 성공했습니다.", dto);
 
         try {
