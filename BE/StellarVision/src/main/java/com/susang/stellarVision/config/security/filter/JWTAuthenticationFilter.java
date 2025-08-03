@@ -6,7 +6,7 @@ import com.susang.stellarVision.application.auth.jwt.dto.MemberInfoDTO;
 import com.susang.stellarVision.application.auth.jwt.dto.TokenResponseDTO;
 import com.susang.stellarVision.application.auth.jwt.service.RefreshTokenService;
 import com.susang.stellarVision.config.security.authentication.CustomUserDetails;
-import com.susang.stellarVision.common.util.JWTUtil;
+import com.susang.stellarVision.common.utils.JWTUtil;
 import com.susang.stellarVision.entity.Member;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.Cookie;
@@ -15,6 +15,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Objects;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
