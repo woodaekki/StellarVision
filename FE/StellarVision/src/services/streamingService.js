@@ -23,12 +23,17 @@ export default {
     })
   },
 
-  // 3) 녹화 시작 / 정지
-  toggleRecording(streamId, action) {
-    return streamingApi.post(`/streamings/${streamId}/recording/${action}`, new FormData())
+  // 3) 녹화 시작
+  startRecording(sessionId) {
+    return streamingApi.post(`/${sessionId}/recording/start`)
   },
 
-  // 4) 스트리밍 종료하기
+  // 4) 녹화 중지
+  stopRecording(sessionId) {
+    return streamingApi.post(`/${sessionId}/recording/stop`)
+  },
+
+  // 5) 스트리밍 종료하기
   end(streamId) {
     return streamingApi.delete(`/streamings/${streamId}`)
   },
@@ -38,7 +43,7 @@ export default {
     return streamingApi.get('/streamings')
   },
 
-  // 2) 토큰 발급용 메서드 추가
+  // 토큰 발급용 메서드 추가
   getToken(sessionId, userName, role = 'SUBSCRIBER') {
     return streamingApi.post(
       `/streamings/${sessionId}/connection`,

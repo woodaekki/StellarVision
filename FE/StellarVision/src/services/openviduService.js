@@ -18,28 +18,45 @@ export default function openviduService(streamId, userName, onError = () => {}) 
     subscribers.value = subscribers.value.filter(s => s.stream.streamId !== e.stream.streamId)
   })
 
-  const connect = async () => {
-    try {
-      const response = await streamingService.getToken(streamId, userName)
-      const token = response.data.data
-      await session.connect(token, { clientData: userName })
-      publisher.value = OV.initPublisher(undefined, {
+  // const connect = async () => {
+  //   try {
+  //     const response = await streamingService.getToken(streamId, userName)
+  //     const token = response.data.data
+  //     await session.connect(token, { clientData: userName })
+  //     publisher.value = OV.initPublisher(undefined, {
+  //       audioSource: undefined,
+  //       videoSource: undefined,
+  //       publishAudio: true,
+  //       publishVideo: true,
+  //       resolution: '640x480',
+  //       frameRate: 30
+  //     })
+  //     session.publish(publisher.value)
+  //   } catch (e) {
+  //     onError(e)
+  //   }
+  // }
+
+  async function connectAsPublisher(sessionId) {
+    const session = OV.initSession()
+    const res = await streamingService.getToken(sessionId)
+    const token = res.data.data
+    await session.connect(token, { clientData: 'Host' })
+    const publisher = OV.initPublisher(undefined, {
         audioSource: undefined,
         videoSource: undefined,
         publishAudio: true,
         publishVideo: true,
         resolution: '640x480',
-        frameRate: 30
-      })
-      session.publish(publisher.value)
-    } catch (e) {
-      onError(e)
-    }
+        frameRate: 30})
+    session.publish(publisher)
+    return session
   }
+
 // 참여자(SUBSCRIBER)로 접속
   async function connectAsSubscriber(sessionId) {
     const session = OV.initSession()
-    const res = await streamingService.createToken(sessionId)
+    const res = await streamingService.getToken(sessionId)
     const token = res.data.data
     await session.connect(token, { clientData: 'Guest' })
     session.on('streamCreated', ({ stream }) => {
@@ -64,5 +81,5 @@ export default function openviduService(streamId, userName, onError = () => {}) 
   onMounted(connect)
   onUnmounted(leave)
 
-  return { session, publisher, subscribers, recording, toggleRec, leave, connectAsSubscriber }
+  return { session, publisher, subscribers, recording, toggleRec, leave, connectAsSubscriber, connectAsPublisher }
 }

@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import streamingService from '@/services/streamingService'
 import { useStreamingStore } from '@/stores/streaming'
+import openviduService from '@/services/openviduService'
 
 const { create } = streamingService
 const router = useRouter()
@@ -25,7 +26,10 @@ const createRoom = async () => {
 
     const response = await create(payload)
     const sessionId = response.data.data
-    store.setRoomInfo({roomId, userName : userName.value})
+    // store.setRoomInfo({roomId, userName : userName.value})
+
+    await openviduService.connectAsPublisher(sessionId)
+
     router.push({
       name: 'RoomView',
       params: {

@@ -6,14 +6,16 @@ import { useStreamingStore } from '@/stores/streaming'
 
 const route = useRoute()
 const router = useRouter()
-// const streamId = route.params.id
-// const userName = route.params.userName || 'Guest'
-const store = useStreamingStore
-const {roodId, userName} = store;
+const streamId = route.params.id
+const userName = route.params.userName || 'Guest'
+const isRecording = ref(false)
+
+// const store = useStreamingStore
+// const {roodId, userName} = store;
 
 
 // composable 에서 모든 로직을 가져온다
-const { subscribers, recording, toggleRec, leave } = openviduService(
+const { subscribers, recording, leave } = openviduService(
   streamId,
   userName,
   e => {
@@ -32,7 +34,19 @@ watch(localVideo, el => {
 })
 
 
-
+async function toggleRecording(action) {
+  try {
+    if (action === 'start') {
+      await streamingService.startRecording(sessionId)
+      isRecording.value = true
+    } else {
+      await streamingService.stopRecording(sessionId)
+      isRecording.value = false
+    }
+  } catch (e) {
+    console.error('녹화 토글 실패', e.response?.data || e)
+  }
+}
 
 </script>
 
@@ -45,7 +59,7 @@ watch(localVideo, el => {
       </div>
       <video ref="localVideo" autoplay playsinline muted></video>
     </div>
-    <button @click="toggleRec">
+    <button @click="toggleRecording">
       {{ recording ? '녹화 중지' : '녹화 시작' }}
     </button>
     <button @click="leave">나가기</button>
