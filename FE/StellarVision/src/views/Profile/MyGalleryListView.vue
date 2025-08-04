@@ -61,14 +61,19 @@ const uploadGalleryImage = async (e) => {
   const file = e.target.files[0]
   if (!file || !memberId.value) return
 
+  console.log(file)
+
   const { data } = await axios.post('/api/photos/presignedUrl', {
     memberId: memberId.value,
     originalFilename: file.name,
-    contentType: file.type,
   })
+  console.log('presigned data', data)
 
+  console.log('PUT Content-Type:', file.type)
   await axios.put(data.presignedUrl, file, {
-    headers: { 'Content-Type': file.type },
+    headers: {
+        'Content-Type': file.type,
+      },
   })
 
   await axios.post('/api/photos/complete', {
@@ -100,6 +105,7 @@ const galleryFrames = computed(() => {
 onMounted(async () => {
   await accountStore.fetchMyProfile()
   await fetchPhotos()
+
 })
 
 </script>

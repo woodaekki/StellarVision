@@ -11,6 +11,8 @@
           <RouterLink :to="`/profile/${userInfo?.email}`">
             {{ userInfo?.email }}님
           </RouterLink>
+          <!-- ✅ 로그아웃 버튼 추가 -->
+          <button @click="handleLogout" class="logout-button">로그아웃</button>
         </template>
         <template v-else>
           <RouterLink to="/signup">회원가입</RouterLink>
@@ -21,11 +23,22 @@
   </header>
 </template>
 
+
 <script setup>
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
+import { computed } from 'vue'
 import logo from "@/assets/pictures/stellabot/logo.png"
 import { useAccountStore } from "@/stores/account.js"
 
+const router = useRouter()
 const account = useAccountStore()
-const { userInfo, isLogin } = account
+const isLogin = computed(() => account.isLogin)
+const userInfo = computed(() => account.userInfo)
+
+// 로그아웃 버튼 클릭 핸들러
+const handleLogout = () => {
+  account.logOut()
+}
 </script>
+
+
