@@ -30,7 +30,7 @@ export const useAccountStore = defineStore('account', () => {
     // 로그인 응답으로 온 사용자 기본 정보 저장
     userInfo.value = memberInfo
     localStorage.setItem('userInfo', JSON.stringify(memberInfo))
-
+    console.log('📦 setToken에서 userInfo 저장됨:', userInfo.value)
   }
 
 
@@ -60,10 +60,16 @@ export const useAccountStore = defineStore('account', () => {
         formData,
       { headers: { 'Content-Type' : 'multipart/form-data' }}
     )
+
+     console.log('로그인 전체 응답:', res)
+     console.log('res.data:', res.data)
+     console.log('res.data.data:', res.data.data)
+
       const {accessToken, refreshToken, memberInfo} = res.data.data
       setToken(accessToken, refreshToken, memberInfo)                // 토큰 및 정보 저장
       console.log('로그인 성공')
-      console.log('token', accessToken)
+      console.log('accessToken:', accessToken)
+      console.log(memberInfo)
       router.push({name: 'LandingView'})
     } catch (err) {
       console.error('로그인 실패', err)
@@ -112,9 +118,9 @@ export const useAccountStore = defineStore('account', () => {
   }
 
   // 새로고침 시 로그인 상태 유지
-  // if(token.value){
-  //   commonApi.defaults.headers.common.Authorization = `Bearer ${token.value}`
-  // }
+  if(token.value){
+    commonApi.defaults.headers.common.Authorization = `Bearer ${token.value}`
+  }
 
 
   return { isLogin, signUp, logIn, logOut, token, userInfo, myProfile, fetchMyProfile, fetchUserProfile }

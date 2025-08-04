@@ -32,23 +32,37 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useAccountStore } from '@/stores/account'
 import axios from 'axios'
 
-const memberId = 1
+const accountStore = useAccountStore()
 
 const galleryInput = ref(null)
-
 const photos = ref([])
 const TOTAL_FRAMES = 7
 
-const triggerGalleryUpload = () => galleryInput.value.click()
+const memberId = computed(() => accountStore.myProfile?.id)
+
+// 사용자 자신은 토큰만 있으면 내 갤러리에 업로드 가능 
+const canUpload = computed(() => accountStore.isLogin)
+
+const triggerGalleryUpload = () => {
+  console.log('isLogin:', accountStore.isLogin)
+
+  
+  if (!canUpload.value) {
+    alert('업로드 권한이 없습니다. 로그인 후 다시 시도해주세요.')
+    return
+  }
+  galleryInput.value.click()
+}
 
 const uploadGalleryImage = async (e) => {
   const file = e.target.files[0]
-  if (!file) return
+  if (!file || !memberId.value) return
 
   const { data } = await axios.post('/api/photos/presignedUrl', {
-    memberId,
+    memberId: memberId.value,
     originalFilename: file.name,
     contentType: file.type,
   })
@@ -58,7 +72,7 @@ const uploadGalleryImage = async (e) => {
   })
 
   await axios.post('/api/photos/complete', {
-    memberId,
+    memberId: memberId.value,
     originalFilename: file.name,
     s3Key: data.s3Key,
   })
@@ -67,7 +81,8 @@ const uploadGalleryImage = async (e) => {
 }
 
 const fetchPhotos = async () => {
-  const { data } = await axios.get(`/api/profiles/${memberId}/photos`)
+  if (!memberId.value) return
+  const { data } = await axios.get(`/api/profiles/${memberId.value}/photos`)
   photos.value = data.data.photos.map(p => ({
     id: p.id,
     url: p.url,
@@ -82,9 +97,11 @@ const galleryFrames = computed(() => {
   return [...filled, ...Array(emptyCount).fill(null)]
 })
 
-onMounted(() => {
-  fetchPhotos()
+onMounted(async () => {
+  await accountStore.fetchMyProfile()
+  await fetchPhotos()
 })
+
 </script>
 
 <style scoped>

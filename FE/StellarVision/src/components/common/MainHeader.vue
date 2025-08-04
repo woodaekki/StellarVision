@@ -7,19 +7,25 @@
         <RouterLink to="/pre">시작</RouterLink>
       </div>
       <nav class="header-right">
-        <RouterLink to="/signup">회원가입</RouterLink>
-        <RouterLink to="/login">로그인</RouterLink>
+        <template v-if="isLogin">
+          <RouterLink :to="`/profile/${userInfo?.email}`">
+            {{ userInfo?.email }}님
+          </RouterLink>
+        </template>
+        <template v-else>
+          <RouterLink to="/signup">회원가입</RouterLink>
+          <RouterLink to="/login">로그인</RouterLink>
+        </template>
       </nav>
     </div>
   </header>
 </template>
 
-
 <script setup>
 import { RouterLink } from 'vue-router'
 import logo from "@/assets/pictures/stellabot/logo.png"
+import { useAccountStore } from "@/stores/account.js"
 
+const account = useAccountStore()
+const { userInfo, isLogin } = account
 </script>
-
-<style lang="scss">
-</style>

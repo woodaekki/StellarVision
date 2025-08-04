@@ -13,12 +13,16 @@
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router'
-import MyGalleryListView from '@/views/Profile/MyGalleryListView.vue'
+import { useRouter, useRoute } from 'vue-router'  
 
 const router = useRouter()
+const route = useRoute()
+
 const goGalleryList = () => {
-  router.push({name: MyGalleryListView})
+  router.push({
+    name: 'MyGalleryListView',
+    params: { id: route.params.id } 
+  })
 }
 </script>
 
@@ -85,7 +89,7 @@ const goGalleryList = () => {
 @media (max-width: 1500px) {
   .photo-frames {
     flex-wrap: wrap;
-    overflow-x: visible;   /* 스크롤 해제 */
+    overflow-x: visible;   
   }
   .photo-frame {
     width: calc(50% - 16px);
