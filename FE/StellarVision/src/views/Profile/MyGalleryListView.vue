@@ -84,8 +84,8 @@ const fetchPhotos = async () => {
     // API 구조에 맞게 변경 필요
     const newPhotos = data.data.photos.map(p => ({
       id: p.id,
-      url: p.downloadUrl,       // downloadUrl로 변경
-      name: p.originalFilename, // 이름도 API에 맞게 변경
+      url: p.downloadUrl,       
+      name: p.originalFilename, 
       date: p.createdAt.split('T')[0],
     }))
 
