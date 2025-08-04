@@ -1,4 +1,3 @@
-<!-- 아직 기능 지원x -->
 <template>
   <p class="title">My Gallery</p>
 
@@ -7,16 +6,32 @@
   </div>
 
   <div class="photo-frames">
-    <div class="photo-frame" v-for="n in 3" :key="n">
+    <div
+      class="photo-frame"
+      v-for="(photo, index) in recentPhotos"
+      :key="photo.id"
+      @click="handlePhotoClick(photo)"
+    >
+      <img
+        :src="photo.url"
+        :alt="photo.name"
+        style="width: 100%; height: 100%; object-fit: cover"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
-import { useRouter, useRoute } from 'vue-router'  
+import { ref, computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import axiosApi from '@/api/axiosApi'
 
-const router = useRouter()
+const photos = ref([])
+const loading = ref(false)
+
 const route = useRoute()
+const router = useRouter()
+const memberId = route.params.id || null  
 
 const goGalleryList = () => {
   router.push({
@@ -24,6 +39,7 @@ const goGalleryList = () => {
     params: { id: route.params.id } 
   })
 }
+
 </script>
 
 <style scoped>
@@ -86,10 +102,21 @@ const goGalleryList = () => {
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
 }
 
+.empty-frame {
+  background-color: #f5f5f5;
+  border: 2px dashed #ccc;
+}
+
+.empty-text {
+  color: #999;
+  font-size: 18px;
+  font-weight: 500;
+}
+
 @media (max-width: 1500px) {
   .photo-frames {
     flex-wrap: wrap;
-    overflow-x: visible;   
+    overflow-x: visible;
   }
   .photo-frame {
     width: calc(50% - 16px);
