@@ -1,113 +1,196 @@
-<!-- 아직 무한 스크롤 기능 지원x -->
 <template>
   <div class="page">
     <div class="stars-background">
       <div class="gallery-grid">
+
+        <!-- 업로드 박스 -->
         <div class="upload-box" @click="triggerGalleryUpload">
           <span>+</span>
-          <input type="file" ref="galleryInput" @change="uploadGalleryImage" accept="image/*" class="hidden" />
+          <input
+            type="file"
+            ref="galleryInput"
+            @change="uploadGalleryImage"
+            accept="image/*"
+            class="hidden"
+          />
         </div>
 
+        <!-- 사진 리스트 -->
         <div
-          v-for="(item, index) in galleryFrames"
-          :key="index"
+          v-for="(item, index) in photos"
+          :key="item.id"
           class="photo-box"
         >
-          <template v-if="item">
-            <img :src="item.url" class="photo-img" />
-            <div class="photo-text">
-              <p>{{ item.name }}</p>
-              <p class="photo-date">{{ item.date }}</p>
-            </div>
-          </template>
-          <template v-else>
-
-            <div class="empty-frame"></div>
-          </template>
+          <img :src="item.url" class="photo-img" />
+          <div class="photo-text">
+            <p>{{ item.name }}</p>
+            <p class="photo-date">{{ item.date }}</p>
+          </div>
         </div>
+
+        <!-- 빈 프레임 채우기 (선택사항) -->
+        <div
+          v-for="n in (TOTAL_FRAMES - photos.length)"
+          :key="'empty-' + n"
+          class="empty-frame"
+          v-if="photos.length < TOTAL_FRAMES"
+        ></div>
+
+        <!-- 무한스크롤 감지 요소 -->
+        <div ref="loadMoreTrigger" class="load-more-trigger"></div>
       </div>
+
+      <!-- 로딩 표시 -->
+      <div v-if="loading" class="loading-text">사진 불러오는 중...</div>
+      <div v-if="!hasMore && photos.length > 0" class="loading-text">모든 사진을 불러왔습니다.</div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAccountStore } from '@/stores/account'
 import axios from 'axios'
+import axiosApi from '@/api/axiosApi'
 
 const accountStore = useAccountStore()
 
 const galleryInput = ref(null)
+const loadMoreTrigger = ref(null)
+
 const photos = ref([])
+const page = ref(1)
+const limit = 7
+const loading = ref(false)
+const hasMore = ref(true)
+
 const TOTAL_FRAMES = 7
 
-const memberId = computed(() => accountStore.myProfile?.id)
-
-// 사용자 자신은 토큰만 있으면 내 갤러리에 업로드 가능
+const memberId = computed(() => accountStore.myProfile?.memberId)
 const canUpload = computed(() => accountStore.isLogin)
 
-const triggerGalleryUpload = () => {
-  console.log('isLogin:', accountStore.isLogin)
+// 사진 불러오기 (페이지네이션)
+const fetchPhotos = async () => {
+  if (loading.value || !hasMore.value) return
+  if (!memberId.value) return
 
+  loading.value = true
 
+  try {
+    const { data } = await axiosApi.get(`profiles/${memberId.value}/photos`, {
+      params: { page: page.value, limit }
+    })
+
+    // API 구조에 맞게 변경 필요
+    const newPhotos = data.data.photos.map(p => ({
+      id: p.id,
+      url: p.downloadUrl,       // downloadUrl로 변경
+      name: p.originalFilename, // 이름도 API에 맞게 변경
+      date: p.createdAt.split('T')[0],
+    }))
+
+    photos.value = [...photos.value, ...newPhotos]
+
+    if (photos.value.length >= data.data.totalCount) {
+      hasMore.value = false
+    } else {
+      page.value += 1
+    }
+  } catch (e) {
+    console.error('사진 불러오기 실패:', e)
+  } finally {
+    loading.value = false
+  }
+}
+
+// 업로드 트리거
+const triggerGalleryUpload = async () => {
   if (!canUpload.value) {
     alert('업로드 권한이 없습니다. 로그인 후 다시 시도해주세요.')
     return
   }
+
+  if (!memberId.value) {
+    await accountStore.fetchMyProfile()
+  }
+
+  if (!memberId.value) {
+    alert('프로필 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.')
+    return
+  }
+
+  galleryInput.value.value = ''
   galleryInput.value.click()
 }
 
+// 업로드 처리
 const uploadGalleryImage = async (e) => {
   const file = e.target.files[0]
   if (!file || !memberId.value) return
 
-  console.log(file)
+  try {
+    const { data } = await axiosApi.post('/photos/presignedUrl', {
+      memberId: memberId.value,
+      originalFilename: file.name,
+    })
 
-  const { data } = await axios.post('/api/photos/presignedUrl', {
-    memberId: memberId.value,
-    originalFilename: file.name,
-  })
-  console.log('presigned data', data)
+    const presignedData = data.data
 
-  console.log('PUT Content-Type:', file.type)
-  await axios.put(data.presignedUrl, file, {
-    headers: {
-        'Content-Type': file.type,
+    if (!presignedData.uploadUrl || !presignedData.s3Key) {
+      console.error('presignedUrl 또는 s3Key가 없습니다', data)
+      return
+    }
+
+    await axios.put(presignedData.uploadUrl, file, {
+      headers: {
+        'Content-Type': file.type
       },
-  })
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity,
+    })
 
-  await axios.post('/api/photos/complete', {
-    memberId: memberId.value,
-    originalFilename: file.name,
-    s3Key: data.s3Key,
-  })
+    await axiosApi.post('/photos/complete', {
+      memberId: memberId.value,
+      originalFilename: file.name,
+      s3Key: presignedData.s3Key,
+    })
 
-  await fetchPhotos()
+    // 업로드 후 최신 사진 목록 다시 불러오기
+    photos.value = []
+    page.value = 1
+    hasMore.value = true
+    await fetchPhotos()
+
+  } catch (err) {
+    console.error('업로드 실패:', err)
+  }
 }
 
-const fetchPhotos = async () => {
-  if (!memberId.value) return
-  const { data } = await axios.get(`/api/profiles/${memberId.value}/photos`)
-  photos.value = data.data.photos.map(p => ({
-    id: p.id,
-    url: p.url,
-    name: p.name,
-    date: p.createdAt.split('T')[0],
-  }))
-}
-
-const galleryFrames = computed(() => {
-  const filled = photos.value.slice(0, TOTAL_FRAMES)
-  const emptyCount = TOTAL_FRAMES - filled.length
-  return [...filled, ...Array(emptyCount).fill(null)]
-})
+// IntersectionObserver 무한 스크롤 구현
+let observer = null
 
 onMounted(async () => {
   await accountStore.fetchMyProfile()
   await fetchPhotos()
 
+  observer = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting) {
+      fetchPhotos()
+    }
+  }, {
+    rootMargin: '200px', // 화면 아래 200px 접근 시 미리 로딩
+  })
+
+  if (loadMoreTrigger.value) {
+    observer.observe(loadMoreTrigger.value)
+  }
 })
 
+onUnmounted(() => {
+  if (observer && loadMoreTrigger.value) {
+    observer.unobserve(loadMoreTrigger.value)
+  }
+})
 </script>
 
 <style scoped>
@@ -180,5 +263,15 @@ onMounted(async () => {
 
 .hidden {
   display: none;
+}
+
+.load-more-trigger {
+  height: 1px;
+}
+
+.loading-text {
+  text-align: center;
+  margin-top: 1rem;
+  color: #ccc;
 }
 </style>
