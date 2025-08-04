@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+
 public class ProfileServiceImpl implements ProfileService {
 
     private final MemberRepository memberRepository;
@@ -42,7 +43,7 @@ public class ProfileServiceImpl implements ProfileService {
         }
         profile.setProfileS3Key(s3Key);
     }
-
+    @Transactional
     @Override
     public String getProfileImage(Long memberId) throws MemberNotFoundException {
         Member member = memberRepository.findById(memberId)
@@ -59,12 +60,14 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ProfileResponse getMyProfileInfo(CustomUserDetails userDetails) throws MemberNotFoundException {
-        Member member = userDetails.getMember();
-        if (member == null) {
-            throw new MemberNotFoundException("존재하지 않는 멤버입니다.");
-        }
+        Long memberId = userDetails.getMember().getId();
+        Member member = memberRepository
+                .findByIdWithProfile(memberId)
+                .orElseThrow(() -> new MemberNotFoundException(memberId.toString()));
         Profile profile = member.getProfile();
+
 
         ProfileResponse response = ProfileResponse.builder()
                 .memberId(member.getId())
@@ -77,7 +80,7 @@ public class ProfileServiceImpl implements ProfileService {
 
         return response;
     }
-
+    @Transactional
     @Override
     public ProfileResponse getProfileInfo(Long memberId) throws MemberNotFoundException, MemberNotFoundException {
         Member member = memberRepository.findById(memberId)
