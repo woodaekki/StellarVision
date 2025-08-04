@@ -6,7 +6,23 @@
 
       <div class="profile-text">
         <p>닉네임</p>
+        <FollowButton />
         <p>안녕하세요 닉네임 입니다.</p>
+        <!-- 팔로잉이랑 팔로워 표시, 클릭시 모달창 나타남 -->
+        <div class="follow-list-button">
+          <button @click="showFollowers = true">팔로워 {{ follower.length }}</button>
+          <button @click="showFollowing = true">팔로잉 {{ following.length }}</button>
+          <UserListModal
+            v-if="showFollowers"
+            :user-list="follower"
+            @close="showFollowers = false"
+          />
+          <UserListModal
+            v-if="showFollowing"
+            :user-list="following"
+            @close="showFollowing = false"
+          />
+        </div>
       </div>
     </div>
 
@@ -18,11 +34,41 @@
 </template>
 
 <script setup>
+import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 // import { useAccountStore } from '@/stores/account.js'
+import FollowButton from './FollowButton.vue';
+import UserListModal from './UserListModal.vue';
 
 const router = useRouter();
 const member_id = 1; //테스트용 가상 사용자 id
+
+// 임의로 하드코딩한 팔로잉이랑 팔로워
+const following = ref(
+  [{
+    id: 2,
+    nickname: '김싸피'
+  },
+  {
+    id: 4,
+    nickname: '노바'
+  },
+  {
+    id: 5,
+    nickname: '홍길동'
+  }]
+)
+const follower = ref(
+ [{
+    id: 4,
+    nickname: '노바'
+  }]
+)
+
+const showFollowers = ref(false)
+const showFollowing = ref(false)
+
+// 팔로잉 & 팔로워 관련 끝
 
 const goEditProfile = () => {
   router.push(`/profile/${member_id}/edit`)
@@ -92,6 +138,4 @@ const goEditProfile = () => {
 .profile-header-right button:hover {
   background-color: #666;
 }
-
-
 </style>
