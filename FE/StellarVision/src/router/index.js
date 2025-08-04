@@ -88,6 +88,11 @@ const router = createRouter({
       component: MyGalleryListView
     },
     {
+      path: '/profile/:id/myvideo/detail',
+      name: 'MyVideoListView',
+      component: MyVideoListView
+    },
+    {
       path: '/calender',
       name: CalenderView,
       component: CalenderView
