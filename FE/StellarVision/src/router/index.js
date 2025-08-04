@@ -42,13 +42,13 @@ const router = createRouter({
                 name: 'ReplayStreamingListView',
                 component: ReplayStreamingListView
               },
-              {
-                path:'room/:id',
-                name: 'RoomView',
-                component: RoomView
-              },
             ]
         },
+      {
+        path:'/room/:id',
+        name: 'RoomView',
+        component: RoomView
+      },
       {
         path:'/pre',
         name:'PreRoomView',

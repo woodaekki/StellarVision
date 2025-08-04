@@ -5,39 +5,46 @@ export default {
   // 1) 스트리밍 방 생성하기
   create({ title, latitude, longitude, forcedVideoCodec, mediaMode, recordingMode }) {
     return streamingApi.post(
-      '/api/streamings',
+      '/streamings',
       { title, latitude, longitude, forcedVideoCodec, mediaMode, recordingMode },
       { headers: { 'Content-Type': 'application/json' } }
     )
   },
 
   // 2) 스트리밍 참여하기
-  join(streamId, { role /* e.g. 'publisher' | 'subscriber' */, userName }) {
+  join(streamId, { role, userName }) {
     // form-data 로 보내야 한다면:
     const form = new FormData()
     form.append('role', role)
     form.append('userName', userName)
-    return streamingApi.post(`/api/streamings/${streamId}/connection`, form, {
+    return streamingApi.post(
+      `/streamings/${streamId}/connection`, form, {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
   },
 
-  // 3) 녹화 시작
-  startRecording(streamId) {
-    return streamingApi.post(`/api/streamings/${streamId}/recording/start`)
-  },
-  // 4) 녹화 정지
-  stopRecording(streamId) {
-    return streamingApi.post(`/api/streamings/${streamId}/recording/stop`)
+  // 3) 녹화 시작 / 정지
+  toggleRecording(streamId, action) {
+    return streamingApi.post(`/streamings/${streamId}/recording/${action}`, new FormData())
   },
 
-  // 5) 스트리밍 종료하기
+  // 4) 스트리밍 종료하기
   end(streamId) {
-    return streamingApi.delete(`/api/streamings/${streamId}`)
+    return streamingApi.delete(`/streamings/${streamId}`)
   },
 
-  // 6) 스트리밍 목록 조회
+  // 5) 스트리밍 목록 조회
   list() {
-    return streamingApi.get('/api/streamings')
-  }
+    return streamingApi.get('/streamings')
+  },
+
+  // 2) 토큰 발급용 메서드 추가
+  getToken(sessionId, userName, role = 'SUBSCRIBER') {
+    return streamingApi.post(
+      `/streamings/${sessionId}/connection`,
+      { role, userName }
+    )
+  },
+
+
 }
