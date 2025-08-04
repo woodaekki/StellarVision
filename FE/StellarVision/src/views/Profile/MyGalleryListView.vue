@@ -43,13 +43,13 @@ const TOTAL_FRAMES = 7
 
 const memberId = computed(() => accountStore.myProfile?.id)
 
-// 사용자 자신은 토큰만 있으면 내 갤러리에 업로드 가능 
+// 사용자 자신은 토큰만 있으면 내 갤러리에 업로드 가능
 const canUpload = computed(() => accountStore.isLogin)
 
 const triggerGalleryUpload = () => {
   console.log('isLogin:', accountStore.isLogin)
 
-  
+
   if (!canUpload.value) {
     alert('업로드 권한이 없습니다. 로그인 후 다시 시도해주세요.')
     return
@@ -172,4 +172,7 @@ onMounted(async () => {
   background-color: #ababab;
 }
 
+.hidden {
+  display: none;
+}
 </style>

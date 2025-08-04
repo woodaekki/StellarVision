@@ -168,7 +168,7 @@ videos.value = [
     thumbnail: 'https://images.unsplash.com/photo-1470770841072-f978cf4d019e',
     date: '2025-08-05',
   },
-];
+]
 
 function goToReplay(videoId) {
   router.push(`/replay/${videoId}`)
