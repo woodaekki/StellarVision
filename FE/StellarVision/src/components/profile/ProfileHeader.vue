@@ -1,32 +1,30 @@
 <template>
-  <!-- 가상으로 레이아웃만 만들어놓기 -->
  <div class="profile-header">
     <div class="profile-header-left">
       <div class="profile-image">+</div>
 
       <div class="profile-text">
-        <p>닉네임</p>
-        <p>안녕하세요 닉네임 입니다.</p>
+        <p>{{ email || 'null' }}</p>
+        <p>안녕하세요 {{ email || 'null' }} 입니다.</p>
       </div>
     </div>
 
     <div class="profile-header-right">
-      <button @click="goEditProfile" class="account-edit">수정</button>
+      <RouterLink :to="`/profile/${userInfo?.email}/edit`">
+        수정
+      </RouterLink>
     </div>
  </div>
-
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router';
-// import { useAccountStore } from '@/stores/account.js'
+import { useAccountStore } from '@/stores/account.js'
+import { computed } from 'vue'
+import { RouterLink } from 'vue-router'
 
-const router = useRouter();
-const member_id = 1; //테스트용 가상 사용자 id
-
-const goEditProfile = () => {
-  router.push(`/profile/${member_id}/edit`)
-}
+const account = useAccountStore()
+const { userInfo } = account
+const email = computed(() => userInfo?.email || 'null')
 </script>
 
 <style scoped>

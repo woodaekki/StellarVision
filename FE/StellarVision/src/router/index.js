@@ -65,11 +65,6 @@ const router = createRouter({
           component: ProfileHeader
         },
         {
-        path: 'edit',
-        name: 'ProfileEdit',
-        component: ProfileEdit
-        },
-        {
           path: 'mygallery',
           name: 'MyGalleryView',
           component: MyGalleryView,
@@ -80,6 +75,11 @@ const router = createRouter({
           component : MyVideoView,
         },
       ]
+    },
+    {
+      path: '/profile/:id/edit',
+      name: 'ProfileEdit',
+      component: ProfileEdit
     },
     {
       path: '/profile/:id/mygallery/detail',

@@ -22,7 +22,7 @@ export const useAccountStore = defineStore('account', () => {
     token.value = accessToken
     localStorage.setItem('jwt', accessToken)
     commonApi.defaults.headers.common.Authorization = `Bearer ${accessToken}`    //  토큰이 있다면 모든 요청에 인증 헤더를 자동으로 붙이도록 한다.
-    
+
     // 리프레시 토큰 저장
     refreshToken.value = newRefreshToken
     localStorage.setItem('refreshToken', newRefreshToken)
@@ -30,7 +30,7 @@ export const useAccountStore = defineStore('account', () => {
     // 로그인 응답으로 온 사용자 기본 정보 저장
     userInfo.value = memberInfo
     localStorage.setItem('userInfo', JSON.stringify(memberInfo))
-
+    console.log('📦 setToken에서 userInfo 저장됨:', userInfo.value)
   }
 
 
@@ -60,6 +60,11 @@ export const useAccountStore = defineStore('account', () => {
         formData,
       { headers: { 'Content-Type' : 'multipart/form-data' }}
     )
+
+     console.log('로그인 전체 응답:', res)
+     console.log('res.data:', res.data)
+     console.log('res.data.data:', res.data.data)
+
       const {accessToken, refreshToken, memberInfo} = res.data.data
       setToken(accessToken, refreshToken, memberInfo)                // 토큰 및 정보 저장
       console.log('로그인 성공')
@@ -86,7 +91,7 @@ export const useAccountStore = defineStore('account', () => {
     router.push({ name: 'LandingView' })
   }
 
-  // 내 프로필 정보 조회 
+  // 내 프로필 정보 조회
   async function fetchMyProfile() {
     // 로그인 유무 확인
     if (!isLogin.value) return
