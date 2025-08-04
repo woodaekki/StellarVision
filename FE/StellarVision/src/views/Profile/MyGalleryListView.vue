@@ -43,13 +43,13 @@ const TOTAL_FRAMES = 7
 
 const memberId = computed(() => accountStore.myProfile?.id)
 
-// 사용자 자신은 토큰만 있으면 내 갤러리에 업로드 가능 
+// 사용자 자신은 토큰만 있으면 내 갤러리에 업로드 가능
 const canUpload = computed(() => accountStore.isLogin)
 
 const triggerGalleryUpload = () => {
   console.log('isLogin:', accountStore.isLogin)
 
-  
+
   if (!canUpload.value) {
     alert('업로드 권한이 없습니다. 로그인 후 다시 시도해주세요.')
     return
@@ -61,14 +61,19 @@ const uploadGalleryImage = async (e) => {
   const file = e.target.files[0]
   if (!file || !memberId.value) return
 
+  console.log(file)
+
   const { data } = await axios.post('/api/photos/presignedUrl', {
     memberId: memberId.value,
     originalFilename: file.name,
-    contentType: file.type,
   })
+  console.log('presigned data', data)
 
+  console.log('PUT Content-Type:', file.type)
   await axios.put(data.presignedUrl, file, {
-    headers: { 'Content-Type': file.type },
+    headers: {
+        'Content-Type': file.type,
+      },
   })
 
   await axios.post('/api/photos/complete', {
@@ -100,6 +105,7 @@ const galleryFrames = computed(() => {
 onMounted(async () => {
   await accountStore.fetchMyProfile()
   await fetchPhotos()
+
 })
 
 </script>
