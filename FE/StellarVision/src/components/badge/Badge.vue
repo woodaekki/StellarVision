@@ -3,10 +3,13 @@
 </template>
 
 <script setup>
-import { defineProps, computed } from 'vue'
+import { computed } from 'vue'
 
 const props = defineProps({
-  badge: Object
+  badge: {
+    type: Object,
+    required: true
+  }
 })
 
 const badgeImagePath = computed(() =>
@@ -21,6 +24,4 @@ const badgeImagePath = computed(() =>
   display: block;
   cursor: pointer;
 }
-
-
 </style>

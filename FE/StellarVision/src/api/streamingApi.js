@@ -1,7 +1,4 @@
-import axios from 'axios'
+import api from "./axiosApi"
 
-const streamingApi = axios.create({
-  baseURL: 'https://i13c106.p.ssafy.io',
-})
 
-export default streamingApi
+export default api

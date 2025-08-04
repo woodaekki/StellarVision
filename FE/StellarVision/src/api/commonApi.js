@@ -1,9 +1,24 @@
-import axios from "axios"
+import axios from "axios";
+import api from "./axiosApi"
+
 
 const commonApi = axios.create({
-  baseURL: 'https://i13c106.p.ssafy.io',   //개발 단계에서 사용할 도메인
-  timeout: 1000,
-  headers: {'Content-Type' : 'application/json'}    //HTTP에 JSON 전달임을 명시
-})
+  baseURL: 'https://i13c106.p.ssafy.io/api',
+  timeout: 5000,
+  withCredentials: true,
+  headers: { 'Content-Type': 'application/json' },
+  });
 
+  api.interceptors.request.use(
+  function (config) {
+  const token = localStorage.getItem('jwt');
+  if (token) {
+  config.headers.Authorization = 'Bearer ' + token;
+  }
+  return config;
+  },
+  function (error) {
+  return Promise.reject(error);
+  }
+  );
 export default commonApi

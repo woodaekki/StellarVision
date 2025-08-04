@@ -36,7 +36,7 @@ export const useAccountStore = defineStore('account', () => {
 
   // 회원가입 로직
   const signUp = function({userEmail, nickname, password, birthday}){
-    commonApi.post('/api/account/signup', {userEmail, nickname, password, birthday})
+    commonApi.post('/account/signup', {userEmail, nickname, password, birthday})
     .then(res => {
       console.log('회원가입 성공', res.data)
       router.push({name:'LandingView'})
@@ -56,7 +56,7 @@ export const useAccountStore = defineStore('account', () => {
 
     try {
       const res = await commonApi.post(
-        '/api/auth/login',
+        '/auth/login',
         formData,
       { headers: { 'Content-Type' : 'multipart/form-data' }}
     )
@@ -97,7 +97,7 @@ export const useAccountStore = defineStore('account', () => {
     if (!isLogin.value) return
 
     try{
-      const res = await commonApi.get('/api/profiles/me')
+      const res = await commonApi.get('/profiles/me')
       myProfile.value = res.data.data
       console.log('내 프로필 정보', myProfile.value)
     } catch (err) {
@@ -109,7 +109,7 @@ export const useAccountStore = defineStore('account', () => {
   // 다른 사용자 프로필 정보 조회
   async function fetchUserProfile(memberId) {
     try {
-      const res = await commonApi.get(`/api/profiles/${memberId}`)    // api 명세서 참조 경로
+      const res = await commonApi.get(`/profiles/${memberId}`)    // api 명세서 참조 경로
       return res.data.data
     } catch(err){
       console.error(`${memberId} 프로필 정보 조회 실패`, err)

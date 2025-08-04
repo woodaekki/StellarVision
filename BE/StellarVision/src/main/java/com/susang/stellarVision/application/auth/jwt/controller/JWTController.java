@@ -6,7 +6,7 @@ import com.susang.stellarVision.application.auth.jwt.dto.MemberInfoDTO;
 import com.susang.stellarVision.application.auth.jwt.dto.TokenResponseDTO;
 import com.susang.stellarVision.application.auth.jwt.error.RefreshTokenError;
 import com.susang.stellarVision.application.auth.jwt.service.RefreshTokenService;
-import com.susang.stellarVision.common.util.JWTUtil;
+import com.susang.stellarVision.common.utils.JWTUtil;
 import com.susang.stellarVision.entity.Member;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;

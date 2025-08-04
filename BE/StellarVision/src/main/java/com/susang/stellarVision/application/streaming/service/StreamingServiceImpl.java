@@ -1,6 +1,7 @@
 package com.susang.stellarVision.application.streaming.service;
 
 import com.susang.stellarVision.application.streaming.dto.CreateStreamingSessionRequest;
+import com.susang.stellarVision.application.streaming.dto.StreamingRoomDTO;
 import com.susang.stellarVision.application.streaming.exception.AccessDeniedException;
 import com.susang.stellarVision.application.streaming.exception.SessionNotFoundException;
 import com.susang.stellarVision.application.streaming.repository.StreamingRepository;
@@ -8,6 +9,7 @@ import com.susang.stellarVision.entity.Member;
 import com.susang.stellarVision.entity.StreamingRoom;
 import io.openvidu.java.client.*;
 
+import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -62,7 +64,7 @@ public class StreamingServiceImpl implements StreamingService {
 
         Session session = openVidu.getActiveSession(streamingRoom.getSessionId());
 
-        if(session == null) {
+        if (session == null) {
             throw new SessionNotFoundException(sessionId);
         }
 
@@ -109,5 +111,26 @@ public class StreamingServiceImpl implements StreamingService {
         activeSession.close();
 
         streamingRoom.endSession();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<StreamingRoomDTO> getStreamingRoomList() {
+        List<StreamingRoom> streamingRooms = streamingRepository.findAllWithMember();
+
+        return streamingRooms.stream()
+                .map(room -> {
+                    Member member = room.getMember();
+                    return new StreamingRoomDTO(
+                            room.getId(),
+                            room.getSessionId(),
+                            room.getTitle(),
+                            room.getLatitude(),
+                            room.getLongitude(),
+                            member.getId(),
+                            member.getName()
+                    );
+                })
+                .toList();
     }
 }

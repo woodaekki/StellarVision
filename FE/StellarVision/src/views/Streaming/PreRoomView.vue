@@ -1,44 +1,100 @@
-<!-- src/views/PreRoomView.vue -->
-<template>
-  <div class="pre-room">
-    <h2>방송 준비</h2>
-    <!-- 방 제목을 수정 가능하게 하려면 v-model로 바인딩 -->
-    <label>방 제목</label>
-    <input v-model="roomTitle" />
-
-    <button @click="startStreaming" :disabled="!roomTitle">
-      방송 시작
-    </button>
-  </div>
-</template>
-
 <script setup>
 import { ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 import streamingService from '@/services/streamingService'
+import { useStreamingStore } from '@/stores/streaming'
+import openviduService from '@/services/openviduService'
 
-const route  = useRoute()
+const { create } = streamingService
 const router = useRouter()
-const roomId    = route.params.id
-const roomTitle = ref(route.query.title || '')  // query로 기존 제목 전달받아도 좋습니다
 
-async function startStreaming() {
+const title = ref('')
+const userName = ref('')
+const joinStreamId = ref('')
+const store = useStreamingStore()
+
+const createRoom = async () => {
   try {
-    // publisher 로 입장
-    await streamingService.join(roomId, {
-      role: 'publisher',
-      userName: roomTitle.value  // userName에 방 제목을 넣을 수도 있고, 실제 이름을 받으셔도 되고
+    const payload = {
+      title: title.value,
+      latitude: 37.1234,        // 임의 값 설정
+      longitude: 127.5678,
+      forcedVideoCodec: 'H264',
+      mediaMode: 'ROUTED',
+      recordingMode: 'MANUAL'
+    };
+
+    const response = await create(payload)
+    const sessionId = response.data.data
+    // store.setRoomInfo({roomId, userName : userName.value})
+
+    await openviduService.connectAsPublisher(sessionId)
+
+    router.push({
+      name: 'RoomView',
+      params: {
+        id: sessionId,
+        userName: userName.value || 'Guest'
+      }
     })
-    router.push({ name: 'RoomView', params: { id: roomId } })
-  } catch (e) {
-    console.error('방송 시작 실패', e)
-    alert('방송 시작에 실패했습니다.')
+  } catch (err) {
+    console.error(err)
+    console.error('🛠 Error details:', err.response.data.error.details);
+
+    alert('방 생성에 실패했습니다.')
   }
+}
+
+const joinRoom = () => {
+  router.push({
+    name: 'RoomView',
+    params: {
+      streamId: joinStreamId.value,
+      userName: userName.value || 'Guest'
+    }
+  })
 }
 </script>
 
+<template>
+  <div class="pre-room">
+    <h1>방 생성 / 참가</h1>
+
+    <!-- 새 방 생성 -->
+    <form @submit.prevent="createRoom">
+      <input v-model="title" placeholder="새 방 제목" required />
+      <input v-model="userName" placeholder="내 이름 (Optional)" />
+      <button type="submit">방 생성</button>
+    </form>
+
+    <hr />
+
+    <!-- ID로 방 참가 -->
+    <form @submit.prevent="joinRoom">
+      <input v-model="joinStreamId" placeholder="참가할 방 ID" required />
+      <input v-model="userName" placeholder="내 이름" required />
+      <button type="submit">방 참가</button>
+    </form>
+
+    <hr />
+
+
+  </div>
+</template>
+
 <style scoped>
-.pre-room { max-width: 400px; margin: 2rem auto; }
-input { width: 100%; padding: .5rem; margin-bottom: 1rem; }
-button { width: 100%; padding: .75rem; }
+.pre-room {
+  max-width: 400px;
+  margin: 50px auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+input, button {
+  padding: .5rem;
+  width: 100%;
+}
+hr {
+  margin: 1.5rem 0;
+}
 </style>

@@ -17,6 +17,7 @@ import BadgeView from '@/views/BadgeView.vue'
 import ProfileEdit from '@/components/profile/ProfileEdit.vue'
 import ProfileHeader from '@/components/profile/ProfileHeader.vue'
 import PreRoomView from '@/views/Streaming/PreRoomView.vue'
+import ReplayView from '@/views/Streaming/ReplayView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -42,13 +43,13 @@ const router = createRouter({
                 name: 'ReplayStreamingListView',
                 component: ReplayStreamingListView
               },
-              {
-                path:'room/:id',
-                name: 'RoomView',
-                component: RoomView
-              },
             ]
         },
+      {
+        path:'/room/:id',
+        name: 'RoomView',
+        component: RoomView
+      },
       {
         path:'/pre',
         name:'PreRoomView',
@@ -95,6 +96,11 @@ const router = createRouter({
       path: '/badge',
       name: 'BadgeView',
       component: BadgeView
+    },
+    {
+      path:'/replay/:id', // 다시보기 영상도 가급적 다른 ui가 없어야 해서 children이 아닌 개별로 뺐습니다
+      name: 'ReplayView',
+      component: ReplayView
     },
   ],
     }

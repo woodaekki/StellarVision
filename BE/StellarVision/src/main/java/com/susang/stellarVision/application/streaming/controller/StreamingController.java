@@ -1,6 +1,7 @@
 package com.susang.stellarVision.application.streaming.controller;
 
 import com.susang.stellarVision.application.streaming.dto.CreateStreamingSessionRequest;
+import com.susang.stellarVision.application.streaming.dto.StreamingRoomDTO;
 import com.susang.stellarVision.application.streaming.exception.AccessDeniedException;
 import com.susang.stellarVision.application.streaming.service.StreamingService;
 import com.susang.stellarVision.common.dto.APIResponse;
@@ -9,12 +10,14 @@ import com.susang.stellarVision.entity.Member;
 import io.openvidu.java.client.OpenViduHttpException;
 import io.openvidu.java.client.OpenViduJavaClientException;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -75,5 +78,11 @@ public class StreamingController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(APIResponse.fail("STREAM", e.getMessage()));
         }
+    }
+
+    @GetMapping
+    public ResponseEntity<APIResponse<List<StreamingRoomDTO>>> getStreamingList() {
+        List<StreamingRoomDTO> streamingRoomList = streamingService.getStreamingRoomList();
+        return ResponseEntity.ok(APIResponse.success(streamingRoomList));
     }
 }
