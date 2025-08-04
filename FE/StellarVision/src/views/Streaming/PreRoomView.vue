@@ -28,7 +28,7 @@ const createRoom = async () => {
     const sessionId = response.data.data
     // store.setRoomInfo({roomId, userName : userName.value})
 
-    await openviduService.connectAsPublisher(sessionId)
+    await openviduService().connectAsPublisher(sessionId)
 
     router.push({
       name: 'RoomView',
