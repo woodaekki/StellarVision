@@ -2,6 +2,7 @@ package com.susang.stellarVision.common.exception.handler;
 
 import com.susang.stellarVision.common.dto.APIResponse;
 import com.susang.stellarVision.common.exception.AlreadyExistException;
+import com.susang.stellarVision.common.exception.BadRequestException;
 import com.susang.stellarVision.common.exception.NotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +22,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<APIResponse<Void>> handleAlreadyExistException(AlreadyExistException e) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(APIResponse.fail("ALREADY_EXIST", e.getMessage()));
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<APIResponse<Void>> handleBadRequestException(BadRequestException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(APIResponse.fail("BAD_REQUEST", e.getMessage()));
     }
 
 
