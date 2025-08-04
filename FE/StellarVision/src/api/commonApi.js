@@ -1,7 +1,6 @@
 import axios from "axios";
 import api from "./axiosApi"
 
-
 const commonApi = axios.create({
   baseURL: 'https://i13c106.p.ssafy.io/api',
   timeout: 5000,
