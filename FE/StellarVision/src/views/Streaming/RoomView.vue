@@ -1,21 +1,22 @@
 <script setup>
-import { ref, watch} from 'vue'
+import { ref, watch, watchEffect} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import openviduService from '@/services/openviduService'
 import { useStreamingStore } from '@/stores/streaming'
+import streamingService from '@/services/streamingService'
 
 const route = useRoute()
 const router = useRouter()
 const streamId = route.params.id
-const userName = route.params.userName || 'Guest'
+const userName = route.params.userName || 'Host'
 const isRecording = ref(false)
 
 // const store = useStreamingStore
 // const {roodId, userName} = store;
 
 
-// composable 에서 모든 로직을 가져온다
-const { subscribers, recording, leave } = openviduService(
+// 모든 로직을 가져온다
+const { publisher, subscribers, recording, leave } = openviduService(
   streamId,
   userName,
   e => {
@@ -27,20 +28,20 @@ const { subscribers, recording, leave } = openviduService(
 
 // 로컬 비디오 엘리먼트에 퍼블리셔 붙이기
 const localVideo = ref(null)
-watch(localVideo, el => {
-  if (el) {
-    // composable 안의 publisher.stream 가져와서 붙이기
+watchEffect(() => {
+  if (publisher.value && localVideo.value) {
+    publisher.value.addVideoElement(localVideo.value)
   }
 })
 
-
 async function toggleRecording(action) {
   try {
+
     if (action === 'start') {
-      await streamingService.startRecording(sessionId)
+      await streamingService.startRecording(streamId)
       isRecording.value = true
     } else {
-      await streamingService.stopRecording(sessionId)
+      await streamingService.stopRecording(streamId)
       isRecording.value = false
     }
   } catch (e) {
@@ -52,13 +53,21 @@ async function toggleRecording(action) {
 
 <template>
   <div>
-    <h2>방 {{ streamId }} — {{ userName }}</h2>
+    <h2>방제목 {{ streamId }} — {{ userName }}</h2>
     <div class="videos">
-      <div v-for="sub in subscribers" :key="sub.stream.streamId">
-        <video autoplay playsinline ref="el => sub.addVideoElement(el)"></video>
+
+
+      <div style="width: 1080px; height: 720px; background: #000;">
+          <video
+            ref="localVideo"
+            autoplay
+            playsinline
+            muted
+            style="width:100%; height:100%; object-fit:fill;"
+          ></video>
       </div>
-      <video ref="localVideo" autoplay playsinline muted></video>
     </div>
+
     <button @click="toggleRecording">
       {{ recording ? '녹화 중지' : '녹화 시작' }}
     </button>
