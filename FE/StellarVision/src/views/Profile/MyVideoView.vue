@@ -3,7 +3,7 @@
   <p class="title">My video</p>
 
   <div class="button-wrapper">
-    <button @click="govideoList" class="video-list">상세보기</button>
+    <button @click="goVideoList" class="video-list">상세보기</button>
   </div>
 
   <div class="video-frames">
@@ -13,12 +13,17 @@
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router'
 import MyVideoListView from '@/views/Profile/MyVideoListView.vue'
+import { useRouter, useRoute } from 'vue-router'
 
 const router = useRouter()
-const govideoList = () => {
-  router.push({name: MyVideoListView})
+const route = useRoute()
+
+const goVideoList = () => {
+  router.push({
+    name: 'MyVideoListView',
+    params: { id: route.params.id }
+  })
 }
 </script>
 
