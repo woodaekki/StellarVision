@@ -127,27 +127,17 @@ function handleBadgeClick(event, badge) {
   const clickX = targetRect.left + targetRect.width / 2 - wrapperRect.left
   const clickY = targetRect.top - wrapperRect.top + window.scrollY
 
-  console.log('--- Badge Clicked ---')
-  console.log('targetRect:', targetRect)
-  console.log('wrapperRect:', wrapperRect)
-  console.log('clickX:', clickX)
-  console.log('clickY:', clickY)
-
   const wrapperMid = wrapperRect.width / 2
-  console.log('wrapperMid:', wrapperMid)
 
   if (clickX > wrapperMid) {
     tooltipX.value = clickX - 120
     tooltipPosition.value = 'left'
-    console.log('Tooltip positioned to LEFT at:', tooltipX.value)
   } else {
     tooltipX.value = clickX + 40
     tooltipPosition.value = 'right'
-    console.log('Tooltip positioned to RIGHT at:', tooltipX.value)
   }
 
   tooltipY.value = clickY
-  console.log('Final tooltipY:', tooltipY.value)
 }
 
 </script>
