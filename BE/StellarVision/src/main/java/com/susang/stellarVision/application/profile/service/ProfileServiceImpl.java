@@ -4,6 +4,7 @@ import com.susang.stellarVision.application.member.exception.MemberNotFoundExcep
 import com.susang.stellarVision.application.member.repository.MemberRepository;
 import com.susang.stellarVision.application.photo.error.S3DeletionFailedException;
 import com.susang.stellarVision.application.profile.dto.ProfileResponse;
+import com.susang.stellarVision.application.profile.dto.ProfileVisibilityUpdateRequest;
 import com.susang.stellarVision.common.s3.S3FileManager;
 import com.susang.stellarVision.config.security.authentication.CustomUserDetails;
 import com.susang.stellarVision.entity.Member;
@@ -76,6 +77,8 @@ public class ProfileServiceImpl implements ProfileService {
                 .isGalleryPublic(profile.isGalleryPublic())
                 .isVideoPublic(profile.isVideoPublic())
                 .isCollectionPublic(profile.isCollectionPublic())
+                .followerCount(member.getFollowerCount())
+                .followingCount(member.getFollowingCount())
                 .build();
 
         return response;
@@ -95,8 +98,25 @@ public class ProfileServiceImpl implements ProfileService {
                 .isGalleryPublic(profile.isGalleryPublic())
                 .isVideoPublic(profile.isVideoPublic())
                 .isCollectionPublic(profile.isCollectionPublic())
+                .followerCount(member.getFollowerCount())
+                .followingCount(member.getFollowingCount())
                 .build();
         return response;
+    }
+
+    @Override
+    @Transactional
+    public void updateVisibility(CustomUserDetails userDetails,
+            ProfileVisibilityUpdateRequest profileVisibilityUpdateRequest) {
+        Long memberId = userDetails.getMember().getId();
+        Member member = memberRepository
+                .findByIdWithProfile(memberId)
+                .orElseThrow(() -> new MemberNotFoundException(memberId.toString()));
+        Profile profile = member.getProfile();
+        profile.setGalleryPublic(profileVisibilityUpdateRequest.isGalleryPublic());
+        profile.setCollectionPublic(profileVisibilityUpdateRequest.isCollectionPublic());
+        profile.setVideoPublic(profileVisibilityUpdateRequest.isVideoPublic());
+
     }
 
 

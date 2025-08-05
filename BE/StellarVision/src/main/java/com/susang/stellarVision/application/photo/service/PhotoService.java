@@ -1,6 +1,7 @@
 package com.susang.stellarVision.application.photo.service;
 
 import com.susang.stellarVision.application.photo.dto.PhotoResponse;
+import com.susang.stellarVision.application.photo.dto.PhotoTagListResponse;
 import com.susang.stellarVision.application.photo.dto.PhotoUploadResponse;
 
 import com.susang.stellarVision.application.photo.error.PhotoNotFoundException;
@@ -24,5 +25,7 @@ public interface PhotoService {
     Page<PhotoResponse> getPhotosByMemberId(Long memberId, Pageable pageable);
 
     void deletePhoto(Long photoId);
+
+    PhotoTagListResponse getTagsByPhotoId(Long photoId);
 
 }
