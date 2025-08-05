@@ -1,5 +1,6 @@
 package com.susang.stellarVision.application.streaming.service;
 
+import com.susang.stellarVision.application.streaming.dto.ConnectionTokenDTO;
 import com.susang.stellarVision.application.streaming.dto.CreateStreamingSessionRequest;
 import com.susang.stellarVision.application.streaming.dto.RecordingInfoDTO;
 import com.susang.stellarVision.application.streaming.dto.StreamingRoomDTO;
@@ -55,7 +56,7 @@ public class StreamingServiceImpl implements StreamingService {
 
     @Override
     @Transactional(readOnly = true)
-    public String createToken(String sessionId, Member member)
+    public ConnectionTokenDTO createToken(String sessionId, Member member)
             throws OpenViduJavaClientException, OpenViduHttpException {
         StreamingRoom streamingRoom = streamingRepository.findBySessionId(sessionId)
                 .orElseThrow(() -> new SessionNotFoundException(sessionId));
@@ -82,7 +83,9 @@ public class StreamingServiceImpl implements StreamingService {
 
         Connection connection = session.createConnection(connectionProperties);
 
-        return connection.getToken();
+        String token = connection.getToken();
+
+        return new  ConnectionTokenDTO(token, role.name());
     }
 
     @Override
