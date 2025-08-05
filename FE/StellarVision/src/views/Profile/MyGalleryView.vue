@@ -8,7 +8,7 @@
   <div class="photo-frames">
     <div
       class="photo-frame"
-      v-for="(photo, index) in recentPhotos"
+      v-for="photo in recentPhotos"
       :key="photo.id"
       @click="handlePhotoClick(photo)"
     >
@@ -18,31 +18,122 @@
         style="width: 100%; height: 100%; object-fit: cover"
       />
     </div>
+
+    <div v-if="recentPhotos.length === 0" class="empty-frame">
+      <p class="empty-text">사진이 없습니다.</p>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useAccountStore } from '@/stores/account'
 import axiosApi from '@/api/axiosApi'
+
+const accountStore = useAccountStore()
 
 const photos = ref([])
 const loading = ref(false)
 
 const route = useRoute()
 const router = useRouter()
-const memberId = route.params.id || null  
+
+// memberId를 스토어에서만 가져오도록 수정
+const memberId = computed(() => {
+  const idFromStore = accountStore.myProfile?.memberId;
+
+  console.log('--- MyGallery 컴포넌트 변수 확인 ---');
+  console.log('스토어 프로필 ID:', idFromStore);
+  console.log('-----------------------------------');
+
+  return idFromStore;
+});
+
+const recentPhotos = computed(() => {
+  return photos.value;
+});
+
+const fetchPhotos = async () => {
+  if (!memberId.value) {
+    console.warn('⚠️ memberId가 없어 사진 목록을 불러오지 않습니다.');
+    loading.value = false;
+    return;
+  }
+
+  loading.value = true;
+  console.log(`📡 사진 목록 API 호출 시작: memberId = ${memberId.value}`);
+
+  try {
+    const { data } = await axiosApi.get(`profiles/${memberId.value}/photos`, {
+      params: {
+        page: 0,
+        size: 3,
+      },
+    });
+
+    console.log('✅ API 응답 성공:', data);
+
+    if (data.data && data.data.photos) {
+      photos.value = data.data.photos.map((p) => ({
+        id: p.id,
+        url: p.downloadUrl,
+        name: p.originalFilename,
+        date: p.createdAt.split('T')[0],
+      }));
+      console.log('🖼️ 사진 데이터 처리 완료:', photos.value);
+    } else {
+      console.warn('❗ API 응답에 예상한 사진 데이터 구조가 없습니다:', data);
+      photos.value = [];
+    }
+
+  } catch (e) {
+    console.error('❌ 사진 목록을 불러오는 데 실패했습니다 (AxiosError):', e);
+    if (e.response) {
+      console.error('서버 응답 상태 코드:', e.response.status);
+      console.error('서버 응답 데이터:', e.response.data);
+      console.error('서버 응답 헤더:', e.response.headers);
+    }
+  } finally {
+    loading.value = false;
+    console.log('🏁 API 호출 종료.');
+  }
+};
+
+const handlePhotoClick = (photo) => {
+  console.log(`🖱️ 사진 클릭: ID = ${photo.id}, URL = ${photo.url}`);
+  if (photo.url) {
+    window.open(photo.url, '_blank');
+  }
+};
 
 const goGalleryList = () => {
+  console.log('➡️ 상세보기 버튼 클릭, MyGalleryListView로 이동');
+  // 라우트 파라미터가 이메일인 경우 memberId를 사용하지 않음
   router.push({
     name: 'MyGalleryListView',
-    params: { id: route.params.id } 
-  })
-}
+    params: { id: memberId.value },
+  });
+};
 
+onMounted(async () => {
+  console.log('🚀 MyGallery 컴포넌트 마운트됨');
+  if (!accountStore.myProfile) {
+    console.log('👤 프로필 정보가 없어 스토어에서 불러옵니다.');
+    await accountStore.fetchMyProfile();
+  }
+
+  if (memberId.value) {
+    console.log('✅ memberId 확인됨. 사진 목록 불러오기 시작.');
+    fetchPhotos();
+  } else {
+    console.warn('⚠️ 마운트 시점에 memberId를 찾을 수 없습니다.');
+  }
+});
 </script>
 
 <style scoped>
+/* style은 이전과 동일 */
 .title {
   text-align: center;
   font-size: 36px;
@@ -105,6 +196,12 @@ const goGalleryList = () => {
 .empty-frame {
   background-color: #f5f5f5;
   border: 2px dashed #ccc;
+  width: 480px;
+  height: 300px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .empty-text {
