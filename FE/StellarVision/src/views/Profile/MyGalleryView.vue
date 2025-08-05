@@ -39,7 +39,6 @@ const loading = ref(false)
 const route = useRoute()
 const router = useRouter()
 
-// memberId를 스토어에서만 가져오도록 수정
 const memberId = computed(() => {
   const idFromStore = accountStore.myProfile?.memberId;
 
@@ -56,13 +55,13 @@ const recentPhotos = computed(() => {
 
 const fetchPhotos = async () => {
   if (!memberId.value) {
-    console.warn('⚠️ memberId가 없어 사진 목록을 불러오지 않습니다.');
+    console.warn('memberId가 없어 사진 목록을 불러오지 않습니다.');
     loading.value = false;
     return;
   }
 
   loading.value = true;
-  console.log(`📡 사진 목록 API 호출 시작: memberId = ${memberId.value}`);
+  console.log(`사진 목록 API 호출 시작: memberId = ${memberId.value}`);
 
   try {
     const { data } = await axiosApi.get(`profiles/${memberId.value}/photos`, {
@@ -72,7 +71,7 @@ const fetchPhotos = async () => {
       },
     });
 
-    console.log('✅ API 응답 성공:', data);
+    console.log('API 응답 성공:', data);
 
     if (data.data && data.data.photos) {
       photos.value = data.data.photos.map((p) => ({
@@ -81,14 +80,14 @@ const fetchPhotos = async () => {
         name: p.originalFilename,
         date: p.createdAt.split('T')[0],
       }));
-      console.log('🖼️ 사진 데이터 처리 완료:', photos.value);
+      console.log('사진 데이터 처리 완료:', photos.value);
     } else {
-      console.warn('❗ API 응답에 예상한 사진 데이터 구조가 없습니다:', data);
+      console.warn('API 응답에 예상한 사진 데이터 구조가 없습니다:', data);
       photos.value = [];
     }
 
   } catch (e) {
-    console.error('❌ 사진 목록을 불러오는 데 실패했습니다 (AxiosError):', e);
+    console.error('사진 목록을 불러오는 데 실패했습니다 (AxiosError):', e);
     if (e.response) {
       console.error('서버 응답 상태 코드:', e.response.status);
       console.error('서버 응답 데이터:', e.response.data);
@@ -96,20 +95,19 @@ const fetchPhotos = async () => {
     }
   } finally {
     loading.value = false;
-    console.log('🏁 API 호출 종료.');
+    console.log('API 호출 종료.');
   }
 };
 
 const handlePhotoClick = (photo) => {
-  console.log(`🖱️ 사진 클릭: ID = ${photo.id}, URL = ${photo.url}`);
+  console.log(`사진 클릭: ID = ${photo.id}, URL = ${photo.url}`);
   if (photo.url) {
     window.open(photo.url, '_blank');
   }
 };
 
 const goGalleryList = () => {
-  console.log('➡️ 상세보기 버튼 클릭, MyGalleryListView로 이동');
-  // 라우트 파라미터가 이메일인 경우 memberId를 사용하지 않음
+  console.log('상세보기 버튼 클릭, MyGalleryListView로 이동');
   router.push({
     name: 'MyGalleryListView',
     params: { id: memberId.value },
@@ -117,23 +115,22 @@ const goGalleryList = () => {
 };
 
 onMounted(async () => {
-  console.log('🚀 MyGallery 컴포넌트 마운트됨');
+  console.log(' MyGallery 컴포넌트 마운트됨');
   if (!accountStore.myProfile) {
-    console.log('👤 프로필 정보가 없어 스토어에서 불러옵니다.');
+    console.log('프로필 정보가 없어 스토어에서 불러옵니다.');
     await accountStore.fetchMyProfile();
   }
 
   if (memberId.value) {
-    console.log('✅ memberId 확인됨. 사진 목록 불러오기 시작.');
+    console.log('memberId 확인됨. 사진 목록 불러오기 시작.');
     fetchPhotos();
   } else {
-    console.warn('⚠️ 마운트 시점에 memberId를 찾을 수 없습니다.');
+    console.warn('마운트 시점에 memberId를 찾을 수 없습니다.');
   }
 });
 </script>
 
 <style scoped>
-/* style은 이전과 동일 */
 .title {
   text-align: center;
   font-size: 36px;
