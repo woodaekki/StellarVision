@@ -1,6 +1,7 @@
 package com.susang.stellarVision.application.streaming.controller;
 
 import com.susang.stellarVision.application.streaming.dto.CreateStreamingSessionRequest;
+import com.susang.stellarVision.application.streaming.dto.RecordingInfoDTO;
 import com.susang.stellarVision.application.streaming.dto.StreamingRoomDTO;
 import com.susang.stellarVision.application.streaming.exception.AccessDeniedException;
 import com.susang.stellarVision.application.streaming.service.StreamingService;
@@ -84,5 +85,35 @@ public class StreamingController {
     public ResponseEntity<APIResponse<List<StreamingRoomDTO>>> getStreamingList() {
         List<StreamingRoomDTO> streamingRoomList = streamingService.getStreamingRoomList();
         return ResponseEntity.ok(APIResponse.success(streamingRoomList));
+    }
+
+    @PostMapping("/{sessionId}/recordings/start")
+    public ResponseEntity<APIResponse<String>> startStreamingRecording(
+            @PathVariable String sessionId,
+            @AuthenticationPrincipal CustomUserDetails customUserDetails
+    ) {
+        try {
+            Member member = customUserDetails.getMember();
+            String recordingId = streamingService.startRecording(sessionId, member);
+            return ResponseEntity.ok(APIResponse.success(recordingId));
+        } catch (OpenViduJavaClientException | OpenViduHttpException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(APIResponse.fail("RECORDING", "녹화 시작에 실패했습니다.", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/recordings/{recordingId}/stop")
+    public ResponseEntity<APIResponse<RecordingInfoDTO>> endStreamingRecording(
+            @PathVariable String recordingId,
+            @AuthenticationPrincipal CustomUserDetails customUserDetails
+    ) {
+        try {
+            Member member = customUserDetails.getMember();
+            RecordingInfoDTO recordingInfoDTO = streamingService.stopRecording(recordingId, member);
+            return ResponseEntity.ok(APIResponse.success("녹화저장에 성공했습니다.", recordingInfoDTO));
+        } catch (OpenViduJavaClientException | OpenViduHttpException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(APIResponse.fail("RECORDING", "녹화 종료에 실패했습니다.", e.getMessage()));
+        }
     }
 }
