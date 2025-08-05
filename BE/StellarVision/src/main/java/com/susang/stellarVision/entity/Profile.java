@@ -32,7 +32,7 @@ public class Profile extends BaseEntity {
     private Long id;
 
     @Setter
-    @Column(name = "profile_s3_key", unique = true, length = 255)
+    @Column(name = "profile_s3_key", length = 255)
     private String profileS3Key;
 
     @Column
@@ -51,8 +51,7 @@ public class Profile extends BaseEntity {
     private boolean isCollectionPublic;
 
     @Builder
-    public Profile(String profileS3Key, String description,
-            boolean isGalleryPublic, boolean isVideoPublic, boolean isCollectionPublic) {
+    public Profile(String profileS3Key, String description) {
         this.profileS3Key = profileS3Key;
         this.description = description;
         this.isGalleryPublic = true;
