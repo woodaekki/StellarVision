@@ -1,4 +1,4 @@
-<template>
+<!-- <template>
   <div class="todays-image-wrapper">
   <h1>오늘의 천체 사진</h1>
     <div v-if="loading">Loading...</div>
@@ -63,4 +63,14 @@ onMounted(async () => {
   max-height: 30rem;
   border-radius: 12px;
 }
+</style> -->
+
+<template>
+  <p>오늘의 천체 사진</p>
+</template>
+
+<script setup>
+</script>
+
+<style scoped>
 </style>
