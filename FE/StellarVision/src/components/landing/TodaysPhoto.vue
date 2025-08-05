@@ -1,4 +1,4 @@
-<!-- <template>
+<template>
   <div class="todays-image-wrapper">
   <h1>오늘의 천체 사진</h1>
     <div v-if="loading">Loading...</div>
@@ -17,6 +17,12 @@
         allowfullscreen
         class="todays-image"
       ></iframe>
+      <div
+        v-else
+        class="todays-placeholder"
+      >
+        <p>오늘의 천체 사진을 불러올 수 없었습니다.</p>
+      </div>
     </div>
   </div>
 </template>
@@ -43,7 +49,7 @@ onMounted(async () => {
     apod.value = data
     localStorage.setItem(cacheKey, JSON.stringify(data))
   } catch (err) {
-    console.error(err, 'Could not load data from API')
+    // todayPhoto API에서 이미 콘솔창을 찍기 때문에 생략
   } finally {
     loading.value = false
   }
@@ -63,14 +69,17 @@ onMounted(async () => {
   max-height: 30rem;
   border-radius: 12px;
 }
-</style> -->
 
-<template>
-  <p>오늘의 천체 사진</p>
-</template>
-
-<script setup>
-</script>
-
-<style scoped>
+.todays-placeholder {
+  width: 100%;
+  max-width: 800px;
+  height: 30rem;
+  background-color: #ccc;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  font-size: 1.2rem;
+}
 </style>
