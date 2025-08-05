@@ -3,10 +3,13 @@ package com.susang.stellarVision.application.photo.service;
 import com.susang.stellarVision.application.member.exception.MemberNotFoundException;
 import com.susang.stellarVision.application.member.repository.MemberRepository;
 import com.susang.stellarVision.application.photo.dto.PhotoResponse;
+import com.susang.stellarVision.application.photo.dto.PhotoTagListResponse;
+import com.susang.stellarVision.application.photo.dto.PhotoTagResponse;
 import com.susang.stellarVision.application.photo.dto.PhotoUploadResponse;
 import com.susang.stellarVision.application.photo.error.DuplicatedPhotoException;
 import com.susang.stellarVision.application.photo.error.PhotoNotFoundException;
 import com.susang.stellarVision.application.photo.repository.PhotoRepository;
+import com.susang.stellarVision.application.photo.repository.PhotoTagRepository;
 import com.susang.stellarVision.common.s3.ContentTypeMapper;
 import com.susang.stellarVision.common.s3.FileExtensionUtil;
 import com.susang.stellarVision.common.s3.S3Directory;
@@ -15,6 +18,8 @@ import com.susang.stellarVision.common.s3.S3KeyGenerator;
 import com.susang.stellarVision.entity.Member;
 import com.susang.stellarVision.entity.Photo;
 
+import com.susang.stellarVision.entity.PhotoTag;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -29,6 +34,7 @@ public class PhotoServiceImpl implements PhotoService {
     private final MemberRepository memberRepository;
     private final S3FileManager s3FileManager;
     private final S3KeyGenerator s3KeyGenerator;
+    private final PhotoTagRepository photoTagRepository;
 
 
     public PhotoUploadResponse generatePresignedUploadUrl(S3Directory directory, Long memberId,
@@ -100,6 +106,19 @@ public class PhotoServiceImpl implements PhotoService {
                 });
         s3FileManager.delete(photo.getPhotoS3Key());
         photoRepository.delete(photo);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PhotoTagListResponse getTagsByPhotoId(Long photoId) {
+        Photo photo = photoRepository.findById(photoId)
+                .orElseThrow(() -> new PhotoNotFoundException(photoId.toString()));
+        List<PhotoTag> tags = photoTagRepository.findAllByPhoto(photo);
+        List<PhotoTagResponse> tagList = tags.stream()
+                .map(tag -> new PhotoTagResponse(tag.getId(), tag.getTagName())).toList();
+
+        return new PhotoTagListResponse(tagList);
+
     }
 
 

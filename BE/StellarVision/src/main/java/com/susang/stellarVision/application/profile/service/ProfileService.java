@@ -3,6 +3,7 @@ package com.susang.stellarVision.application.profile.service;
 import com.susang.stellarVision.application.member.exception.MemberNotFoundException;
 import com.susang.stellarVision.application.photo.error.S3DeletionFailedException;
 import com.susang.stellarVision.application.profile.dto.ProfileResponse;
+import com.susang.stellarVision.application.profile.dto.ProfileVisibilityUpdateRequest;
 import com.susang.stellarVision.config.security.authentication.CustomUserDetails;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,4 +17,6 @@ public interface ProfileService {
     ProfileResponse getMyProfileInfo(CustomUserDetails userDetails) throws MemberNotFoundException;
 
     ProfileResponse getProfileInfo(Long memberId) throws MemberNotFoundException, MemberNotFoundException;
+
+    void updateVisibility(CustomUserDetails userDetails, ProfileVisibilityUpdateRequest profileVisibilityUpdateRequest);
 }

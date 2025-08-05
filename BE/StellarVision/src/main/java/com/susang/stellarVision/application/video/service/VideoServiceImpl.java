@@ -86,7 +86,7 @@ public class VideoServiceImpl implements VideoService {
     public void addVideoTag(Long videoId, VideoTagRequest request) {
 
         Video video = videoRepository.findById(videoId)
-                .orElseThrow(() -> new VideoNotFoundException("해당 영상이 존재하지 않습니다."));
+                .orElseThrow(() -> new VideoNotFoundException(videoId.toString()));
 
         boolean exists = videoTagRepository.existsByVideoAndTagName(video, request.getTagName());
         if (exists) {
@@ -102,7 +102,7 @@ public class VideoServiceImpl implements VideoService {
     @Transactional(readOnly = true)
     public VideoTagListResponse getTagsByVideoId(Long videoId) {
         if (!videoRepository.existsById(videoId)) {
-            throw new VideoNotFoundException("해당 영상이 존재하지 않습니다.");
+            throw new VideoNotFoundException(videoId.toString());
         }
         List<VideoTag> tags = videoTagRepository.findAllByVideoId(videoId);
         List<VideoTagResponse> tagList = tags.stream()
