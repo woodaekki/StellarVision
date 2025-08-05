@@ -1,5 +1,6 @@
 package com.susang.stellarVision.application.streaming.service;
 
+import com.susang.stellarVision.application.streaming.dto.ConnectionTokenDTO;
 import com.susang.stellarVision.application.streaming.dto.CreateStreamingSessionRequest;
 import com.susang.stellarVision.application.streaming.dto.RecordingInfoDTO;
 import com.susang.stellarVision.application.streaming.dto.StreamingRoomDTO;
@@ -13,7 +14,7 @@ public interface StreamingService {
     String createSession(CreateStreamingSessionRequest request, Member member)
             throws OpenViduJavaClientException, OpenViduHttpException;
 
-    String createToken(String sessionId, Member member)
+    ConnectionTokenDTO createToken(String sessionId, Member member)
             throws OpenViduJavaClientException, OpenViduHttpException;
 
     void deleteSession(String sessionId, Member member)

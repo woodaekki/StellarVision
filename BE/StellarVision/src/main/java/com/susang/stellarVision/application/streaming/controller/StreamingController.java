@@ -1,5 +1,6 @@
 package com.susang.stellarVision.application.streaming.controller;
 
+import com.susang.stellarVision.application.streaming.dto.ConnectionTokenDTO;
 import com.susang.stellarVision.application.streaming.dto.CreateStreamingSessionRequest;
 import com.susang.stellarVision.application.streaming.dto.RecordingInfoDTO;
 import com.susang.stellarVision.application.streaming.dto.StreamingRoomDTO;
@@ -49,14 +50,14 @@ public class StreamingController {
     }
 
     @PostMapping("/{sessionId}/connection")
-    public ResponseEntity<APIResponse<String>> createStreamingToken(
+    public ResponseEntity<APIResponse<ConnectionTokenDTO>> createStreamingToken(
             @PathVariable String sessionId,
             @AuthenticationPrincipal CustomUserDetails customUserDetails
     ) {
         Member member = customUserDetails.getMember();
         try {
-            String token = streamingService.createToken(sessionId, member);
-            return ResponseEntity.ok(APIResponse.success(token));
+            ConnectionTokenDTO data = streamingService.createToken(sessionId, member);
+            return ResponseEntity.ok(APIResponse.success(data));
         } catch (OpenViduJavaClientException | OpenViduHttpException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(APIResponse.fail("STREAM", "스트리밍 토큰 생성에 실패했습니다.", e.getMessage()));
