@@ -35,8 +35,8 @@ export const useAccountStore = defineStore('account', () => {
 
 
   // 회원가입 로직
-  const signUp = function({userEmail, nickname, password, birthday}){
-    commonApi.post('/account/signup', {userEmail, nickname, password, birthday})
+  const signUp = function({email, name, password, birth}){
+    commonApi.post('/members', {email, name, password, birth})
     .then(res => {
       console.log('회원가입 성공', res.data)
       router.push({name:'LandingView'})
