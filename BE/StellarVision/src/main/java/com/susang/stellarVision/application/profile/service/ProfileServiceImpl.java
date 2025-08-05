@@ -37,12 +37,12 @@ public class ProfileServiceImpl implements ProfileService {
         }
         if (oldS3Key != null) {
             try {
-                s3FileManager.delete(s3Key);
+                s3FileManager.delete(oldS3Key);
             } catch (Exception e) {
                  throw new S3DeletionFailedException("S3 삭제 실패");
             }
         }
-        profile.setProfileS3Key(s3Key);
+        profile.updateProfileS3Key(s3Key);
     }
     @Transactional
     @Override
@@ -54,9 +54,6 @@ public class ProfileServiceImpl implements ProfileService {
         Profile profile = member.getProfile();
         String s3Key = profile.getProfileS3Key();
 
-        if (s3Key == null) {
-            // Todo : 기본이미지
-        }
         return s3FileManager.getPresignedDownloadUrl(s3Key);
     }
 
