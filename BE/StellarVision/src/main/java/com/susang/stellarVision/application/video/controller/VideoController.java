@@ -1,12 +1,18 @@
 package com.susang.stellarVision.application.video.controller;
 
 
+import com.susang.stellarVision.application.video.dto.VideoListResponse;
 import com.susang.stellarVision.application.video.dto.VideoResponse;
+import com.susang.stellarVision.application.video.dto.VideoSearchRequest;
 import com.susang.stellarVision.application.video.dto.VideoTagListResponse;
 import com.susang.stellarVision.application.video.dto.VideoTagRequest;
 import com.susang.stellarVision.application.video.service.VideoService;
 import com.susang.stellarVision.common.dto.APIResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -43,6 +49,30 @@ public class VideoController {
     public APIResponse<String> deleteVideoTag(@PathVariable Long videoId, @PathVariable Long tagId) {
         videoService.deleteVideoTag(videoId,tagId);
         return APIResponse.success("태그 삭제 성공");
+    }
+
+    @GetMapping()
+    public APIResponse<VideoListResponse> getVideoList( @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
+    Pageable pageable) {
+        Page<VideoResponse> page = videoService.getVideos(pageable);
+        VideoListResponse response = new VideoListResponse(page.getContent(),
+                page.getTotalElements());
+
+        return APIResponse.success(response);
+
+
+    }
+
+    @GetMapping("/search")
+    public APIResponse<VideoListResponse> searchVideos(@ModelAttribute VideoSearchRequest condition,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+
+        Page<VideoResponse> page = videoService.searchVideos(condition, pageable);
+
+        VideoListResponse response = new VideoListResponse(page.getContent(),
+                page.getTotalElements());
+
+        return APIResponse.success(response);
     }
 
 }
