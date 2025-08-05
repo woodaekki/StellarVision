@@ -1,13 +1,12 @@
 package com.susang.stellarVision.application.streaming.service;
 
 import com.susang.stellarVision.application.streaming.dto.CreateStreamingSessionRequest;
+import com.susang.stellarVision.application.streaming.dto.RecordingInfoDTO;
 import com.susang.stellarVision.application.streaming.dto.StreamingRoomDTO;
 import com.susang.stellarVision.entity.Member;
-import io.openvidu.java.client.OpenViduException;
 import io.openvidu.java.client.OpenViduHttpException;
 import io.openvidu.java.client.OpenViduJavaClientException;
 import java.util.List;
-import java.util.Map;
 
 public interface StreamingService {
 
@@ -21,4 +20,10 @@ public interface StreamingService {
             throws OpenViduJavaClientException, OpenViduHttpException;
 
     List<StreamingRoomDTO> getStreamingRoomList();
+
+    String startRecording(String sessionId, Member member)
+            throws OpenViduJavaClientException, OpenViduHttpException;
+
+    RecordingInfoDTO stopRecording(String recordingId, Member member)
+            throws OpenViduJavaClientException, OpenViduHttpException;
 }
