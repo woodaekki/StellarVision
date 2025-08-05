@@ -43,9 +43,6 @@ public class Member extends BaseEntity {
     @Column(nullable = false)
     private LocalDate birth;
 
-    @Column(name = "created_at", nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
-    private LocalDateTime createdAt;
-
     @Setter
     @Column(name = "latest_login")
     private LocalDateTime latestLogin;
@@ -66,17 +63,20 @@ public class Member extends BaseEntity {
 
     @Builder
     public Member(String email, String password, String name, LocalDate birth,
-            LocalDateTime createdAt, LocalDateTime latestLogin, Long followerCount,
+            LocalDateTime latestLogin, Long followerCount,
             Long followingCount, Boolean isDeleted, Profile profile) {
         this.email = email;
         this.password = password;
         this.name = name;
         this.birth = birth;
-        this.createdAt = createdAt;
         this.latestLogin = latestLogin;
         this.followerCount = followerCount;
         this.followingCount = followingCount;
         this.isDeleted = isDeleted;
         this.profile = profile;
+    }
+
+    public void updateLatestLogin() {
+        this.latestLogin = LocalDateTime.now();
     }
 }
