@@ -12,4 +12,6 @@ public interface StreamingRepository extends JpaRepository<StreamingRoom, Long> 
 
     @Query("SELECT r FROM StreamingRoom r JOIN FETCH r.member m WHERE r.isDeleted = false")
     List<StreamingRoom> findAllWithMember();
+
+    Optional<StreamingRoom> findByRecordingId(String recordingId);
 }

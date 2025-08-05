@@ -1,8 +1,10 @@
 package com.susang.stellarVision.application.streaming.service;
 
 import com.susang.stellarVision.application.streaming.dto.CreateStreamingSessionRequest;
+import com.susang.stellarVision.application.streaming.dto.RecordingInfoDTO;
 import com.susang.stellarVision.application.streaming.dto.StreamingRoomDTO;
 import com.susang.stellarVision.application.streaming.exception.AccessDeniedException;
+import com.susang.stellarVision.application.streaming.exception.RecordingNotFoundException;
 import com.susang.stellarVision.application.streaming.exception.SessionNotFoundException;
 import com.susang.stellarVision.application.streaming.repository.StreamingRepository;
 import com.susang.stellarVision.entity.Member;
@@ -10,6 +12,10 @@ import com.susang.stellarVision.entity.StreamingRoom;
 import io.openvidu.java.client.*;
 
 import java.util.List;
+import io.openvidu.java.client.Recording.OutputMode;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,18 +32,10 @@ public class StreamingServiceImpl implements StreamingService {
     @Transactional
     public String createSession(CreateStreamingSessionRequest request, Member member)
             throws OpenViduJavaClientException, OpenViduHttpException {
-
-        if (request.getForcedVideoCodec() == VideoCodec.MEDIA_SERVER_PREFERRED) {
-            request.setForcedVideoCodec(VideoCodec.VP8);
-        }
-
         SessionProperties.Builder builder = new SessionProperties.Builder()
-                .forcedVideoCodec(VideoCodec.valueOf(request.getForcedVideoCodec()
-                        .name()))
-                .mediaMode(MediaMode.valueOf(request.getMediaMode()
-                        .name()))
-                .recordingMode(RecordingMode.valueOf(request.getRecordingMode()
-                        .name()));
+                .forcedVideoCodec(VideoCodec.VP8)
+                .mediaMode(MediaMode.ROUTED)
+                .recordingMode(RecordingMode.MANUAL);
 
         SessionProperties properties = builder.build();
         Session session = openVidu.createSession(properties);
@@ -132,5 +130,66 @@ public class StreamingServiceImpl implements StreamingService {
                     );
                 })
                 .toList();
+    }
+
+    @Override
+    @Transactional
+    public String startRecording(String sessionId, Member member)
+            throws OpenViduJavaClientException, OpenViduHttpException {
+
+        StreamingRoom streamingRoom = streamingRepository.findBySessionId(sessionId)
+                .orElseThrow(() -> new SessionNotFoundException(sessionId));
+
+        if (!member.getId()
+                .equals(streamingRoom.getMember()
+                        .getId())) {
+            throw new AccessDeniedException("생성한 멤버만 녹화를 시작할 수 있습니다.");
+        }
+
+        Session activeSession = openVidu.getActiveSession(sessionId);
+        if (activeSession == null) {
+            throw new SessionNotFoundException(sessionId);
+        }
+
+        RecordingProperties defaultProps = activeSession.getProperties()
+                .defaultRecordingProperties();
+
+        RecordingProperties props = new RecordingProperties.Builder(defaultProps)
+                .name(streamingRoom.getTitle())
+                .outputMode(OutputMode.COMPOSED)
+                .build();
+
+        Recording recording = openVidu.startRecording(sessionId, props);
+
+        streamingRoom.markRecordingStarted(recording.getId());
+
+        return recording.getId();
+    }
+
+    @Override
+    @Transactional
+    public RecordingInfoDTO stopRecording(String recordingId, Member member)
+            throws OpenViduJavaClientException, OpenViduHttpException {
+        StreamingRoom streamingRoom = streamingRepository.findByRecordingId(recordingId)
+                .orElseThrow(() -> new RecordingNotFoundException(recordingId));
+
+        if (!member.getId()
+                .equals(streamingRoom.getMember()
+                        .getId())) {
+            throw new AccessDeniedException("생성한 멤버만 녹화를 중지할 수 있습니다.");
+        }
+
+        Recording recording = openVidu.stopRecording(recordingId);
+
+        Instant created = Instant.ofEpochMilli(recording.getCreatedAt());
+        streamingRoom.markRecordingStopped(recording.getUrl(),
+                LocalDateTime.ofInstant(created, ZoneOffset.UTC));
+
+        return new RecordingInfoDTO(
+                recordingId,
+                recording.getUrl(),
+                recording.getName(),
+                LocalDateTime.ofInstant(created, ZoneOffset.UTC)
+        );
     }
 }

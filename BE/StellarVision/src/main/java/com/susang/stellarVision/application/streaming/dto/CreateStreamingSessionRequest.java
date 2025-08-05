@@ -16,6 +16,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreateStreamingSessionRequest {
+
     @NotBlank
     private String title;
 
@@ -24,13 +25,4 @@ public class CreateStreamingSessionRequest {
 
     @NotNull
     private BigDecimal longitude;
-
-    @NotNull
-    private VideoCodec forcedVideoCodec;
-
-    @NotNull
-    private MediaMode mediaMode;
-
-    @NotNull
-    private RecordingMode recordingMode;
 }

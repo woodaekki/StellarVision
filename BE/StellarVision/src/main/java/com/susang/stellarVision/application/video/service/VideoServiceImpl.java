@@ -2,6 +2,7 @@ package com.susang.stellarVision.application.video.service;
 
 
 import com.susang.stellarVision.application.video.dto.VideoResponse;
+import com.susang.stellarVision.application.video.dto.VideoSearchRequest;
 import com.susang.stellarVision.application.video.dto.VideoTagListResponse;
 import com.susang.stellarVision.application.video.dto.VideoTagRequest;
 import com.susang.stellarVision.application.video.dto.VideoTagResponse;
@@ -56,6 +57,29 @@ public class VideoServiceImpl implements VideoService {
                 .originalFilename(video.getTitle()).createdAt(video.getCreatedAt())
                 .thumbnailDownloadUrl(s3FileManager.getPresignedDownloadUrl(
                         video.getThumbnail().getThumbnailS3Key())).build());
+    }
+
+    @Override
+    public Page<VideoResponse> getVideos(Pageable pageable) {
+        Page<Video> videos = videoRepository.findAll(pageable);
+        return videos.map(video -> VideoResponse.builder().id(video.getId()).id(video.getId())
+                .originalFilename(video.getTitle()).createdAt(video.getCreatedAt())
+                .thumbnailDownloadUrl(s3FileManager.getPresignedDownloadUrl(
+                        video.getThumbnail().getThumbnailS3Key()))
+                .memberId(video.getMember().getId())
+                .build());
+    }
+
+    @Override
+    public Page<VideoResponse> searchVideos(VideoSearchRequest condition, Pageable pageable) {
+        Page<Video> videos = videoRepository.search(condition, pageable);
+
+        return videos.map(video -> VideoResponse.builder().id(video.getId())
+                .originalFilename(video.getTitle()).createdAt(video.getCreatedAt())
+                .thumbnailDownloadUrl(s3FileManager.getPresignedDownloadUrl(
+                        video.getThumbnail().getThumbnailS3Key()))
+                .memberId(video.getMember().getId())
+                .build());
     }
 
     @Override
