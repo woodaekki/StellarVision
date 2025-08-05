@@ -1,9 +1,7 @@
 <template>
-  <div class="page">
+  <div class="page" ref="pageRef">
     <div class="stars-background">
       <div class="gallery-grid">
-
-        <!-- 업로드 박스 -->
         <div class="upload-box" @click="triggerGalleryUpload">
           <span>+</span>
           <input
@@ -15,91 +13,84 @@
           />
         </div>
 
-        <!-- 사진 리스트 -->
         <div
           v-for="(item, index) in photos"
           :key="item.id"
           class="photo-box"
+          @click="viewPhoto(item.id)"
         >
           <img :src="item.url" class="photo-img" />
           <div class="photo-text">
             <p>{{ item.name }}</p>
             <p class="photo-date">{{ item.date }}</p>
           </div>
+          <button class="delete-button" @click.stop="deletePhoto(item.id)">
+            삭제
+          </button>
         </div>
-
-        <!-- 빈 프레임 채우기 (선택사항) -->
-        <div
-          v-for="n in (TOTAL_FRAMES - photos.length)"
-          :key="'empty-' + n"
-          class="empty-frame"
-          v-if="photos.length < TOTAL_FRAMES"
-        ></div>
-
-        <!-- 무한스크롤 감지 요소 -->
-        <div ref="loadMoreTrigger" class="load-more-trigger"></div>
       </div>
 
-      <!-- 로딩 표시 -->
       <div v-if="loading" class="loading-text">사진 불러오는 중...</div>
-      <div v-if="!hasMore && photos.length > 0" class="loading-text">모든 사진을 불러왔습니다.</div>
+      <div v-if="!photos.length && !loading && !hasMore" class="loading-text">
+        아직 사진이 없습니다.
+      </div>
+      <div v-if="!loading && hasMore" class="loading-text">
+        스크롤하여 더 많은 사진 보기
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useAccountStore } from '@/stores/account'
 import axios from 'axios'
 import axiosApi from '@/api/axiosApi'
 
 const accountStore = useAccountStore()
 
+const pageRef = ref(null)
 const galleryInput = ref(null)
-const loadMoreTrigger = ref(null)
 
 const photos = ref([])
-const page = ref(1)
-const limit = 7
 const loading = ref(false)
+const page = ref(0)
 const hasMore = ref(true)
-
-const TOTAL_FRAMES = 7
+const isScrolling = ref(false)
 
 const memberId = computed(() => accountStore.myProfile?.memberId)
 const canUpload = computed(() => accountStore.isLogin)
 
-// 사진 불러오기 (페이지네이션)
+// 사진 불러오기
 const fetchPhotos = async () => {
-  if (loading.value || !hasMore.value) return
-  if (!memberId.value) return
+  if (loading.value || !hasMore.value || isScrolling.value) return
 
+  isScrolling.value = true
   loading.value = true
 
   try {
     const { data } = await axiosApi.get(`profiles/${memberId.value}/photos`, {
-      params: { page: page.value, limit }
+      params: {
+        page: page.value,
+        size: 7, // 한 번에 불러올 사진 목록 수
+      },
     })
 
-    // API 구조에 맞게 변경 필요
-    const newPhotos = data.data.photos.map(p => ({
+    const newPhotos = data.data.photos.map((p) => ({
       id: p.id,
-      url: p.downloadUrl,       
-      name: p.originalFilename, 
+      url: p.downloadUrl,
+      name: p.originalFilename,
       date: p.createdAt.split('T')[0],
     }))
 
     photos.value = [...photos.value, ...newPhotos]
-
-    if (photos.value.length >= data.data.totalCount) {
-      hasMore.value = false
-    } else {
-      page.value += 1
-    }
+    hasMore.value = !data.data.isLast
+    page.value++
   } catch (e) {
     console.error('사진 불러오기 실패:', e)
   } finally {
     loading.value = false
+    isScrolling.value = false
   }
 }
 
@@ -129,66 +120,111 @@ const uploadGalleryImage = async (e) => {
   if (!file || !memberId.value) return
 
   try {
-    const { data } = await axiosApi.post('/photos/presignedUrl', {
+    const { data: presignedResponse } = await axiosApi.post('/photos/presignedUrl', {
       memberId: memberId.value,
       originalFilename: file.name,
+      contentType: file.type,
     })
 
-    const presignedData = data.data
+    const presignedData = presignedResponse.data
 
     if (!presignedData.uploadUrl || !presignedData.s3Key) {
-      console.error('presignedUrl 또는 s3Key가 없습니다', data)
+      console.error('presignedUrl 또는 s3Key가 없습니다', presignedResponse)
       return
     }
 
     await axios.put(presignedData.uploadUrl, file, {
       headers: {
-        'Content-Type': file.type
+        'Content-Type': file.type,
       },
       maxContentLength: Infinity,
       maxBodyLength: Infinity,
     })
 
+    // 업로드 완료 후, 서버로부터 응답 대기
     await axiosApi.post('/photos/complete', {
       memberId: memberId.value,
       originalFilename: file.name,
       s3Key: presignedData.s3Key,
     })
 
-    // 업로드 후 최신 사진 목록 다시 불러오기
+    // 업로드가 완료되면 전체 목록을 초기화하고 새로고침
+    page.value = 0
     photos.value = []
-    page.value = 1
     hasMore.value = true
     await fetchPhotos()
 
+    alert('사진 업로드가 완료되었습니다.')
   } catch (err) {
     console.error('업로드 실패:', err)
+    alert('사진 업로드에 실패했습니다. 다시 시도해주세요.')
   }
 }
 
-// IntersectionObserver 무한 스크롤 구현
-let observer = null
+// 단건 조회 API를 호출하여 새 창에서 사진 띄우기
+const viewPhoto = async (photoId) => {
+  try {
+    const { data } = await axiosApi.get(`/photos/${photoId}`)
+
+    const photoUrl = data.data.downloadUrl
+
+    if (photoUrl) {
+      window.open(photoUrl, '_blank')
+    }
+  } catch (e) {
+    console.error(`사진(ID: ${photoId}) 조회 실패:`, e)
+    alert('사진 정보를 불러오는 데 실패했습니다.')
+  }
+}
+
+// 사진 삭제 함수
+const deletePhoto = async (photoId) => {
+  if (!canUpload.value) {
+    alert('삭제 권한이 없습니다. 로그인 후 다시 시도해주세요.')
+    return
+  }
+  if (!confirm('정말로 이 사진을 삭제하시겠습니까?')) return
+
+  try {
+    await axiosApi.delete(`/photos/${photoId}`)
+
+    // 삭제 후 전체 목록을 초기화하고 새로 고침
+    page.value = 0
+    photos.value = []
+    hasMore.value = true
+    await fetchPhotos()
+
+    alert('사진이 성공적으로 삭제되었습니다.')
+  } catch (e) {
+    console.error(`사진(ID: ${photoId}) 삭제 실패:`, e)
+    alert('사진 삭제에 실패했습니다. 다시 시도해주세요.')
+  }
+}
+
+// 스크롤 이벤트 핸들러
+const handleScroll = () => {
+  const pageElement = pageRef.value
+  if (!pageElement) return
+
+  const { scrollTop, scrollHeight, clientHeight } = pageElement
+  if (scrollTop + clientHeight >= scrollHeight - 50 && hasMore.value) {
+    fetchPhotos()
+  }
+}
 
 onMounted(async () => {
   await accountStore.fetchMyProfile()
-  await fetchPhotos()
-
-  observer = new IntersectionObserver((entries) => {
-    if (entries[0].isIntersecting) {
-      fetchPhotos()
-    }
-  }, {
-    rootMargin: '200px', // 화면 아래 200px 접근 시 미리 로딩
-  })
-
-  if (loadMoreTrigger.value) {
-    observer.observe(loadMoreTrigger.value)
+  if (memberId.value) {
+    await fetchPhotos()
+  }
+  if (pageRef.value) {
+    pageRef.value.addEventListener('scroll', handleScroll)
   }
 })
 
-onUnmounted(() => {
-  if (observer && loadMoreTrigger.value) {
-    observer.unobserve(loadMoreTrigger.value)
+onBeforeUnmount(() => {
+  if (pageRef.value) {
+    pageRef.value.removeEventListener('scroll', handleScroll)
   }
 })
 </script>
@@ -196,7 +232,8 @@ onUnmounted(() => {
 <style scoped>
 .page {
   background-color: black;
-  min-height: 100vh;
+  height: 100vh;
+  overflow-y: auto;
   color: white;
   font-family: sans-serif;
 }
@@ -205,12 +242,12 @@ onUnmounted(() => {
   padding: 2rem;
   background: #262626;
   position: relative;
+  min-height: 100%;
 }
 
 .gallery-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(4, auto);
   gap: 1rem;
   max-width: 640px;
   margin: 0 auto;
@@ -226,17 +263,26 @@ onUnmounted(() => {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  cursor: pointer;
 }
 
 .upload-box {
   justify-content: center;
   align-items: center;
   font-size: 3rem;
-  cursor: pointer;
   transition: background 0.3s;
 }
+
 .upload-box:hover {
   background-color: #3a3a3a;
+}
+
+.photo-box {
+  transition: transform 0.2s;
+}
+
+.photo-box:hover {
+  transform: scale(1.03);
 }
 
 .photo-img {
@@ -255,6 +301,26 @@ onUnmounted(() => {
   font-size: 0.75rem;
 }
 
+.delete-button {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background-color: rgba(255, 0, 0, 0.8);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 12px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 10;
+}
+
+.photo-box:hover .delete-button {
+  opacity: 1;
+}
+
 .empty-frame {
   width: 100%;
   height: 100%;
@@ -263,10 +329,6 @@ onUnmounted(() => {
 
 .hidden {
   display: none;
-}
-
-.load-more-trigger {
-  height: 1px;
 }
 
 .loading-text {
