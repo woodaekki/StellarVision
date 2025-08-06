@@ -21,12 +21,11 @@ export default function openviduService(streamId, userName, onError = () => {}) 
   const connect = async () => {
     try {
       const response = await streamingService.getToken(streamId, userName)
-      const token = response.data.token   //data에서 token과 role을 받아옴
+      const token = response.data.data.token   //data에서 token과 role을 받아옴
       const role = response.data.data.role
-      console.log(response.data.data)
       console.log('token, role', token, role)
       await session.connect(token, { clientData: userName })
-      if(role === 'PUBILSHER' ){
+      if(role === 'PUBLISHER' ){
         publisher.value = OV.initPublisher(undefined, {     //undefiend 대신 태그ID나 DOM 지정하면 바로 스트림이 붙는다.
         audioSource: undefined,
         videoSource: undefined,
