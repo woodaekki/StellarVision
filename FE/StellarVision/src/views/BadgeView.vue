@@ -102,6 +102,8 @@ function handleBadgeClick(event, badge) {
 }
 
 .badge-wrapper {
+  background-image: url(@/assets//pictures/wallpaper/space.jpeg); 
+  padding-top: 58px; 
   position: relative;
   display: flex;
   justify-content: center;
