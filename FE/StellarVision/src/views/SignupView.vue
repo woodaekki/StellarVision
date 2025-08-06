@@ -21,8 +21,7 @@
           <option value="naver.com">@naver.com</option>
           <option value="gmail.com">@gmail.com</option>
           <option value="hanmail.net">@hanmail.net</option>
-          <option value="nate.com">@nate.com</option>
-          <option value="msn.com">@msn.com</option>
+
         </select>
       </div>
 
