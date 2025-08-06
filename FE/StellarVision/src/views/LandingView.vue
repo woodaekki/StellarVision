@@ -1,7 +1,7 @@
 <template>
   <div class="landing-wrapper">
     <section class="video-container">
-      <video autoplay muted loop playsinline class="background-video" src="/videos/test1.mp4"></video>
+      <video autoplay muted loop playsinline class="background-video" src="/videos/test3.mp4"></video>
       <LandingGlobe />
     </section>
 

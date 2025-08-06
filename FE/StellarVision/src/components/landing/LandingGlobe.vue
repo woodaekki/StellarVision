@@ -4,9 +4,6 @@
         <canvas ref="canvas"></canvas>
         <div class="text-layer">
           <p class="text-above">A screen. A sky. A story.</p>
-          <p class="text-below" @animationend="animation">
-            Drag the 360° map to find the 12 zodiac constellations
-          </p>
           <button @click="goToMain" class="start-button">시작하기</button>
         </div>
     </div>
@@ -131,7 +128,7 @@ async function createScene() {
   );
   pipeline.bloomEnabled = true;
   pipeline.bloomThreshold = 0.1;
-  pipeline.bloomIntensity = 0.1;
+  pipeline.bloomIntensity = -100;
   pipeline.bloomKernel = 16;
 
 
