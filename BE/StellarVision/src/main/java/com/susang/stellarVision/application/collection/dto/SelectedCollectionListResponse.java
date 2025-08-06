@@ -9,5 +9,6 @@ import lombok.Getter;
 @AllArgsConstructor
 @Builder
 public class SelectedCollectionListResponse {
+
     List<SelectedCollectionResponse> selectedCollections;
 }

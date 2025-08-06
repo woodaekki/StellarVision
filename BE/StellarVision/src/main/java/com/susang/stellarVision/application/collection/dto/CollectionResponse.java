@@ -8,6 +8,7 @@ import lombok.Getter;
 @Builder
 @AllArgsConstructor
 public class CollectionResponse {
+
     private Integer id;
     private String name;         // 영문 이름 (예: Aries)
     private String koreanName;   // 한글 이름 (예: 양자리)

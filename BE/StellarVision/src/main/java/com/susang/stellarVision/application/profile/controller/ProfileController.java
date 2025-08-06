@@ -58,11 +58,10 @@ public class ProfileController {
     }
 
     @PostMapping("/complete")
-    public ResponseEntity<APIResponse<String>> completeUpload(@RequestBody PhotoUploadCompleteRequest request) {
+    public ResponseEntity<APIResponse<String>> completeUpload(
+            @RequestBody PhotoUploadCompleteRequest request) {
 
-        profileService.saveProfileImageMeta(
-                request.getMemberId(),
-                request.getOriginalFilename(),
+        profileService.saveProfileImageMeta(request.getMemberId(), request.getOriginalFilename(),
                 request.getS3Key());
 
         return ResponseEntity.ok(APIResponse.success("프로필 이미지 업로드 완료 및 메타데이터 저장 성공", null));
@@ -72,8 +71,7 @@ public class ProfileController {
     @GetMapping("/{memberId}/photos")
     public ResponseEntity<APIResponse<PhotoListResponse>> getPhotosByMemberId(
             @PathVariable Long memberId,
-            @PageableDefault(size = 3, sort = "createdAt", direction = Sort.Direction.DESC)
-            Pageable pageable) {
+            @PageableDefault(size = 3, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
         Page<PhotoResponse> page = photoService.getPhotosByMemberId(memberId, pageable);
         PhotoListResponse response = new PhotoListResponse(page.getContent(),
@@ -82,9 +80,9 @@ public class ProfileController {
     }
 
     @GetMapping("{memberId}/videos")
-    public ResponseEntity<APIResponse<VideoListResponse>> getVideosByMemberId(@PathVariable Long memberId,
-            @PageableDefault(size = 3, sort = "createdAt", direction = Sort.Direction.DESC)
-            Pageable pageable){
+    public ResponseEntity<APIResponse<VideoListResponse>> getVideosByMemberId(
+            @PathVariable Long memberId,
+            @PageableDefault(size = 3, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
         Page<VideoResponse> page = videoService.getVideosByMemberId(memberId, pageable);
         VideoListResponse response = new VideoListResponse(page.getContent(),
@@ -101,52 +99,61 @@ public class ProfileController {
     }
 
     @PatchMapping("/videos/{videoId}")
-    public ResponseEntity<APIResponse<String>> updateVideoContent (@PathVariable Long videoId,@RequestBody VideoUpdateRequest request) {
-        videoService.updateVideoContent(videoId,request);
+    public ResponseEntity<APIResponse<String>> updateVideoContent(@PathVariable Long videoId,
+            @RequestBody VideoUpdateRequest request) {
+        videoService.updateVideoContent(videoId, request);
         return ResponseEntity.ok(APIResponse.success("다시보기 제목,태그 수정 성공", null));
     }
 
     @GetMapping("/me")
-    public ResponseEntity<APIResponse<ProfileResponse>> getMyProfile(@AuthenticationPrincipal CustomUserDetails userDetails)  {
+    public ResponseEntity<APIResponse<ProfileResponse>> getMyProfile(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
         ProfileResponse response = profileService.getMyProfileInfo(userDetails);
-        return ResponseEntity.ok(APIResponse.success("내 프로필 정보 조회 성공" ,response ));
+        return ResponseEntity.ok(APIResponse.success("내 프로필 정보 조회 성공", response));
     }
 
 
     @GetMapping("/{memberId}")
-    public ResponseEntity<APIResponse<ProfileResponse>> getProfileInfo(@PathVariable Long memberId) {
+    public ResponseEntity<APIResponse<ProfileResponse>> getProfileInfo(
+            @PathVariable Long memberId) {
         ProfileResponse response = profileService.getProfileInfo(memberId);
         return ResponseEntity.ok(APIResponse.success("프로필 정보 조회 성공", response));
     }
 
     @PatchMapping("/me/visibility")
-    public ResponseEntity<APIResponse<String>> updateVisibility(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody ProfileVisibilityUpdateRequest profileVisibilityUpdateRequest) {
-        profileService.updateVisibility(userDetails,profileVisibilityUpdateRequest);
-        return  ResponseEntity.ok(APIResponse.success("프로필 공개 여부 변경 성공" , null));
+    public ResponseEntity<APIResponse<String>> updateVisibility(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody ProfileVisibilityUpdateRequest profileVisibilityUpdateRequest) {
+        profileService.updateVisibility(userDetails, profileVisibilityUpdateRequest);
+        return ResponseEntity.ok(APIResponse.success("프로필 공개 여부 변경 성공", null));
     }
 
     @GetMapping("/{memberId}/collections")
-    public ResponseEntity<APIResponse<CollectionListResponse>> getMyCollections(@PathVariable Long memberId) {
+    public ResponseEntity<APIResponse<CollectionListResponse>> getMyCollections(
+            @PathVariable Long memberId) {
         CollectionListResponse response = collectionService.getCollectionsByMemberId(memberId);
         return ResponseEntity.ok(APIResponse.success(response));
 
     }
 
-    @PatchMapping ("/me/badge")
-    public ResponseEntity<APIResponse<String>> updateMyBadge(@AuthenticationPrincipal CustomUserDetails userDetails , @RequestBody
-            SelectCollectionRequest selectCollectionRequest) {
-            collectionService.updateMyBadge(userDetails,selectCollectionRequest);
-        return ResponseEntity.ok(APIResponse.success("뱃지 설정 성공",null));
+    @PatchMapping("/me/badge")
+    public ResponseEntity<APIResponse<String>> updateMyBadge(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody SelectCollectionRequest selectCollectionRequest) {
+        collectionService.updateMyBadge(userDetails, selectCollectionRequest);
+        return ResponseEntity.ok(APIResponse.success("뱃지 설정 성공", null));
     }
 
-   @GetMapping("/{memberId}/badge")
-    public ResponseEntity<APIResponse<SelectedCollectionListResponse>> getBadges(@PathVariable Long memberId) {
-       SelectedCollectionListResponse selectedCollectionListResponse = collectionService.getBadges(memberId);
-        return ResponseEntity.ok(APIResponse.success("뱃지 조회 성공",selectedCollectionListResponse));
-   }
-
-
+    @GetMapping("/{memberId}/badge")
+    public ResponseEntity<APIResponse<SelectedCollectionListResponse>> getBadges(
+            @PathVariable Long memberId) {
+        SelectedCollectionListResponse selectedCollectionListResponse = collectionService.getBadges(
+                memberId);
+        return ResponseEntity.ok(APIResponse.success("뱃지 조회 성공", selectedCollectionListResponse));
     }
+
+
+}
 
 
 

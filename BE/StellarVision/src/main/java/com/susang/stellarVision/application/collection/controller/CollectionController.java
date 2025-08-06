@@ -19,7 +19,8 @@ public class CollectionController {
     private final CollectionService collectionService;
 
     @GetMapping()
-    public ResponseEntity<APIResponse<CollectionListResponse>> getMemberCollections(@AuthenticationPrincipal CustomUserDetails details) {
+    public ResponseEntity<APIResponse<CollectionListResponse>> getMemberCollections(
+            @AuthenticationPrincipal CustomUserDetails details) {
 
         CollectionListResponse response = collectionService.getMemberCollections(details);
         return ResponseEntity.ok(APIResponse.success(response));

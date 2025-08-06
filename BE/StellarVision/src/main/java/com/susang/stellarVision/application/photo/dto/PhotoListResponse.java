@@ -7,6 +7,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class PhotoListResponse {
+
     private List<PhotoResponse> photos;
     private long totalCount;
 }

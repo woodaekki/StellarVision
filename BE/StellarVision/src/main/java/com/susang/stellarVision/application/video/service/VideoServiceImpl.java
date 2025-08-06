@@ -46,7 +46,7 @@ public class VideoServiceImpl implements VideoService {
     private final MemberRepository memberRepository;
     private final ThumbnailRepository thumbnailRepository;
 
-    public String getVideoPresignedUrl(Long videoId)  {
+    public String getVideoPresignedUrl(Long videoId) {
         return videoRepository.findById(videoId)
                 .map(video -> s3FileManager.getPresignedDownloadUrl(video.getVideoS3Key()))
                 .orElseThrow(() -> new VideoNotFoundException(videoId.toString()) {
@@ -55,7 +55,7 @@ public class VideoServiceImpl implements VideoService {
 
     @Override
     @Transactional
-    public void deleteVideo(Long videoId)  {
+    public void deleteVideo(Long videoId) {
         Video video = videoRepository.findById(videoId)
                 .orElseThrow(() -> new VideoNotFoundException(videoId.toString()) {
                 });
@@ -81,8 +81,7 @@ public class VideoServiceImpl implements VideoService {
                 .originalFilename(video.getTitle()).createdAt(video.getCreatedAt())
                 .thumbnailDownloadUrl(s3FileManager.getPresignedDownloadUrl(
                         video.getThumbnail().getThumbnailS3Key()))
-                .memberId(video.getMember().getId())
-                .build());
+                .memberId(video.getMember().getId()).build());
     }
 
     @Override
@@ -93,8 +92,7 @@ public class VideoServiceImpl implements VideoService {
                 .originalFilename(video.getTitle()).createdAt(video.getCreatedAt())
                 .thumbnailDownloadUrl(s3FileManager.getPresignedDownloadUrl(
                         video.getThumbnail().getThumbnailS3Key()))
-                .memberId(video.getMember().getId())
-                .build());
+                .memberId(video.getMember().getId()).build());
     }
 
     @Override
@@ -128,7 +126,7 @@ public class VideoServiceImpl implements VideoService {
 
     @Override
     @Transactional
-    public void deleteVideoTag(Long videoId, Long tagId)  {
+    public void deleteVideoTag(Long videoId, Long tagId) {
         VideoTag tag = videoTagRepository.findById(tagId)
                 .orElseThrow(() -> new VideoTagNotFoundException(tagId.toString()));
 
@@ -140,8 +138,7 @@ public class VideoServiceImpl implements VideoService {
 
     @Override
     @Transactional
-    public void updateVideoContent(Long videoId, VideoUpdateRequest request)
-            {
+    public void updateVideoContent(Long videoId, VideoUpdateRequest request) {
 
         Video video = videoRepository.findById(videoId)
                 .orElseThrow(() -> new VideoNotFoundException(videoId.toString()));
@@ -159,7 +156,7 @@ public class VideoServiceImpl implements VideoService {
     @Override
     @Transactional
     public void uploadVideo(InputStream inputStream, Long contentLength, String title,
-            Long memberId)  {
+            Long memberId) {
         String originalFilename = title + ".mp4";
         String extension = FileExtensionUtil.extractExtension(originalFilename);
         String contentType = ContentTypeMapper.fromExtension(extension);
@@ -174,16 +171,11 @@ public class VideoServiceImpl implements VideoService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new MemberNotFoundException(memberId.toString()));
 
-        Thumbnail thumbnail = Thumbnail.builder()
-                .build();
+        Thumbnail thumbnail = Thumbnail.builder().build();
         thumbnailRepository.save(thumbnail);
 
-        Video video = Video.builder()
-                .videoS3Key(s3Key)
-                .title(title)
-                .member(member)
-                .thumbnail(thumbnail)
-                .build();
+        Video video = Video.builder().videoS3Key(s3Key).title(title).member(member)
+                .thumbnail(thumbnail).build();
         videoRepository.save(video);
 
 

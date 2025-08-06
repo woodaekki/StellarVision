@@ -59,7 +59,7 @@ public class PhotoServiceImpl implements PhotoService {
 
 
     @Override
-    public PhotoResponse getPhoto(Long photoId) throws PhotoNotFoundException  {
+    public PhotoResponse getPhoto(Long photoId) {
         Photo photo = photoRepository.findById(photoId)
                 .orElseThrow(() -> new PhotoNotFoundException(photoId.toString()) {
                 });
@@ -83,7 +83,7 @@ public class PhotoServiceImpl implements PhotoService {
 
     @Override
     @Transactional
-    public void savePhotoMeta(Long memberId, String originalFilename, String s3Key) throws MemberNotFoundException  {
+    public void savePhotoMeta(Long memberId, String originalFilename, String s3Key) {
         if (photoRepository.existsByPhotoS3Key(s3Key)) {
             throw new DuplicatedPhotoException(s3Key);
         }
@@ -100,7 +100,7 @@ public class PhotoServiceImpl implements PhotoService {
     }
 
     @Transactional
-    public void deletePhoto(Long photoId) throws PhotoNotFoundException  {
+    public void deletePhoto(Long photoId) {
         Photo photo = photoRepository.findById(photoId)
                 .orElseThrow(() -> new PhotoNotFoundException(photoId.toString()) {
                 });
