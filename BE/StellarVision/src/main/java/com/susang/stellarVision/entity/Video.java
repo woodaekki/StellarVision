@@ -21,7 +21,7 @@ public class Video extends BaseEntity {
     @Column(name = "title", nullable = false, length = 30)
     private String title;
 
-    @Column(name = "like_count", nullable = false)
+    @Column(name = "like_count")
     @ColumnDefault("0")
     private Long likeCount;
 

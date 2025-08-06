@@ -1,20 +1,20 @@
 package com.susang.stellarVision.application.streaming.service;
 
 import com.susang.stellarVision.application.streaming.dto.RecordingStream;
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.buffer.DataBuffer;
-import org.springframework.core.io.buffer.DataBufferUtils;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class RecordingDownloadService {
 
     @Value("${openvidu.secret}")
@@ -24,30 +24,32 @@ public class RecordingDownloadService {
 
     @Async("recordingExecutor")
     public CompletableFuture<RecordingStream> getRecordingStream(String recordingUrl) {
-        ClientResponse resp = webClient.get()
+        // 1) 요청 및 응답 수신
+        ResponseEntity<byte[]> response = webClient.get()
                 .uri(recordingUrl)
                 .headers(h -> h.setBasicAuth("OPENVIDUAPP", secret))
-                .exchangeToMono(Mono::just)
+                .retrieve()
+                .toEntity(byte[].class)
                 .block();
 
-        if (resp == null || !resp.statusCode()
-                .is2xxSuccessful()) {
-            throw new RuntimeException(
-                    "다운로드 실패: " + (resp != null ? resp.statusCode() : "No response"));
+        if (response == null) {
+            throw new RuntimeException("다운로드 응답이 없습니다");
+        }
+        if (!response.getStatusCode().is2xxSuccessful()) {
+            throw new RuntimeException("HTTP 에러: " + response.getStatusCode());
         }
 
-        Long contentLength = resp.headers()
-                .contentLength()
-                .orElse(-1L);
+        long contentLengthHeader = response.getHeaders().getContentLength();
 
-        InputStream inputStream = DataBufferUtils.join(resp.bodyToFlux(DataBuffer.class))
-                .map(DataBuffer::asInputStream)
-                .block();
-
-        if (inputStream == null) {
-            throw new RuntimeException("InputStream 생성실패");
+        byte[] data = response.getBody();
+        if (data == null || data.length == 0) {
+            throw new RuntimeException("다운로드 받은 데이터가 없습니다");
         }
 
-        return CompletableFuture.completedFuture(new RecordingStream(contentLength, inputStream));
+        // 4) InputStream 생성 및 반환
+        InputStream is = new ByteArrayInputStream(data);
+        return CompletableFuture.completedFuture(
+                new RecordingStream(contentLengthHeader, is)
+        );
     }
 }

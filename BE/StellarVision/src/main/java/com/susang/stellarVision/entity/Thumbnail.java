@@ -23,7 +23,7 @@ public class Thumbnail extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "thumbnail_s3_key", nullable = false)
+    @Column(name = "thumbnail_s3_key")
     private String thumbnailS3Key;
 
     @Builder
