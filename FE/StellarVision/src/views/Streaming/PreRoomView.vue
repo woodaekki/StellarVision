@@ -1,8 +1,8 @@
+<!-- PreRoomView.vue -->
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import streamingService from '@/services/streamingService'
-import { useStreamingStore } from '@/stores/streaming'
 import openviduService from '@/services/openviduService'
 
 const { create } = streamingService
@@ -10,8 +10,6 @@ const router = useRouter()
 
 const title = ref('')
 const userName = ref('')
-const joinStreamId = ref('')
-const store = useStreamingStore()
 
 const createRoom = async () => {
   try {
@@ -19,41 +17,30 @@ const createRoom = async () => {
       title: title.value,
       latitude: 37.1234,        // 임의 값 설정
       longitude: 127.5678,
-      forcedVideoCodec: 'H264',
-      mediaMode: 'ROUTED',
-      recordingMode: 'MANUAL'
     };
 
     const response = await create(payload)
     const sessionId = response.data.data
-    // store.setRoomInfo({roomId, userName : userName.value})
-
-    await openviduService().connectAsPublisher(sessionId)
+    console.log('res', response.data.data)
+    await openviduService().connect
 
     router.push({
       name: 'RoomView',
       params: {
         id: sessionId,
         userName: userName.value || 'Guest'
-      }
+      },
+      query: {title:title.value}      //RoomView로 방 제목을 전달해주기 위해 쿼리에 포함시킴
     })
   } catch (err) {
     console.error(err)
-    console.error('🛠 Error details:', err.response.data.error.details);
+    console.error('Error details:', err.response.data.error.details);
 
     alert('방 생성에 실패했습니다.')
   }
 }
 
-const joinRoom = () => {
-  router.push({
-    name: 'RoomView',
-    params: {
-      streamId: joinStreamId.value,
-      userName: userName.value || 'Guest'
-    }
-  })
-}
+
 </script>
 
 <template>
@@ -68,16 +55,6 @@ const joinRoom = () => {
     </form>
 
     <hr />
-
-    <!-- ID로 방 참가 -->
-    <form @submit.prevent="joinRoom">
-      <input v-model="joinStreamId" placeholder="참가할 방 ID" required />
-      <input v-model="userName" placeholder="내 이름" required />
-      <button type="submit">방 참가</button>
-    </form>
-
-    <hr />
-
 
   </div>
 </template>

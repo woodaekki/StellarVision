@@ -21,9 +21,13 @@ export default function openviduService(streamId, userName, onError = () => {}) 
   const connect = async () => {
     try {
       const response = await streamingService.getToken(streamId, userName)
-      const token = response.data.data
+      const token = response.data.token   //data에서 token과 role을 받아옴
+      const role = response.data.data.role
+      console.log(response.data.data)
+      console.log('token, role', token, role)
       await session.connect(token, { clientData: userName })
-      publisher.value = OV.initPublisher(undefined, {
+      if(role === 'PUBILSHER' ){
+        publisher.value = OV.initPublisher(undefined, {     //undefiend 대신 태그ID나 DOM 지정하면 바로 스트림이 붙는다.
         audioSource: undefined,
         videoSource: undefined,
         publishAudio: true,
@@ -31,41 +35,13 @@ export default function openviduService(streamId, userName, onError = () => {}) 
         resolution: '640x480',
         frameRate: 30
       })
-      session.publish(publisher.value)
+        session.publish(publisher.value)
+      }
     } catch (e) {
       onError(e)
+      console.error('pulisher init error', e)
     }
   }
-
-  async function connectAsPublisher(sessionId) {
-    const session = OV.initSession()
-    const res = await streamingService.getToken(sessionId)
-    const token = res.data.data
-    await session.connect(token, { clientData: 'Host' })
-    const publisher = OV.initPublisher(token, {
-        audioSource: undefined,
-        videoSource: undefined,
-        publishAudio: true,
-        publishVideo: true,
-        resolution: '640x480',
-        frameRate: 30})
-    session.publish(publisher)
-    return session
-  }
-
-// 참여자(SUBSCRIBER)로 접속
-  async function connectAsSubscriber(sessionId) {
-    const session = OV.initSession()
-    const res = await streamingService.getToken(sessionId)
-    const token = res.data.data
-    await session.connect(token, { clientData: 'Guest' })
-    session.on('streamCreated', ({ stream }) => {
-      session.subscribe(stream)
-    })
-    return session
-  }
-
-
 
   const toggleRec = async () => {
     const action = recording.value ? 'stop' : 'start'
@@ -81,5 +57,5 @@ export default function openviduService(streamId, userName, onError = () => {}) 
   onMounted(connect)
   onUnmounted(leave)
 
-  return { session, publisher, subscribers, recording, toggleRec, leave, connectAsSubscriber, connectAsPublisher }
+  return { session, publisher, subscribers, recording, toggleRec, leave, connect }
 }

@@ -69,7 +69,41 @@
 /* 4) input 기본 스타일   */
 /* 5) form 기본 스타일   */
 /* 6) btn 기본 스타일   */
+$control-bg: rgba(0, 0, 0, 0.5);
+$btn-color: #fff;
+$btn-active-color: #f00;
+$btn-size: 2rem;      // 버튼 아이콘 폰트 크기
+$btn-padding: 0.5rem; // 버튼 내부 여백
+$btn-gap: 1.5rem;     // 버튼 간격
+$container-padding: 0.5rem;
+$container-radius: 9999px; // 둥근 형태
 
+
+.control-buttons {
+  position: absolute;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: $btn-gap;
+  background-color: $control-bg;
+  padding: $container-padding;
+  border-radius: $container-radius;
+
+  &__button {
+    font-size: $btn-size;
+    color: $btn-color;
+    padding: $btn-padding;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: color 0.2s ease;
+
+    &:focus {
+      outline: none;
+    }
+  }
+}
 /* 7) fade 기본 스타일  */
 
 /* 8) text-color   */
