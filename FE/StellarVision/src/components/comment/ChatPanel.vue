@@ -1,17 +1,57 @@
 <script setup>
-import { ref } from 'vue'
+import openviduService from '@/services/openviduService'
+import { Session } from 'openvidu-browser'
+import { onBeforeMount, onBeforeUnmount, onMounted, ref } from 'vue'
 
+
+const props = defineProps({
+  session : {type:Object, required:true},
+  userName: {type:String, required:true}
+
+})
+// 예제 채팅
 const messages = ref([
   { user: 'Alice', text: '안녕하세요!' },
   { user: 'Bob',   text: '어서오세요!' }
 ])
 const newMessage = ref('')
 
-function sendMessage() {
-  if (!newMessage.value.trim()) return
-  messages.value.push({ user: 'Me', text: newMessage.value })
-  newMessage.value = ''
-  // TODO: 실제 OpenVidu signaling 채널로 메시지 전송 로직 추가
+//openvidu 수신 콜백 핸들러
+function signalHandler(event){
+  messages.value.push({
+    user: event.from.clientData || 'Unknown',
+    text: event.data
+  })
+}
+
+onMounted(()=>{
+  // 채팅 메시지 수신
+  props.session.on('signal:chat', signalHandler)
+})
+
+// 언마운트 시 해제
+onBeforeUnmount(()=>{
+  props.session.off('signal:chat', signalHandler)
+})
+
+async function sendMessage() {
+
+  const text = newMessage.value.trim()
+  if(!text) return
+
+  try {
+    messages.value.push({ user: props.userName, text })   //새로운 메시지 추가하도록 함 Me 자리에 userName으로 바꾸면 됨
+
+    await props.session.signal({      //openvidu 공식 문서 참조
+      data:text,
+      type:'chat',
+      to:[]
+    })
+    newMessage.value = '' //새로 보낼 메시지 초기화
+  } catch(err){
+    console.error('signal 전송실패', err)
+  }
+
 }
 </script>
 
@@ -46,7 +86,7 @@ function sendMessage() {
   max-height: 60vh;
   display: flex;
   flex-direction: column;
-  background: rgba(255,255,255,0.9);
+  background: rgba(154, 153, 153, 0.9);
   border-radius: 8px;
   overflow: hidden;
 }

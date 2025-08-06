@@ -61,11 +61,10 @@ export const useAccountStore = defineStore('account', () => {
       { headers: { 'Content-Type' : 'multipart/form-data' }}
     )
 
-     console.log('로그인 전체 응답:', res)
+      const {accessToken, refreshToken, memberInfo} = res.data.data
+           console.log('로그인 전체 응답:', res)
      console.log('res.data:', res.data)
      console.log('res.data.data:', res.data.data)
-
-      const {accessToken, refreshToken, memberInfo} = res.data.data
       setToken(accessToken, refreshToken, memberInfo)                // 토큰 및 정보 저장
       console.log('로그인 성공')
       console.log('accessToken:', accessToken)
