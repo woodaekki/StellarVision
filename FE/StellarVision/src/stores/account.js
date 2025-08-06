@@ -76,7 +76,6 @@ export const useAccountStore = defineStore('account', () => {
     }
   }
 
-
     // 로그아웃 및 상태 초기화
   function logOut() {
     token.value = ''
@@ -103,7 +102,6 @@ export const useAccountStore = defineStore('account', () => {
       console.error('조회 실패', err)
     }
   }
-
 
   // 다른 사용자 프로필 정보 조회
   async function fetchUserProfile(memberId) {
