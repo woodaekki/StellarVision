@@ -20,6 +20,14 @@ public class ProfileServiceImpl implements ProfileService {
 
     private final MemberRepository memberRepository;
     private final S3FileManager s3FileManager;
+    private static final String DEFAULT_PROFILE_IMAGE_KEY = "profile/profile.png";
+
+    private String getProfileImageUrl(String s3Key) {
+        if (s3Key == null || s3Key.isBlank()) {
+            return s3FileManager.getPresignedDownloadUrl(DEFAULT_PROFILE_IMAGE_KEY);
+        }
+        return s3FileManager.getPresignedDownloadUrl(s3Key);
+    }
 
     @Override
     @Transactional
@@ -54,7 +62,9 @@ public class ProfileServiceImpl implements ProfileService {
 
         Profile profile = member.getProfile();
         String s3Key = profile.getProfileS3Key();
-
+        if(s3Key == null) {
+            return s3FileManager.getPresignedDownloadUrl(DEFAULT_PROFILE_IMAGE_KEY);
+        }
         return s3FileManager.getPresignedDownloadUrl(s3Key);
     }
 
@@ -67,7 +77,7 @@ public class ProfileServiceImpl implements ProfileService {
         Profile profile = member.getProfile();
 
         ProfileResponse response = ProfileResponse.builder().memberId(member.getId())
-                .profileImageUrl(s3FileManager.getPresignedDownloadUrl(profile.getProfileS3Key()))
+                .profileImageUrl(getProfileImageUrl(profile.getProfileS3Key()))
                 .description(profile.getDescription()).isGalleryPublic(profile.isGalleryPublic())
                 .isVideoPublic(profile.isVideoPublic())
                 .isCollectionPublic(profile.isCollectionPublic())
@@ -86,7 +96,7 @@ public class ProfileServiceImpl implements ProfileService {
         Profile profile = member.getProfile();
 
         ProfileResponse response = ProfileResponse.builder().memberId(memberId)
-                .profileImageUrl(s3FileManager.getPresignedDownloadUrl(profile.getProfileS3Key()))
+                .profileImageUrl(getProfileImageUrl(profile.getProfileS3Key()))
                 .description(profile.getDescription()).isGalleryPublic(profile.isGalleryPublic())
                 .isVideoPublic(profile.isVideoPublic())
                 .isCollectionPublic(profile.isCollectionPublic())
