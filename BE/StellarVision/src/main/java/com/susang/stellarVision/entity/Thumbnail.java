@@ -28,6 +28,9 @@ public class Thumbnail extends BaseEntity {
 
     @Builder
     public Thumbnail(String thumbnailS3Key) {
+        this.thumbnailS3Key = "thumbnail/thumbnail.jpg";
+    }
+    public void updateThumbnailS3Key(String thumbnailS3Key) {
         this.thumbnailS3Key = thumbnailS3Key;
     }
 }
