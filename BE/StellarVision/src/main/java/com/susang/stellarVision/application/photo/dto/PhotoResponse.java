@@ -8,6 +8,7 @@ import lombok.Getter;
 @Builder
 
 public class PhotoResponse {
+
     private Long id;
     private String originalFilename;
     private String extension;

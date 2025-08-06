@@ -8,5 +8,6 @@ import lombok.Getter;
 @Builder
 @AllArgsConstructor
 public class CollectionIdRequest {
+
     private Long id;
 }

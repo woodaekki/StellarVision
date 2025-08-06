@@ -6,6 +6,7 @@ import lombok.Getter;
 @Getter
 @Builder
 public class PhotoUploadCompleteRequest {
+
     private Long memberId;
     private String originalFilename;
     private String s3Key;

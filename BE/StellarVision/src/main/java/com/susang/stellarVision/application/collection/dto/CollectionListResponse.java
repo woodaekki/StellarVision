@@ -7,5 +7,6 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class CollectionListResponse {
+
     private List<CollectionResponse> collections;
 }

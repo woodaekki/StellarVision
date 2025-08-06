@@ -21,7 +21,8 @@ public class PhotoController {
     private final PhotoService photoService;
 
     @PostMapping("/presignedUrl")
-    public ResponseEntity<APIResponse<PhotoUploadResponse>> getUploadUrl(@RequestBody PhotoUploadRequest request) {
+    public ResponseEntity<APIResponse<PhotoUploadResponse>> getUploadUrl(
+            @RequestBody PhotoUploadRequest request) {
         PhotoUploadResponse response = photoService.getGalleryPresignedUploadUrl(
                 request.getMemberId(), request.getOriginalFilename());
 
@@ -35,7 +36,8 @@ public class PhotoController {
     }
 
     @PostMapping("/complete")
-    public ResponseEntity<APIResponse<String>> completeUpload(@RequestBody PhotoUploadCompleteRequest request) {
+    public ResponseEntity<APIResponse<String>> completeUpload(
+            @RequestBody PhotoUploadCompleteRequest request) {
 
         photoService.savePhotoMeta(request.getMemberId(), request.getOriginalFilename(),
                 request.getS3Key());
@@ -49,7 +51,7 @@ public class PhotoController {
     }
 
     @GetMapping("{photoId}/tags")
-    public  ResponseEntity<APIResponse<PhotoTagListResponse>> getTags(@PathVariable Long photoId) {
+    public ResponseEntity<APIResponse<PhotoTagListResponse>> getTags(@PathVariable Long photoId) {
         PhotoTagListResponse photoTagListResponse = photoService.getTagsByPhotoId(photoId);
         return ResponseEntity.ok(APIResponse.success("태그 목록 조회 성공", photoTagListResponse));
 
