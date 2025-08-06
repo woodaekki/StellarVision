@@ -38,7 +38,6 @@ onMounted(() => {
 })
 </script>
 
-
 <style lang="scss">
 @use "@/assets/components.scss";
 
@@ -81,16 +80,6 @@ body {
   &.sidebar-open .main-content {
     margin-left: 175px;
     width: calc(100% - 175px);
-  }
-
-  .main-content > header {
-    height: 58px;
-    background: black;
-    color: white;
-    position: sticky;
-    top: 0;
-    z-index: 999;
-    width: 100%;
   }
 
   .main-content > main {

@@ -91,7 +91,8 @@ function goToReplay(videoId) {
 
 <style scoped>
 .profile-wrapper {
-  background-color: #000;
+  padding-top: 58px; 
+  background-image: url(@/assets//pictures/wallpaper/space.jpeg); 
   min-height: 100vh;
   color: white;
   display: flex;

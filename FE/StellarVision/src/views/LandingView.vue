@@ -52,6 +52,5 @@ html, body {
   position: relative;
   z-index: 1;
   color: white;
-  background: rgb(0, 0, 0);
 }
 </style>

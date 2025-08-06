@@ -269,6 +269,8 @@ const onSignUp = async () => {
 .signupContainer {
   max-width: 400px;
   margin: 0 auto;
+  background-image: url(@/assets//pictures/wallpaper/space.jpeg); 
+  padding-top: 58px; 
 }
 
 .email-group {

@@ -3,7 +3,7 @@
     <div class="globe-container">
         <canvas ref="canvas"></canvas>
         <div class="text-layer">
-          <p class="text-above">A screen. A sky. A story.</p>
+            <p class="text-above fade-in-up">A screen. A sky. A story.</p>
           <button @click="goToMain" class="start-button">시작하기</button>
         </div>
     </div>
@@ -170,9 +170,12 @@ async function createScene() {
   if (globeMesh) {
     const boundingInfo = globeMesh.getHierarchyBoundingVectors();
     const center = boundingInfo.min.add(boundingInfo.max).scale(0.5);
+    
+    const newCenter = new Vector3(center.x, center.y - 10, center.z);
+
     fogAura.position = center;
     camera.setTarget(center);
-    camera.radius = center.subtract(boundingInfo.max).length() * 2.5;
+    camera.radius = center.subtract(boundingInfo.max).length() * 2.35;
   }
 
   return scene;
@@ -182,6 +185,8 @@ async function createScene() {
 <style>
 .globe-wrapper {
   position: absolute;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  color: #fff;
   top: 60px;
   left: 0;
   width: 100vw;
@@ -234,15 +239,15 @@ canvas:focus {
 
 .text-above,
 .text-below {
-  color: #fff;
-  font-size: 25px;
-  margin-bottom: 80px;
+  color: #f2f2f2;
+  font-weight: 700;
+  font-size: 38px;
 }
 
 .text-below {
   color: #fff;
   animation: fadeOut 1.5s ease forwards;
-  animation-delay: 1s; /* 1초 대기 후 */
+  animation-delay: 1s; 
 }
 
 
@@ -255,10 +260,9 @@ canvas:focus {
 
 .start-button {
   position: absolute;
-  bottom: 60px;
+  bottom: 35px;
   z-index: 3;
-  padding: 0.8rem 1.5rem;
-  background-color: rgba(231, 231, 231, 0.411);
+  padding: 0.55rem 1.1rem;
   color: #fff;
   border-radius: 6px;
   font-weight: bold;
@@ -266,5 +270,31 @@ canvas:focus {
   text-decoration: none;
   pointer-events: auto;
   max-width: max-content;
+  font-size: 1rem;
+  background-color: transparent;  
+  border: 1px solid #f2f2f2; 
+  transition: background-color 0.3s ease, color 0.3s ease; /* 부드러운 전환 효과 */
+
+  &:hover {
+    background-color: #f2f2f2; 
+    color: #0b0c10; 
+  }
 }
+
+@keyframes fade-in-up {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-up {
+  animation: fade-in-up 2s ease-out forwards;
+  animation-delay: 0.5s; 
+}
+
 </style>
