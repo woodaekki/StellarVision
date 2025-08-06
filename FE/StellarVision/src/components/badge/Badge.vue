@@ -12,9 +12,13 @@ const props = defineProps({
   }
 })
 
-const badgeImagePath = computed(() =>
-  new URL(`../../assets/pictures/badge/${props.badge.imageName}.png`, import.meta.url).href
-)
+const badgeImagePath = computed(() => {
+  if (props.badge.collected) {
+    return new URL(`../../assets/pictures/badge/${props.badge.imageName}.png`, import.meta.url).href
+  } else {
+    return new URL(`../../assets/pictures/badge/nobadge.png`, import.meta.url).href
+  }
+})
 </script>
 
 <style scoped>
