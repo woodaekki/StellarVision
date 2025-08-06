@@ -23,7 +23,7 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     @Transactional
-    public void saveProfileImageMeta(Long memberId, String originalFilename, String s3Key) throws S3DeletionFailedException, MemberNotFoundException  {
+    public void saveProfileImageMeta(Long memberId, String originalFilename, String s3Key) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new MemberNotFoundException(memberId.toString()) {
                 });
@@ -39,14 +39,15 @@ public class ProfileServiceImpl implements ProfileService {
             try {
                 s3FileManager.delete(oldS3Key);
             } catch (Exception e) {
-                 throw new S3DeletionFailedException("S3 삭제 실패");
+                throw new S3DeletionFailedException("S3 삭제 실패");
             }
         }
         profile.updateProfileS3Key(s3Key);
     }
+
     @Transactional
     @Override
-    public String getProfileImage(Long memberId) throws MemberNotFoundException {
+    public String getProfileImage(Long memberId) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new MemberNotFoundException(memberId.toString()) {
                 });
@@ -59,44 +60,37 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     @Transactional(readOnly = true)
-    public ProfileResponse getMyProfileInfo(CustomUserDetails userDetails) throws MemberNotFoundException {
+    public ProfileResponse getMyProfileInfo(CustomUserDetails userDetails) {
         Long memberId = userDetails.getMember().getId();
-        Member member = memberRepository
-                .findByIdWithProfile(memberId)
+        Member member = memberRepository.findByIdWithProfile(memberId)
                 .orElseThrow(() -> new MemberNotFoundException(memberId.toString()));
         Profile profile = member.getProfile();
 
-
-        ProfileResponse response = ProfileResponse.builder()
-                .memberId(member.getId())
+        ProfileResponse response = ProfileResponse.builder().memberId(member.getId())
                 .profileImageUrl(s3FileManager.getPresignedDownloadUrl(profile.getProfileS3Key()))
-                .description(profile.getDescription())
-                .isGalleryPublic(profile.isGalleryPublic())
+                .description(profile.getDescription()).isGalleryPublic(profile.isGalleryPublic())
                 .isVideoPublic(profile.isVideoPublic())
                 .isCollectionPublic(profile.isCollectionPublic())
-                .followerCount(member.getFollowerCount())
-                .followingCount(member.getFollowingCount())
+                .followerCount(member.getFollowerCount()).followingCount(member.getFollowingCount())
                 .build();
 
         return response;
     }
+
     @Transactional
     @Override
-    public ProfileResponse getProfileInfo(Long memberId) throws MemberNotFoundException, MemberNotFoundException {
+    public ProfileResponse getProfileInfo(Long memberId) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new MemberNotFoundException(memberId.toString()) {
                 });
         Profile profile = member.getProfile();
 
-        ProfileResponse response = ProfileResponse.builder()
-                .memberId(memberId)
+        ProfileResponse response = ProfileResponse.builder().memberId(memberId)
                 .profileImageUrl(s3FileManager.getPresignedDownloadUrl(profile.getProfileS3Key()))
-                .description(profile.getDescription())
-                .isGalleryPublic(profile.isGalleryPublic())
+                .description(profile.getDescription()).isGalleryPublic(profile.isGalleryPublic())
                 .isVideoPublic(profile.isVideoPublic())
                 .isCollectionPublic(profile.isCollectionPublic())
-                .followerCount(member.getFollowerCount())
-                .followingCount(member.getFollowingCount())
+                .followerCount(member.getFollowerCount()).followingCount(member.getFollowingCount())
                 .build();
         return response;
     }
@@ -106,8 +100,7 @@ public class ProfileServiceImpl implements ProfileService {
     public void updateVisibility(CustomUserDetails userDetails,
             ProfileVisibilityUpdateRequest profileVisibilityUpdateRequest) {
         Long memberId = userDetails.getMember().getId();
-        Member member = memberRepository
-                .findByIdWithProfile(memberId)
+        Member member = memberRepository.findByIdWithProfile(memberId)
                 .orElseThrow(() -> new MemberNotFoundException(memberId.toString()));
         Profile profile = member.getProfile();
         profile.setGalleryPublic(profileVisibilityUpdateRequest.isGalleryPublic());

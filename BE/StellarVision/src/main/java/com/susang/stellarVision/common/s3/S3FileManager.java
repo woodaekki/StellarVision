@@ -3,10 +3,13 @@ package com.susang.stellarVision.common.s3;
 
 import com.susang.stellarVision.config.S3Config;
 import jakarta.annotation.PostConstruct;
+import java.io.IOException;
+import java.io.InputStream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
@@ -75,5 +78,14 @@ public class S3FileManager {
                 .key(key).build();
 
         s3Client.deleteObject(request);
+    }
+    public void uploadFile(InputStream inputStream, long contentLength, String contentType, String key) throws IOException {
+        PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                .bucket(config.getBucket())
+                .key(key)
+                .contentType(contentType)
+                .build();
+
+        s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(inputStream, contentLength));
     }
 }

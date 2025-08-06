@@ -1,6 +1,8 @@
 package com.susang.stellarVision.application.video.service;
 
 
+import com.susang.stellarVision.application.member.exception.MemberNotFoundException;
+import com.susang.stellarVision.application.member.repository.MemberRepository;
 import com.susang.stellarVision.application.video.dto.VideoResponse;
 import com.susang.stellarVision.application.video.dto.VideoSearchRequest;
 import com.susang.stellarVision.application.video.dto.VideoTagListResponse;
@@ -10,12 +12,22 @@ import com.susang.stellarVision.application.video.dto.VideoUpdateRequest;
 import com.susang.stellarVision.application.video.error.DuplicatedVideoTagNameException;
 import com.susang.stellarVision.application.video.error.VideoTagMismatchException;
 import com.susang.stellarVision.application.video.error.VideoTagNotFoundException;
+import com.susang.stellarVision.application.video.error.VideoUploadFailException;
+import com.susang.stellarVision.application.video.repository.ThumbnailRepository;
 import com.susang.stellarVision.application.video.repository.VideoTagRepository;
+import com.susang.stellarVision.common.s3.ContentTypeMapper;
+import com.susang.stellarVision.common.s3.FileExtensionUtil;
+import com.susang.stellarVision.common.s3.S3Directory;
 import com.susang.stellarVision.common.s3.S3FileManager;
 import com.susang.stellarVision.application.video.error.VideoNotFoundException;
 import com.susang.stellarVision.application.video.repository.VideoRepository;
+import com.susang.stellarVision.common.s3.S3KeyGenerator;
+import com.susang.stellarVision.entity.Member;
+import com.susang.stellarVision.entity.Thumbnail;
 import com.susang.stellarVision.entity.Video;
 import com.susang.stellarVision.entity.VideoTag;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -30,8 +42,11 @@ public class VideoServiceImpl implements VideoService {
     private final VideoRepository videoRepository;
     private final S3FileManager s3FileManager;
     private final VideoTagRepository videoTagRepository;
+    private final S3KeyGenerator s3KeyGenerator;
+    private final MemberRepository memberRepository;
+    private final ThumbnailRepository thumbnailRepository;
 
-    public String getVideoPresignedUrl(Long videoId) throws VideoNotFoundException {
+    public String getVideoPresignedUrl(Long videoId) {
         return videoRepository.findById(videoId)
                 .map(video -> s3FileManager.getPresignedDownloadUrl(video.getVideoS3Key()))
                 .orElseThrow(() -> new VideoNotFoundException(videoId.toString()) {
@@ -40,7 +55,7 @@ public class VideoServiceImpl implements VideoService {
 
     @Override
     @Transactional
-    public void deleteVideo(Long videoId) throws VideoNotFoundException {
+    public void deleteVideo(Long videoId) {
         Video video = videoRepository.findById(videoId)
                 .orElseThrow(() -> new VideoNotFoundException(videoId.toString()) {
                 });
@@ -66,8 +81,7 @@ public class VideoServiceImpl implements VideoService {
                 .originalFilename(video.getTitle()).createdAt(video.getCreatedAt())
                 .thumbnailDownloadUrl(s3FileManager.getPresignedDownloadUrl(
                         video.getThumbnail().getThumbnailS3Key()))
-                .memberId(video.getMember().getId())
-                .build());
+                .memberId(video.getMember().getId()).build());
     }
 
     @Override
@@ -78,8 +92,7 @@ public class VideoServiceImpl implements VideoService {
                 .originalFilename(video.getTitle()).createdAt(video.getCreatedAt())
                 .thumbnailDownloadUrl(s3FileManager.getPresignedDownloadUrl(
                         video.getThumbnail().getThumbnailS3Key()))
-                .memberId(video.getMember().getId())
-                .build());
+                .memberId(video.getMember().getId()).build());
     }
 
     @Override
@@ -113,7 +126,7 @@ public class VideoServiceImpl implements VideoService {
 
     @Override
     @Transactional
-    public void deleteVideoTag(Long videoId, Long tagId) throws VideoTagNotFoundException {
+    public void deleteVideoTag(Long videoId, Long tagId) {
         VideoTag tag = videoTagRepository.findById(tagId)
                 .orElseThrow(() -> new VideoTagNotFoundException(tagId.toString()));
 
@@ -125,20 +138,47 @@ public class VideoServiceImpl implements VideoService {
 
     @Override
     @Transactional
-    public void updateVideoContent(Long videoId,VideoUpdateRequest request) throws VideoNotFoundException {
+    public void updateVideoContent(Long videoId, VideoUpdateRequest request) {
 
         Video video = videoRepository.findById(videoId)
                 .orElseThrow(() -> new VideoNotFoundException(videoId.toString()));
 
-        videoTagRepository.deleteAllByVideoId(video.getId());
+        videoTagRepository.deleteAllByVideoId(videoId);
 
         video.updateTitle(request.getTitle());
 
-        videoTagRepository.deleteAllByVideoId(videoId);
         List<VideoTag> tags = request.getTags().stream()
                 .map(tagName -> new VideoTag(tagName.getTagName(), video)).toList();
 
         videoTagRepository.saveAll(tags);
+    }
+
+    @Override
+    @Transactional
+    public void uploadVideo(InputStream inputStream, Long contentLength, String title,
+            Long memberId) {
+        String originalFilename = title + ".mp4";
+        String extension = FileExtensionUtil.extractExtension(originalFilename);
+        String contentType = ContentTypeMapper.fromExtension(extension);
+        String s3Key = s3KeyGenerator.generateKey(S3Directory.VIDEO, memberId, originalFilename);
+
+        try {
+            s3FileManager.uploadFile(inputStream, contentLength, contentType, s3Key);
+        } catch (IOException e) {
+            throw new VideoUploadFailException("S3 영상 업로드 실패");
+        }
+
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new MemberNotFoundException(memberId.toString()));
+
+        Thumbnail thumbnail = Thumbnail.builder().build();
+        thumbnailRepository.save(thumbnail);
+
+        Video video = Video.builder().videoS3Key(s3Key).title(title).member(member)
+                .thumbnail(thumbnail).build();
+        videoRepository.save(video);
+
+
     }
 
 

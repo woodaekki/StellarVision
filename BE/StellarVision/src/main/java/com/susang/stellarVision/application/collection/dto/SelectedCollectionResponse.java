@@ -8,6 +8,7 @@ import lombok.Getter;
 @Builder
 @AllArgsConstructor
 public class SelectedCollectionResponse {
+
     private Integer id;
     private String name;
     private String koreanName;

@@ -10,13 +10,17 @@ import org.springframework.transaction.annotation.Transactional;
 
 public interface ProfileService {
 
-    void saveProfileImageMeta(Long memberId, String originalFilename, String s3Key) throws S3DeletionFailedException, MemberNotFoundException;
+    void saveProfileImageMeta(Long memberId, String originalFilename, String s3Key)
+            throws S3DeletionFailedException, MemberNotFoundException;
 
     String getProfileImage(Long photoId) throws MemberNotFoundException;
+
     @Transactional(readOnly = true)
     ProfileResponse getMyProfileInfo(CustomUserDetails userDetails) throws MemberNotFoundException;
 
-    ProfileResponse getProfileInfo(Long memberId) throws MemberNotFoundException, MemberNotFoundException;
+    ProfileResponse getProfileInfo(Long memberId)
+            throws MemberNotFoundException, MemberNotFoundException;
 
-    void updateVisibility(CustomUserDetails userDetails, ProfileVisibilityUpdateRequest profileVisibilityUpdateRequest);
+    void updateVisibility(CustomUserDetails userDetails,
+            ProfileVisibilityUpdateRequest profileVisibilityUpdateRequest);
 }
