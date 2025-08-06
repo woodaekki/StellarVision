@@ -2,8 +2,8 @@
   <div class="badge-wrapper">
     <div class="badge-container" ref="containerRef">
       <Badge
-        v-for="(badge, index) in badgeList"
-        :key="index"
+        v-for="badge in badgeList"
+        :key="badge.name"
         :badge="badge"
         @click="(event) => handleBadgeClick(event, badge)"
       />
@@ -28,18 +28,39 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import Badge from '@/components/badge/Badge.vue';
 import badgeData from '@/data/badgeData.json';
-import axios from 'axios';
-import axiosApi from '@/api/axiosApi';
+import { useAccountStore } from '@/stores/account'
+import { useBadgeStore } from '@/stores/badge';
 
-// 나중에 백에서 받은 정보를 기반으로 collected 매핑으로 수정 예정
-const badgeList = ref(badgeData.map(badge => ({
-  ...badge,
-  collected: true
-})));
+const accountStore = useAccountStore();
+const badgeStore = useBadgeStore();
+// 현재 전체 뱃지 조회는 자기 것만 되는 걸 상정하기 때문에 myProfile에서 가져옴
+const memberId = computed(() => accountStore.myProfile?.memberId);
+const collectedBadges = computed(() => badgeStore.collectedBadges);
 
+// .json과 api에서 받아온 정보를 합침
+const badgeList = ref([]);
+
+function updateBadgeList() {
+  badgeList.value = badgeData.map((badge) => ({
+    ...badge,
+    collected: collectedBadges.value.some(
+      (collectedBadge) => collectedBadge.name === badge.name
+    )
+  }));
+}
+
+onMounted(async () => {
+  await accountStore.fetchMyProfile()
+  if (memberId.value) {
+    await badgeStore.fetchCollectedBadges(memberId.value)
+    updateBadgeList();
+  }
+})
+
+// 각 뱃지 클릭 시 말풍선이 뜨는 위치 계산 로직
 const selectedBadge = ref(null);
 const tooltipX = ref(0);
 const tooltipY = ref(0);
