@@ -1,6 +1,10 @@
 <template>
   <div class="app-layout" :class="{ 'sidebar-open': isSidebarOpen }">
-    <MainSidebar ref="sidebarRef" />
+    <MainSidebar
+      v-if="!isStreamingView || isStreamingView"
+      ref="sidebarRef"
+      v-show="isSidebarOpen"
+    />
     <div class="main-content">
       <MainHeader />
       <main>
@@ -11,22 +15,29 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
-import { RouterView } from 'vue-router'
+import { ref, computed, watch, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import MainHeader from '@/components/common/MainHeader.vue'
 import MainSidebar from '@/components/common/MainSidebar.vue'
 
 const sidebarRef = ref(null)
-const isSidebarOpen = ref(false)
+const route = useRoute()
+
+const isStreamingView = computed(() => route.name === 'StreamingListView')
+
+const isSidebarOpen = computed(() => {
+  return isStreamingView.value ? true : (sidebarRef.value?.isOpen ?? false)
+})
 
 onMounted(() => {
-  if (sidebarRef.value?.isOpen !== undefined) {
-    watch(() => sidebarRef.value.isOpen, (val) => {
-      isSidebarOpen.value = val
-    }, { immediate: true })
-  }
+  watch(() => sidebarRef.value?.isOpen, (val) => {
+    if (!isStreamingView.value) {
+      console.log('사이드바 토글:', val)
+    }
+  })
 })
 </script>
+
 
 <style lang="scss">
 @use "@/assets/components.scss";
@@ -55,7 +66,7 @@ body {
   }
 
   &.sidebar-open .sidebar {
-    transform: translateX(0); // slide in
+    transform: translateX(0);
   }
 
   .main-content {
@@ -69,7 +80,7 @@ body {
 
   &.sidebar-open .main-content {
     margin-left: 175px;
-    width: calc(100% - 175px); // shrink to make room
+    width: calc(100% - 175px);
   }
 
   .main-content > header {
@@ -88,4 +99,3 @@ body {
   }
 }
 </style>
-
