@@ -5,10 +5,14 @@ from typing import List
 import uvicorn
 from PIL import Image
 import io
-
+import requests
+from PIL import UnidentifiedImageError
+from pydantic import BaseModel
 app = FastAPI(title="YOLOv12n Constellation Detection API")
 model = YOLO("model/yolov12n.pt")
 CONF_THRESHOLD = 0.7  # 신뢰도 기준값
+
+
 @app.post("/api/detect/streaming")
 async def predict_image(file: UploadFile = File(...)):
 
@@ -43,20 +47,24 @@ async def predict_image(file: UploadFile = File(...)):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Inference failed: {str(e)}")
+
+class ImageURLInput(BaseModel):
+    photoid: int
+    image_url: str
 @app.post("/api/detect/photo")
-async def predict_image(
-    photoid: int = Form(...),         # 숫자 파라미터로 photoid 받기
-    file: UploadFile = File(...)      # 이미지 파일 받기
-):
-    if file.content_type not in ["image/jpeg", "image/png"]:
-        raise HTTPException(status_code=400, detail="Only JPEG or PNG images are supported.")
+async def predict_image(payload: ImageURLInput):
 
     try:
-        image_bytes = await file.read()
-        image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+        resp = requests.get(payload.image_url)
+        if resp.status_code != 200:
+            raise HTTPException(status_code=400, detail="Failed to fetch image from URL.")
 
-        results = model(image,device='cpu')
+        content_type = resp.headers.get("Content-Type", "")
+        if not (content_type.startswith("image/")):
+            raise HTTPException(status_code=400, detail="URL does not point to an image.")
 
+        image = Image.open(io.BytesIO(resp.content)).convert("RGB")
+        results = model(image, device='cpu')
         pred_list = []
         result = results[0]
 
@@ -76,7 +84,7 @@ async def predict_image(
             })
 
         return JSONResponse(content={
-            "photoid": photoid,  # 반환값에 photoid를 포함!
+            "photoid": payload.photoid,
             "predictions": pred_list
         })
 
