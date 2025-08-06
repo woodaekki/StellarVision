@@ -1,30 +1,54 @@
-<!-- 레이아웃만 잡힌 상태 -->
 <template>
-  <p class="title">My video</p>
+    <p class="title">My video</p>
 
-  <div class="button-wrapper">
-    <button @click="goVideoList" class="video-list">상세보기</button>
-  </div>
-
-  <div class="video-frames">
-    <div class="video-frame" v-for="n in 3" :key="n">
+    <div class="button-wrapper">
+      <button v-if="recentVideos.length > 0"
+        @click="goVideoList"
+        class="video-list">
+        상세보기
+      </button>
     </div>
-  </div>
+
+    <div class="video-frames" v-if="recentVideos.length > 0">
+      <VideoFrame
+       v-for="video in recentVideos"
+       :key="video.id"
+       :video="video"
+      />
+    </div>
+
+    <div v-else class="no-video">
+      <p>업로드한 영상이 없습니다.</p>
+    </div>
 </template>
 
 <script setup>
-import MyVideoListView from '@/views/Profile/MyVideoListView.vue'
-import { useRouter, useRoute } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router';
+import VideoFrame from './VideoFrame.vue';
 
-const router = useRouter()
-const route = useRoute()
+const router = useRouter();
+const route = useRoute();
+
+const props = defineProps({
+  profilePk: {
+    type: Number,
+    required: false
+  },
+  recentVideos : {
+    type: Array,
+    required: true
+  }
+})
 
 const goVideoList = () => {
   router.push({
     name: 'MyVideoListView',
-    params: { id: route.params.id }
+    params: { id: route.params.id },
+    state: {
+      profilePk: props.profilePk
+    }
   })
-}
+};
 </script>
 
 <style scoped>
@@ -69,32 +93,10 @@ const goVideoList = () => {
   overflow-x: auto;
 }
 
-.video-frame {
-  width: 480px;
-  height: 300px;
-  background: #fff;
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
-  flex-shrink: 0;
-}
-
-.video-frame:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
-}
-
 @media (max-width: 1500px) {
   .video-frames {
     flex-wrap: wrap;
     overflow-x: visible;
-  }
-  .video-frame {
-    width: calc(50% - 16px);
-    margin-bottom: 32px;
   }
 }
 
@@ -113,9 +115,10 @@ const goVideoList = () => {
     font-size: 14px;
     padding: 6px 16px;
   }
-  .video-frame {
-    width: 100%;
-    height: 200px;
-  }
+}
+
+.no-video {
+  text-align: center;
+  margin: 12rem;
 }
 </style>
