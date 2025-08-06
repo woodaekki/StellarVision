@@ -20,8 +20,8 @@ public class CollectionController {
 
     @GetMapping()
     public ResponseEntity<APIResponse<CollectionListResponse>> getMemberCollections(@AuthenticationPrincipal CustomUserDetails details) {
-        Long memberId = details.getMember().getId();
-        CollectionListResponse response = collectionService.getMemberCollections(memberId);
+
+        CollectionListResponse response = collectionService.getMemberCollections(details);
         return ResponseEntity.ok(APIResponse.success(response));
     }
 }

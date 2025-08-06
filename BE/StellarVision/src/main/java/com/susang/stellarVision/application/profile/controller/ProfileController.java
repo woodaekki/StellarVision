@@ -1,5 +1,11 @@
 package com.susang.stellarVision.application.profile.controller;
 
+import com.susang.stellarVision.application.collection.dto.CollectionListResponse;
+import com.susang.stellarVision.application.collection.dto.CollectionResponse;
+import com.susang.stellarVision.application.collection.dto.SelectCollectionRequest;
+import com.susang.stellarVision.application.collection.dto.SelectedCollectionListResponse;
+import com.susang.stellarVision.application.collection.dto.SelectedCollectionResponse;
+import com.susang.stellarVision.application.collection.service.CollectionService;
 import com.susang.stellarVision.application.photo.dto.PhotoListResponse;
 import com.susang.stellarVision.application.photo.dto.PhotoResponse;
 import com.susang.stellarVision.application.photo.dto.PhotoUploadCompleteRequest;
@@ -15,6 +21,7 @@ import com.susang.stellarVision.application.video.dto.VideoUpdateRequest;
 import com.susang.stellarVision.application.video.service.VideoService;
 import com.susang.stellarVision.common.dto.APIResponse;
 import com.susang.stellarVision.config.security.authentication.CustomUserDetails;
+import com.susang.stellarVision.entity.Collection;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -40,7 +47,7 @@ public class ProfileController {
     private final PhotoService photoService;
     private final ProfileService profileService;
     private final VideoService videoService;
-
+    private final CollectionService collectionService;
 
     @PostMapping("/presignedUrl")
     public ResponseEntity<APIResponse<PhotoUploadResponse>> getProfilePresignedUploadUrl(
@@ -117,6 +124,26 @@ public class ProfileController {
         profileService.updateVisibility(userDetails,profileVisibilityUpdateRequest);
         return  ResponseEntity.ok(APIResponse.success("프로필 공개 여부 변경 성공" , null));
     }
+
+    @GetMapping("/{memberId}/collections")
+    public ResponseEntity<APIResponse<CollectionListResponse>> getMyCollections(@PathVariable Long memberId) {
+        CollectionListResponse response = collectionService.getCollectionsByMemberId(memberId);
+        return ResponseEntity.ok(APIResponse.success(response));
+
+    }
+
+    @PatchMapping ("/me/badge")
+    public ResponseEntity<APIResponse<String>> updateMyBadge(@AuthenticationPrincipal CustomUserDetails userDetails , @RequestBody
+            SelectCollectionRequest selectCollectionRequest) {
+            collectionService.updateMyBadge(userDetails,selectCollectionRequest);
+        return ResponseEntity.ok(APIResponse.success("뱃지 설정 성공",null));
+    }
+
+   @GetMapping("/{memberId}/badge")
+    public ResponseEntity<APIResponse<SelectedCollectionListResponse>> getBadges(@PathVariable Long memberId) {
+       SelectedCollectionListResponse selectedCollectionListResponse = collectionService.getBadges(memberId);
+        return ResponseEntity.ok(APIResponse.success("뱃지 조회 성공",selectedCollectionListResponse));
+   }
 
 
     }
