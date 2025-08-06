@@ -2,54 +2,110 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { useRouter } from 'vue-router'
 import commonApi from '@/api/commonApi'
+import api from '@/api/axiosApi'
 
 export const useAccountStore = defineStore('account', () => {
   const router = useRouter()
-  //로컬 저장소에서 토큰을 가져온다. 없으면 빈 문자열 반환
   const token = ref(localStorage.getItem('jwt') || '')
   const refreshToken = ref(localStorage.getItem('refreshToken') || '')
   const userInfo = ref(JSON.parse(localStorage.getItem('userInfo')) || null)
   const myProfile = ref(null)
 
-  //token 소유 여부에 따라 로그인 상태를 나타 낼 isLogIn 변수 저장
-  const isLogin = computed(()=>{
-    return token.value ? true:false
+  const isLogin = computed(() => {
+    return token.value ? true : false
   })
 
-  //토큰 셋
   function setToken(accessToken, newRefreshToken, memberInfo) {
-    // 액세스 토큰 저장
     token.value = accessToken
     localStorage.setItem('jwt', accessToken)
-    commonApi.defaults.headers.common.Authorization = `Bearer ${accessToken}`    //  토큰이 있다면 모든 요청에 인증 헤더를 자동으로 붙이도록 한다.
+    commonApi.defaults.headers.common.Authorization = `Bearer ${accessToken}`
 
-    // 리프레시 토큰 저장
     refreshToken.value = newRefreshToken
     localStorage.setItem('refreshToken', newRefreshToken)
 
-    // 로그인 응답으로 온 사용자 기본 정보 저장
     userInfo.value = memberInfo
     localStorage.setItem('userInfo', JSON.stringify(memberInfo))
-    console.log('📦 setToken에서 userInfo 저장됨:', userInfo.value)
   }
 
-
-  // 회원가입 로직
-  const signUp = function({email, name, password, birth}){
-    commonApi.post('/members', {email, name, password, birth})
-    .then(res => {
-      console.log('회원가입 성공', res.data)
-      router.push({name:'LandingView'})
-    })
-    .catch(err => {
-      console.log(err)
-    })
+  async function sendEmailVerificationCode(email) {
+    try {
+      const res = await commonApi.post('/auth/email/send', { email })
+      return { success: true, message: '인증코드가 전송되었습니다.' }
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || '인증코드 전송에 실패했습니다.'
+      return { success: false, message: errorMessage }
+    }
   }
 
+  async function verifyEmailCode(email, code) {
+    try {
+      const res = await commonApi.post('/auth/email/verification', {
+        email,
+        code
+      })
+      return { success: true, message: '이메일 인증이 완료되었습니다.' }
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || '인증코드가 올바르지 않습니다.'
+      return { success: false, message: errorMessage }
+    }
+  }
 
-  // 로그인 로직
-  async function logIn({email, password}) {
+  async function signUp({ email, name, password, birth }) {
+    try {
+      const requestData = {
+        email: email?.trim(),
+        name: name?.trim(),
+        password: password?.trim(),
+        birth: birth
+      }
 
+      if (!requestData.email || !requestData.name || !requestData.password || !requestData.birth) {
+        return { success: false, message: '필수 정보가 누락되었습니다.' }
+      }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(requestData.email)) {
+        return { success: false, message: '올바른 이메일 형식이 아닙니다.' }
+      }
+
+      const res = await commonApi.post('/members', requestData)
+
+      if (res.data.status === 'success') {
+        router.push({ name: 'LoginView' })
+        return { success: true, message: res.data.message || '회원가입이 완료되었습니다.' }
+      } else {
+        return { success: false, message: res.data.message || '회원가입에 실패했습니다.' }
+      }
+    } catch (err) {
+      let errorMessage = '회원가입에 실패했습니다.'
+
+      if (err.response?.data?.error?.details) {
+        const errorDetails = err.response.data.error.details
+
+        if (errorDetails.includes('constraint')) {
+          if (errorDetails.includes('UK_PROFILE_KEY')) {
+            errorMessage = '프로필 생성 중 오류가 발생했습니다. 서버 관리자에게 문의하세요.'
+          } else if (errorDetails.toLowerCase().includes('email')) {
+            errorMessage = '이미 가입된 이메일 주소입니다.'
+          } else if (errorDetails.toLowerCase().includes('name')) {
+            errorMessage = '이미 사용 중인 닉네임입니다.'
+          } else {
+            errorMessage = '중복된 정보가 있습니다. 다른 정보로 시도해주세요.'
+          }
+        }
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message
+      } else if (err.response?.status === 500) {
+        errorMessage = '서버 내부 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+      } else if (err.response?.status === 400) {
+        errorMessage = '입력한 정보를 다시 확인해주세요.'
+      }
+
+      return { success: false, message: errorMessage }
+    }
+  }
+
+  async function logIn({ email, password }) {
     const formData = new FormData()
     formData.append('email', email)
     formData.append('password', password)
@@ -58,25 +114,18 @@ export const useAccountStore = defineStore('account', () => {
       const res = await commonApi.post(
         '/auth/login',
         formData,
-      { headers: { 'Content-Type' : 'multipart/form-data' }}
-    )
+        { headers: { 'Content-Type': 'multipart/form-data' } }
+      )
 
-      const {accessToken, refreshToken, memberInfo} = res.data.data
-           console.log('로그인 전체 응답:', res)
-     console.log('res.data:', res.data)
-     console.log('res.data.data:', res.data.data)
-      setToken(accessToken, refreshToken, memberInfo)                // 토큰 및 정보 저장
-      console.log('로그인 성공')
-      console.log('accessToken:', accessToken)
-      console.log(memberInfo)
-      router.push({name: 'LandingView'})
+      const { accessToken, refreshToken, memberInfo } = res.data.data
+      setToken(accessToken, refreshToken, memberInfo)
+      router.push({ name: 'LandingView' })
+
     } catch (err) {
-      console.error('로그인 실패', err)
       throw err
     }
   }
 
-    // 로그아웃 및 상태 초기화
   function logOut() {
     token.value = ''
     refreshToken.value = ''
@@ -89,37 +138,43 @@ export const useAccountStore = defineStore('account', () => {
     router.push({ name: 'LandingView' })
   }
 
-  // 내 프로필 정보 조회
   async function fetchMyProfile() {
-    // 로그인 유무 확인
-    if (!isLogin.value) return
+    if (!isLogin.value) {
+      return
+    }
 
-    try{
+    try {
       const res = await commonApi.get('/profiles/me')
       myProfile.value = res.data.data
-      console.log('내 프로필 정보', myProfile.value)
     } catch (err) {
-      console.error('조회 실패', err)
+      // error handling omitted for brevity
     }
   }
 
-  // 다른 사용자 프로필 정보 조회
   async function fetchUserProfile(memberId) {
     try {
-      const res = await commonApi.get(`/profiles/${memberId}`)    // api 명세서 참조 경로
+      const res = await commonApi.get(`/profiles/${memberId}`)
       return res.data.data
-    } catch(err){
-      console.error(`${memberId} 프로필 정보 조회 실패`, err)
+    } catch (err) {
       return null
     }
   }
 
-  // 새로고침 시 로그인 상태 유지
-  if(token.value){
+  if (token.value) {
     commonApi.defaults.headers.common.Authorization = `Bearer ${token.value}`
   }
 
-
-  return { isLogin, signUp, logIn, logOut, token, userInfo, myProfile, fetchMyProfile, fetchUserProfile }
+  return {
+    isLogin,
+    signUp,
+    logIn,
+    logOut,
+    token,
+    userInfo,
+    myProfile,
+    fetchMyProfile,
+    fetchUserProfile,
+    sendEmailVerificationCode,
+    verifyEmailCode
+  }
 })
-

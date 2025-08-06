@@ -95,7 +95,7 @@ const router = createRouter({
     },
     {
       path: '/calender',
-      name: CalenderView,
+      name: 'CalenderView',
       component: CalenderView
     },
     {
