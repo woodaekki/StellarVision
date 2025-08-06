@@ -3,11 +3,14 @@ package com.susang.stellarVision.application.streaming.service;
 import com.susang.stellarVision.application.streaming.dto.ConnectionTokenDTO;
 import com.susang.stellarVision.application.streaming.dto.CreateStreamingSessionRequest;
 import com.susang.stellarVision.application.streaming.dto.RecordingInfoDTO;
+import com.susang.stellarVision.application.streaming.dto.RecordingStream;
 import com.susang.stellarVision.application.streaming.dto.StreamingRoomDTO;
 import com.susang.stellarVision.application.streaming.exception.AccessDeniedException;
+import com.susang.stellarVision.application.streaming.exception.RecordingInProgressException;
 import com.susang.stellarVision.application.streaming.exception.RecordingNotFoundException;
 import com.susang.stellarVision.application.streaming.exception.SessionNotFoundException;
 import com.susang.stellarVision.application.streaming.repository.StreamingRepository;
+import com.susang.stellarVision.application.video.service.VideoService;
 import com.susang.stellarVision.entity.Member;
 import com.susang.stellarVision.entity.StreamingRoom;
 import io.openvidu.java.client.*;
@@ -28,6 +31,7 @@ public class StreamingServiceImpl implements StreamingService {
 
     private final OpenVidu openVidu;
     private final StreamingRepository streamingRepository;
+    private final RecordingPipelineService pipelineService;
 
     @Override
     @Transactional
@@ -85,7 +89,7 @@ public class StreamingServiceImpl implements StreamingService {
 
         String token = connection.getToken();
 
-        return new  ConnectionTokenDTO(token, role.name());
+        return new ConnectionTokenDTO(token, role.name());
     }
 
     @Override
@@ -107,6 +111,10 @@ public class StreamingServiceImpl implements StreamingService {
 
         if (activeSession == null) {
             throw new SessionNotFoundException(sessionId);
+        }
+
+        if (activeSession.isBeingRecorded()) {
+            throw new RecordingInProgressException(sessionId);
         }
 
         activeSession.close();
@@ -187,6 +195,9 @@ public class StreamingServiceImpl implements StreamingService {
         Instant created = Instant.ofEpochMilli(recording.getCreatedAt());
         streamingRoom.markRecordingStopped(recording.getUrl(),
                 LocalDateTime.ofInstant(created, ZoneOffset.UTC));
+
+        pipelineService.downloadAndUploadAsync(recording.getUrl(), recording.getName(),
+                member.getId());
 
         return new RecordingInfoDTO(
                 recordingId,

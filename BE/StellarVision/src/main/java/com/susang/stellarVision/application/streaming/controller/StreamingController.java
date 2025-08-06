@@ -5,6 +5,7 @@ import com.susang.stellarVision.application.streaming.dto.CreateStreamingSession
 import com.susang.stellarVision.application.streaming.dto.RecordingInfoDTO;
 import com.susang.stellarVision.application.streaming.dto.StreamingRoomDTO;
 import com.susang.stellarVision.application.streaming.exception.AccessDeniedException;
+import com.susang.stellarVision.application.streaming.exception.RecordingInProgressException;
 import com.susang.stellarVision.application.streaming.service.StreamingService;
 import com.susang.stellarVision.common.dto.APIResponse;
 import com.susang.stellarVision.config.security.authentication.CustomUserDetails;
@@ -19,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -76,9 +78,6 @@ public class StreamingController {
         } catch (OpenViduJavaClientException | OpenViduHttpException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(APIResponse.fail("STREAM", "스트리밍 종료에 실패했습니다.", e.getMessage()));
-        } catch (AccessDeniedException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(APIResponse.fail("STREAM", e.getMessage()));
         }
     }
 
@@ -116,5 +115,19 @@ public class StreamingController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(APIResponse.fail("RECORDING", "녹화 종료에 실패했습니다.", e.getMessage()));
         }
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<APIResponse<Void>> handleAccessDenied(AccessDeniedException e) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(APIResponse.fail("STREAM", e.getMessage()));
+    }
+
+    @ExceptionHandler(RecordingInProgressException.class)
+    public ResponseEntity<APIResponse<Void>> handleRecordingInProgress(RecordingInProgressException e) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(APIResponse.fail("STREAM", e.getMessage()));
     }
 }
