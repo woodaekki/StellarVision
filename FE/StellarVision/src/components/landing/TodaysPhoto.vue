@@ -1,6 +1,6 @@
 <template>
   <div class="todays-image-wrapper">
-  <h1>오늘의 천체 사진</h1>
+  <h1>{{ isYesterday ? '어제의 천체 사진' : '오늘의 천체 사진' }}</h1>
     <div v-if="loading">Loading...</div>
     <div v-else>
       <p>{{ apod.date }}</p>
@@ -28,32 +28,19 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { fetchPhoto } from '@/api/todayPhotoApi'
+import { ref, onMounted } from 'vue';
+import { getTodayOrYesterdayAPOD } from '@/api/todayPhotoApi';
 
-const apod = ref({})
-const loading = ref(true)
-const today = new Date().toISOString().split('T')[0]
-const cacheKey = `apod-${today}`
+const apod = ref({});
+const loading = ref(true);
+const isYesterday = ref(false);
 
 onMounted(async () => {
-  const cached = localStorage.getItem(cacheKey)
-  if (cached) {
-    apod.value = JSON.parse(cached)
-    loading.value = false
-    return
-  }
-
-  try {
-    const data = await fetchPhoto(today)
-    apod.value = data
-    localStorage.setItem(cacheKey, JSON.stringify(data))
-  } catch (err) {
-    // todayPhoto API에서 이미 콘솔창을 찍기 때문에 생략
-  } finally {
-    loading.value = false
-  }
-})
+  const result = await getTodayOrYesterdayAPOD();
+  apod.value = result.data;
+  isYesterday.value = result.isYesterday;
+  loading.value = false;
+});
 </script>
 
 <style scoped>
@@ -63,6 +50,7 @@ onMounted(async () => {
   justify-content: center;
   align-items: center;
   text-align: center;
+  background-color: black;
 }
 
 .todays-image {
