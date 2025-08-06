@@ -115,7 +115,7 @@ onMounted(()=>{
             autoplay
             playsinline
             muted
-            style="width:100%; height:100%; object-fit:fill;"
+            style="width:720x; height:100%; object-fit:fill;"
           ></video>
       </div>
 

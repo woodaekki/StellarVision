@@ -9,8 +9,6 @@ import MyGalleryView from '@/views/Profile/MyGalleryView.vue'
 import MyGalleryListView from '@/views/Profile/MyGalleryListView.vue'
 import MyVideoView from '@/views/Profile/MyVideoView.vue'
 import MyVideoListView from '@/views/Profile/MyVideoListView.vue'
-import LiveStreamingListView from '@/views/Streaming/LiveStreamingListView.vue'
-import ReplayStreamingListView from '@/views/Streaming/ReplayStreamingListView.vue'
 import RoomView from '@/views/Streaming/RoomView.vue'
 import CalenderView from '@/views/CalenderView.vue'
 import BadgeView from '@/views/BadgeView.vue'
@@ -31,32 +29,21 @@ const router = createRouter({
       component: MainView,
     },
     {
-          path: '/streaming',
-          component: StreamingListView,
-            children:[
-              {
-                path:'livestreaminglist',
-                name:'LiveStreamingListView',
-                component: LiveStreamingListView
-              },
-              {
-                path:'replay',
-                name: 'ReplayStreamingListView',
-                component: ReplayStreamingListView
-              },
-            ]
-        },
-      {
-        path:'/room/:id',
-        name: 'RoomView',
-        component: RoomView
-      },
-      {
-        path:'/pre',
-        name:'PreRoomView',
-        component:PreRoomView
-      },
-      {
+      path: '/streaming',
+      name: 'StreamingListView',
+      component: StreamingListView,
+    },
+    {
+      path:'/room/:id',
+      name: 'RoomView',
+      component: RoomView
+    },
+    {
+      path:'/pre',
+      name:'PreRoomView',
+      component:PreRoomView
+    },
+    {
       path: '/profile/:id',
       name: 'profileView',
       component: ProfileView,

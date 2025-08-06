@@ -25,7 +25,7 @@ import { ref } from 'vue';
           email: userEmail.value,
           password : password.value
         })
-        
+
         router.push({name:'LandingView'})
       }
       catch (err){
@@ -50,16 +50,19 @@ import { ref } from 'vue';
           type="email"
           id="userEmail"
           placeholder="email 입력"
-          v-model="userEmail">
+          v-model="userEmail"
+          class="text-black"
+          >
         </div>
 
         <!-- 비밀번호 -->
-        <div class="form-group">
+        <div class="">
           <input
           type="password"
           id="password"
           placeholder="Password입력"
-          v-model="password">
+          v-model="password"
+          class="text-black">
         </div>
 
 
