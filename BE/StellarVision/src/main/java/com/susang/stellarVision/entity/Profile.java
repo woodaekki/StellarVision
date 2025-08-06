@@ -52,8 +52,8 @@ public class Profile extends BaseEntity {
 
     @Builder
     public Profile(String profileS3Key, String description) {
-        this.profileS3Key = "profile/profile.png";
-        this.description = "";
+        this.profileS3Key = profileS3Key;
+        this.description = description;
         this.isGalleryPublic = true;
         this.isVideoPublic = true;
         this.isCollectionPublic = true;
