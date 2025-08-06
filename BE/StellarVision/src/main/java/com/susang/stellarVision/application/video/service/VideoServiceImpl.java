@@ -45,6 +45,14 @@ public class VideoServiceImpl implements VideoService {
     private final S3KeyGenerator s3KeyGenerator;
     private final MemberRepository memberRepository;
     private final ThumbnailRepository thumbnailRepository;
+    private static final String DEFAULT_THUMBNAIL_KEY = "thumbnail/thumbnail.jpg";
+
+    private String getThumbnailUrl(String thumbnailS3Key) {
+        if (thumbnailS3Key == null || thumbnailS3Key.isBlank()) {
+            return s3FileManager.getPresignedDownloadUrl(DEFAULT_THUMBNAIL_KEY);
+        }
+        return s3FileManager.getPresignedDownloadUrl(thumbnailS3Key);
+    }
 
     public String getVideoPresignedUrl(Long videoId) {
         return videoRepository.findById(videoId)
@@ -70,8 +78,8 @@ public class VideoServiceImpl implements VideoService {
 
         return videos.map(video -> VideoResponse.builder().id(video.getId()).id(video.getId())
                 .originalFilename(video.getTitle()).createdAt(video.getCreatedAt())
-                .thumbnailDownloadUrl(s3FileManager.getPresignedDownloadUrl(
-                        video.getThumbnail().getThumbnailS3Key())).build());
+                .thumbnailDownloadUrl(getThumbnailUrl(video.getThumbnail().getThumbnailS3Key())).build());
+
     }
 
     @Override
@@ -79,8 +87,7 @@ public class VideoServiceImpl implements VideoService {
         Page<Video> videos = videoRepository.findAll(pageable);
         return videos.map(video -> VideoResponse.builder().id(video.getId()).id(video.getId())
                 .originalFilename(video.getTitle()).createdAt(video.getCreatedAt())
-                .thumbnailDownloadUrl(s3FileManager.getPresignedDownloadUrl(
-                        video.getThumbnail().getThumbnailS3Key()))
+                .thumbnailDownloadUrl(getThumbnailUrl(video.getThumbnail().getThumbnailS3Key()))
                 .memberId(video.getMember().getId()).build());
     }
 
@@ -90,8 +97,7 @@ public class VideoServiceImpl implements VideoService {
 
         return videos.map(video -> VideoResponse.builder().id(video.getId())
                 .originalFilename(video.getTitle()).createdAt(video.getCreatedAt())
-                .thumbnailDownloadUrl(s3FileManager.getPresignedDownloadUrl(
-                        video.getThumbnail().getThumbnailS3Key()))
+                .thumbnailDownloadUrl(getThumbnailUrl(video.getThumbnail().getThumbnailS3Key()))
                 .memberId(video.getMember().getId()).build());
     }
 
