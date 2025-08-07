@@ -1,9 +1,7 @@
 module.exports = {
-  theme: {
-    extend: {
-      fontFamily: {
-        pretendard: ['Pretendard', 'sans-serif'],
-      },
-    },
+  plugins: {
+    '@tailwindcss/postcss': {},
+    autoprefixer: {},
+
   },
 }
