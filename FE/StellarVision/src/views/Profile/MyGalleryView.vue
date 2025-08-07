@@ -42,10 +42,7 @@ const router = useRouter()
 const memberId = computed(() => {
   const idFromStore = accountStore.myProfile?.memberId;
 
-  console.log('--- MyGallery 컴포넌트 변수 확인 ---');
   console.log('스토어 프로필 ID:', idFromStore);
-  console.log('-----------------------------------');
-
   return idFromStore;
 });
 
@@ -95,7 +92,6 @@ const fetchPhotos = async () => {
     }
   } finally {
     loading.value = false;
-    console.log('API 호출 종료.');
   }
 };
 

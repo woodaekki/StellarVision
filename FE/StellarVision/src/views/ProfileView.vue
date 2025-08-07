@@ -57,12 +57,12 @@ onMounted(async () => {
       await account.fetchMyProfile();
       profileInfo.value = account.myProfile;
       profilePk.value = profileInfo.value.memberId;
-      await videoStore.fetchReplays(profilePk.value, 1, 3);
+      await videoStore.fetchReplays(profilePk.value, 0, 3);
     }
   // 다른 경로로 들어왔을 경우 (다른 유저 프로필에 접근, pk 제공 상정)
   } else {
     profileInfo.value = await account.fetchUserProfile(profilePk);
-    await videoStore.fetchReplays(profilePk.value, 1, 3);
+    await videoStore.fetchReplays(profilePk.value, 0, 3);
   }
 
   loading.value = false;
@@ -91,8 +91,8 @@ function goToReplay(videoId) {
 
 <style scoped>
 .profile-wrapper {
-  padding-top: 58px; 
-  background-image: url(@/assets//pictures/wallpaper/space.jpeg); 
+  padding-top: 58px;
+  background-image: url(@/assets//pictures/wallpaper/space.jpeg);
   min-height: 100vh;
   color: white;
   display: flex;
