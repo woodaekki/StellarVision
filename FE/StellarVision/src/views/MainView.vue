@@ -10,8 +10,3 @@
 <script setup>
 import MainGlobe from '@/components/main/MainGlobe.vue';
 </script>
-
-<style lang="scss">
-
-</style>
-

@@ -170,7 +170,7 @@ async function createScene() {
   if (globeMesh) {
     const boundingInfo = globeMesh.getHierarchyBoundingVectors();
     const center = boundingInfo.min.add(boundingInfo.max).scale(0.5);
-    
+
     const newCenter = new Vector3(center.x, center.y - 10, center.z);
 
     fogAura.position = center;
@@ -232,7 +232,7 @@ canvas:focus {
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
-  padding: 2rem;
+  padding: 2.1rem;
   text-align: center;
   pointer-events: none;
 }
@@ -247,7 +247,7 @@ canvas:focus {
 .text-below {
   color: #fff;
   animation: fadeOut 1.5s ease forwards;
-  animation-delay: 1s; 
+  animation-delay: 1s;
 }
 
 
@@ -271,13 +271,13 @@ canvas:focus {
   pointer-events: auto;
   max-width: max-content;
   font-size: 1rem;
-  background-color: transparent;  
-  border: 1px solid #f2f2f2; 
+  background-color: transparent;
+  border: 1px solid #f2f2f2;
   transition: background-color 0.3s ease, color 0.3s ease; /* 부드러운 전환 효과 */
 
   &:hover {
-    background-color: #f2f2f2; 
-    color: #0b0c10; 
+    background-color: #f2f2f2;
+    color: #0b0c10;
   }
 }
 
@@ -294,7 +294,7 @@ canvas:focus {
 
 .fade-in-up {
   animation: fade-in-up 2s ease-out forwards;
-  animation-delay: 0.5s; 
+  animation-delay: 0.5s;
 }
 
 </style>
