@@ -10,9 +10,9 @@
       <main>
         <RouterView />
       </main>
+      <MainFooter />
     </div>
   </div>
-  <MainFooter />
 </template>
 
 <script setup>
@@ -49,6 +49,10 @@ body {
   padding: 0;
 }
 
+main {
+  flex-grow: 1;
+}
+
 .app-layout {
   display: flex;
   height: 100vh;
@@ -74,7 +78,7 @@ body {
     width: 100%;
     transition: margin-left 0.3s ease, width 0.3s ease;
     display: flex;
-    flex-direction: column; 
+    flex-direction: column;
     height: 100vh;
   }
 
