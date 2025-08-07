@@ -68,30 +68,29 @@ onMounted(async () => {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: #0A192F;
 }
 
 .black-header {
   width: 100%;
   height: 58px;
-  background-color: #0A192F;
+  background-color: #000;
   flex-shrink: 0;
 }
 
 .content-container {
   flex: 1;
-  background-color: #0A192F;
+  background-color: #fff;
   display: flex;
   justify-content: center;
   align-items: center;
   padding: 2rem;
-  color: #CCD6F6;
+  color: #333;
   height: calc(100vh - 58px);
 }
 
 .loading-container {
   font-size: 1.5rem;
-  color: #CCD6F6;
+  color: #555;
 }
 
 .content-wrapper {
@@ -101,10 +100,10 @@ onMounted(async () => {
   height: 100%;
   max-height: 800px;
   box-shadow: none;
-  background-color: #0A192F;
+  background-color: #fff;
   border-radius: 0;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .left-section {
@@ -112,7 +111,7 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   padding: 2rem;
-  background-color: #112240;
+  background-color: #f5f5f5;
 }
 
 .title {
@@ -120,12 +119,11 @@ onMounted(async () => {
   font-weight: 700;
   margin-bottom: 0.5rem;
   line-height: 1.2;
-  color: #64FFDA;
 }
 
 .date {
   font-size: 1rem;
-  color: #8892B0;
+  color: #777;
   margin-bottom: 1.5rem;
 }
 
@@ -146,8 +144,8 @@ onMounted(async () => {
   overflow-y: auto;
   line-height: 1.8;
   font-size: clamp(0.9rem, 1.5vw, 1.1rem);
-  color: #CCD6F6;
-  background-color: #0A192F;
+  color: #555;
+  background-color: #ffffff;
 }
 
 .explanation {
@@ -158,8 +156,8 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #112240;
-  color: #8892B0;
+  background-color: #e0e0e0;
+  color: #a0a0a0;
   min-height: 300px;
   border-radius: 5px;
   text-align: center;
@@ -169,14 +167,14 @@ onMounted(async () => {
   width: 8px;
 }
 .right-section::-webkit-scrollbar-track {
-  background: #0A192F;
+  background: #f1f1f1;
 }
 .right-section::-webkit-scrollbar-thumb {
-  background: #4A6987;
+  background: #888;
   border-radius: 4px;
 }
 .right-section::-webkit-scrollbar-thumb:hover {
-  background: #64FFDA;
+  background: #555;
 }
 
 .explanation {
