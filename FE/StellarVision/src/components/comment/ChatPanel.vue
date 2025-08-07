@@ -1,3 +1,4 @@
+<!-- ChatPanel.vue -->
 <script setup>
 import openviduService from '@/services/openviduService'
 import { Session } from 'openvidu-browser'
@@ -6,8 +7,8 @@ import { onBeforeMount, onBeforeUnmount, onMounted, ref } from 'vue'
 
 const props = defineProps({
   session : {type:Object, required:true},
-  userName: {type:String, required:true}
-
+  userName: {type:String, required:true},
+  participants : {type: Array, required:true}
 })
 // 예제 채팅
 const messages = ref([
@@ -40,7 +41,6 @@ async function sendMessage() {
   if(!text) return
 
   try {
-    messages.value.push({ user: props.userName, text })   //새로운 메시지 추가하도록 함 Me 자리에 userName으로 바꾸면 됨
 
     await props.session.signal({      //openvidu 공식 문서 참조
       data:text,
@@ -59,6 +59,9 @@ async function sendMessage() {
 <template>
   <div class="chat-panel">
     <header class="chat-header">채팅</header>
+
+
+
     <ul class="chat-messages">
       <li v-for="(msg, i) in messages" :key="i">
         <strong>{{ msg.user }}:</strong> {{ msg.text }}
