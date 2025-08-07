@@ -1,4 +1,4 @@
-package com.susang.stellarVision.application.streaming.exception;
+package com.susang.stellarVision.common.exception;
 
 public class AccessDeniedException extends RuntimeException {
 

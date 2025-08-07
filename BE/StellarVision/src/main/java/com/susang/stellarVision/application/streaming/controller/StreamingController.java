@@ -4,7 +4,7 @@ import com.susang.stellarVision.application.streaming.dto.ConnectionTokenDTO;
 import com.susang.stellarVision.application.streaming.dto.CreateStreamingSessionRequest;
 import com.susang.stellarVision.application.streaming.dto.RecordingInfoDTO;
 import com.susang.stellarVision.application.streaming.dto.StreamingRoomDTO;
-import com.susang.stellarVision.application.streaming.exception.AccessDeniedException;
+import com.susang.stellarVision.common.exception.AccessDeniedException;
 import com.susang.stellarVision.application.streaming.exception.RecordingInProgressException;
 import com.susang.stellarVision.application.streaming.service.StreamingService;
 import com.susang.stellarVision.common.dto.APIResponse;
