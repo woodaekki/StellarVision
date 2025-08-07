@@ -1,14 +1,15 @@
 <!-- ChatPanel.vue -->
 <script setup>
 import openviduService from '@/services/openviduService'
+import { useAccountStore } from '@/stores/account'
 import { Minimize, Minimize2 } from 'lucide-vue-next'
 import { Session } from 'openvidu-browser'
 import { onBeforeMount, onBeforeUnmount, onMounted, ref } from 'vue'
 
 
+const {userInfo} = useAccountStore()
 const props = defineProps({
   session : {type:Object, required:true},
-  userName: {type:String, required:true},
 })
 
 const emit = defineEmits(['close'])
@@ -22,9 +23,16 @@ const newMessage = ref('')
 
 //openvidu 수신 콜백 핸들러
 function signalHandler(event){
+  let msg
+  try {
+    msg = JSON.parse(event.data)
+  } catch (e) {
+    msg = { user: 'Unknown', text: event.data }
+  }
   messages.value.push({
-    user: event.from.clientData || 'Unknown',
-    text: event.data
+    user: msg.user,
+    text: msg.text,
+    ts: msg.ts,
   })
 }
 
@@ -40,11 +48,19 @@ onBeforeUnmount(()=>{
 
 async function sendMessage() {
   const text = newMessage.value.trim()
+
+  const payload = JSON.stringify({
+    user: userInfo.name,
+    text,
+    ts: Date.now(), // 타임스탬프(선택)
+  })
+
   if(!text) return
+
   try {
     // messages.value.push({user:props.userName, text})
     await props.session.signal({      //openvidu 공식 문서 참조
-      data:text,
+      data:payload,
       type:'chat',
       to:[]
     })
@@ -52,7 +68,6 @@ async function sendMessage() {
   } catch(err){
     console.error('signal 전송실패', err)
   }
-
 }
 </script>
 

@@ -12,8 +12,11 @@ const route = useRoute()
 const router = useRouter()
 //세션관련 객체
 const sessionId = route.params.id
-const userName = route.params.userName || 'Host'
+const userName = route.query.userName || 'Host'
+console.log('params', route.params)
+console.log('username:', userName)
 const roomTitle = route.query.title
+console.log('roomtitle', roomTitle)
 // 녹음 관련 객체
 const isRecording = ref(false)
 const recordingId = ref(null)
@@ -114,10 +117,10 @@ onMounted(()=>{
 </script>
 
 <template>
-  <div class="pt-16">
+  <div>
     <div class="flex flex-col sm:flex-row w-full max-w-[1600px] mx-auto gap-2" alt="videos">
       <!-- 동영상 -->
-      <div style="height: 640px; background: #000;"
+      <div style="height: 700px; background: #000;"
         :class="['relative bg-black transition-all duration-300',
         showChat ? 'sm:w-[70%] w-full' :'w-full']">
           <video
@@ -166,10 +169,9 @@ onMounted(()=>{
         <div
           v-if="showChat"
           class="basis-0 grow sm:w-[30%] w-full min-w[480px] max-w-[600px]
-          h-[640px] flex-shrink-0">
+          h-[700px] flex-shrink-0">
             <ChatPanel
               :session="session"
-              :userName="userName"
               @close="showChat = false"
               class="h-full"
               />

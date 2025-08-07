@@ -4,13 +4,13 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import streamingService from '@/services/streamingService'
 import openviduService from '@/services/openviduService'
+import { useAccountStore } from '@/stores/account'
 
 const { create } = streamingService
 const router = useRouter()
 
+const {userInfo} = useAccountStore()
 const title = ref('')
-const userName = ref('')
-
 const createRoom = async () => {
   try {
     const payload = {
@@ -28,9 +28,8 @@ const createRoom = async () => {
       name: 'RoomView',
       params: {
         id: sessionId,
-        userName: userName.value || 'Guest'
       },
-      query: {title:title.value}      //RoomView로 방 제목을 전달해주기 위해 쿼리에 포함시킴
+      query: {title:title.value, userName : userInfo?.name || 'Host'}      //RoomView로 방 제목을 전달해주기 위해 쿼리에 포함시킴
     })
   } catch (err) {
     console.error(err)
@@ -50,7 +49,6 @@ const createRoom = async () => {
     <!-- 새 방 생성 -->
     <form @submit.prevent="createRoom">
       <input v-model="title" placeholder="새 방 제목" required />
-      <input v-model="userName" placeholder="내 이름 (Optional)" />
       <button type="submit">방 생성</button>
     </form>
 
