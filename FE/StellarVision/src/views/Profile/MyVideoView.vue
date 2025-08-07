@@ -1,44 +1,44 @@
 <template>
-    <p class="title">My video</p>
-
-    <div class="button-wrapper">
-      <button v-if="recentVideos.length > 0"
-        @click="goVideoList"
-        class="video-list">
-        상세보기
-      </button>
+  <div class="profile-section-container">
+    <div class="profile-section">
+      <div class="section-header">
+        <h2 class="section-title">My Video</h2>
+        <button v-if="recentVideos.length > 0" @click="goVideoList" class="detail-button">
+          더보기
+        </button>
+      </div>
+      <div class="content-frames">
+        <VideoFrame
+          v-for="video in recentVideos"
+          @click="goToReplayRoom(video.id)"
+          :key="video.id"
+          :video="video"
+          class="content-frame video-frame"
+        />
+        <div v-if="recentVideos.length === 0" class="empty-frame">
+          <p class="empty-text">업로드한 영상이 없습니다.</p>
+        </div>
+      </div>
     </div>
-
-    <div class="video-frames" v-if="recentVideos.length > 0">
-      <VideoFrame
-       v-for="video in recentVideos"
-       @click="goToReplayRoom(video.id)"
-       :key="video.id"
-       :video="video"
-      />
-    </div>
-
-    <div v-else class="no-video">
-      <p>업로드한 영상이 없습니다.</p>
-    </div>
+  </div>
 </template>
 
 <script setup>
-import { useRouter, useRoute } from 'vue-router';
-import VideoFrame from './VideoFrame.vue';
+import { useRouter, useRoute } from 'vue-router'
+import VideoFrame from './VideoFrame.vue'
 
-const router = useRouter();
-const route = useRoute();
+const router = useRouter()
+const route = useRoute()
 
 const props = defineProps({
   profilePk: {
     type: Number,
-    required: false
+    required: false,
   },
-  recentVideos : {
+  recentVideos: {
     type: Array,
-    default: () => []
-  }
+    default: () => [],
+  },
 })
 
 const goVideoList = () => {
@@ -46,87 +46,87 @@ const goVideoList = () => {
     name: 'MyVideoListView',
     params: { id: route.params.id },
     state: {
-      profilePk: props.profilePk
-    }
+      profilePk: props.profilePk,
+    },
   })
-};
+}
 
 const goToReplayRoom = (videoId) => {
   router.push({
     name: 'ReplayView',
     params: { id: videoId },
   })
-};
+}
 </script>
 
 <style scoped>
-.title {
-  text-align: center;
-  font-size: 36px;
-  font-weight: 700;
-  margin-top: 60px;
-  margin-bottom: 32px;
-  color: #fff;
-  padding: 0 20px;
-}
-
-.button-wrapper {
+.profile-section-container {
   display: flex;
-  justify-content: flex-end;
-  padding: 0 200px;
+  justify-content: center;
+  width: 100%;
 }
 
-.video-list {
+.profile-section {
+  width: 100%;
+  max-width: 1200px; 
+  margin: 0;
+  padding: 10px 0;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 5px;
+  margin-bottom: 5px;
+  padding-bottom: 5px;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.detail-button {
   color: #fff;
   cursor: pointer;
-  font-weight: 600;
-  font-size: 16px;
   background: transparent;
   border: 1px solid #fff;
-  padding: 8px 20px;
+  padding: 5px 12px;
   border-radius: 4px;
-  transition: background-color 0.3s ease;
 }
 
-.video-list:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
-.video-frames {
+.content-frames {
   display: flex;
-  gap: 32px;
+  gap: 15px;
   justify-content: center;
-  padding: 60px 20px;
-  flex-wrap: nowrap;
-  overflow-x: auto;
+  flex-wrap: wrap;
+  padding-top: 5px;
 }
 
-@media (max-width: 1500px) {
-  .video-frames {
-    flex-wrap: wrap;
-    overflow-x: visible;
-  }
+.content-frame,
+.empty-frame {
+  width: calc(33.33% - 10px);
+  max-width: 300px;
+  aspect-ratio: 1.4;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
 }
 
-@media (max-width: 768px) {
-  .title {
-    font-size: 28px;
-    margin-top: 40px;
-    margin-bottom: 24px;
-  }
-  .button-wrapper {
-    justify-content: center;
-    padding: 0 20px;
-    margin-bottom: 20px;
-  }
-  .video-list {
-    font-size: 14px;
-    padding: 6px 16px;
-  }
+.empty-frame {
+  background-color: #f5f5f5;
+  border: 2px dashed #ccc;
+  justify-content: center;
+  align-items: center;
 }
 
-.no-video {
-  text-align: center;
-  margin: 12rem;
+.empty-text {
+  color: #999;
+  font-size: 14px;
+  font-weight: 500;
 }
 </style>
