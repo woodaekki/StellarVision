@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { OpenVidu } from 'openvidu-browser'
 import streamingService from '@/services/streamingService'
+import router from '@/router'
 
 export default function openviduService(streamId, userName, onError = () => {}) {
   const OV = new OpenVidu()
@@ -51,6 +52,8 @@ export default function openviduService(streamId, userName, onError = () => {}) 
   const leave = async () => {
     session.disconnect()
     await streamingService.end(streamId).catch(() => {})
+    alert('스트리밍을 종료합니다')
+    router.push({name:'MainView'})
   }
 
   onMounted(connect)

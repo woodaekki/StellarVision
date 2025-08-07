@@ -1,3 +1,4 @@
+// account.js
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { useRouter } from 'vue-router'

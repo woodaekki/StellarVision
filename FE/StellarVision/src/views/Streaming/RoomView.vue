@@ -4,7 +4,7 @@ import { onMounted, ref, watchEffect} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import openviduService from '@/services/openviduService'
 import streamingService from '@/services/streamingService'
-import { Mic, MicOff, Square, SquareStop } from 'lucide-vue-next'
+import { Camera, DoorOpen, ImageDown, MessageCircle, Mic, MicOff, Square, SquareStop } from 'lucide-vue-next'
 import ChatPanel from '@/components/comment/ChatPanel.vue'
 import { useRecordingStore } from '@/stores/recording'
 
@@ -14,13 +14,15 @@ const router = useRouter()
 const sessionId = route.params.id
 const userName = route.params.userName || 'Host'
 const roomTitle = route.query.title
-const micEnabled = ref(true)
 // 녹음 관련 객체
 const isRecording = ref(false)
 const recordingId = ref(null)
 const isRecordingButtonDisabled = ref(false)
 const recorded = ref('')
 const recordingStore = useRecordingStore()
+// 상태 관리
+const showChat = ref(false)
+const micEnabled = ref(true)
 
 
 
@@ -112,41 +114,77 @@ onMounted(()=>{
 </script>
 
 <template>
-  <div>
-    <h2>방제목 {{ roomTitle }} — {{ userName }}</h2>
-    <div class="videos">
-
-      <div style="width: 720x; height: 480px; background: #000;">
+  <div class="pt-16">
+    <div class="flex flex-col sm:flex-row w-full max-w-[1600px] mx-auto gap-2" alt="videos">
+      <!-- 동영상 -->
+      <div style="height: 640px; background: #000;"
+        :class="['relative bg-black transition-all duration-300',
+        showChat ? 'sm:w-[70%] w-full' :'w-full']">
           <video
             ref="localVideo"
             autoplay
             playsinline
             muted
-            style="width:720x; height:100%; object-fit:fill;"
+            class="w-full h-full object-fill rounded-2xl"
           ></video>
+        <!-- 방 제목 -->
+        <h2 class="text-xl text-white font-bold my-2 absolute left-3 top-3 z-10">방제목 {{ roomTitle }} — {{ userName }}</h2>
+
+        <!-- 음성 버튼-->
+          <div class="absolute left-1/2 bottom-6 -translate-x-1/2 flex gap-4 z-10">
+            <button
+              @click="toggleMic"
+              class=" text-white rounded-full p-4 hover:bg-green-600 shadow transition">
+              <component :is="micEnabled ? Mic : MicOff"/>
+            </button>
+        <!-- 녹화 버튼 -->
+            <button
+              @click="toggleRecording"
+              class=" bg-opacity-70 text-white rounded-full p-4 hover:bg-red-600 shadow transition">
+            <component :is="isRecording ? Square : SquareStop" />
+            </button>
+          </div>
+          <!-- 나가기 버튼 -->
+          <button @click="leave"
+          class="absolute right-3 top-3 z-10 bg-black bg-opacity-70
+          text-white rounded-full px-3 py-1 hover:bg-red-600 transition">
+            <DoorOpen/>
+          </button>
+          <!-- 캡처 버튼 -->
+          <button
+            class="absolute left-3 bottom-6 hover:bg-gray-600 transition shadow rounded-full text-white p-4">
+              <ImageDown/>
+          </button>
+          <!-- 채팅 버튼 -->
+           <button
+            class="absolute right-3 bottom-6 hover:bg-gray-600 transition shadow rounded-full text-yellow p-4"
+            @click="showChat = !showChat">
+            <MessageCircle/>
+           </button>
       </div>
+      <transition name="fade">
+        <div
+          v-if="showChat"
+          class="basis-0 grow sm:w-[30%] w-full min-w[480px] max-w-[600px]
+          h-[640px] flex-shrink-0">
+            <ChatPanel
+              :session="session"
+              :userName="userName"
+              @close="showChat = false"
+              class="h-full"
+              />
+        </div>
 
+      </transition>
     </div>
-    <ChatPanel :session="session" :userName="userName"/>
-
-    <div>
-    <button
-      @click="toggleMic"
-      class="control-buttons__button control-buttons"
-    >
-      <component :is="micEnabled ? Mic : MicOff"/>
-
-    </button>
-
-    <button
-      @click="toggleRecording"
-
-      >
-    <component :is="isRecording ? Square : SquareStop" />
-    </button>
-    <button @click="leave">나가기</button>
-    </div>
-
-
   </div>
 </template>
+
+<style scoped>
+.fade-enter-active, .fade-leave-active {
+  transition: opacity .2s;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
+</style>
