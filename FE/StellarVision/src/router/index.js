@@ -14,6 +14,7 @@ import CalenderView from '@/views/CalenderView.vue'
 import BadgeView from '@/views/BadgeView.vue'
 import ProfileEdit from '@/components/profile/ProfileEdit.vue'
 import ProfileHeader from '@/components/profile/ProfileHeader.vue'
+import TodaysPhoto from '@/components/landing/TodaysPhoto.vue'
 import PreRoomView from '@/views/Streaming/PreRoomView.vue'
 import ReplayView from '@/views/Streaming/ReplayView.vue'
 import UpdateReplayView from '@/views/Profile/UpdateReplayView.vue'
@@ -21,7 +22,18 @@ import UpdateReplayView from '@/views/Profile/UpdateReplayView.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    { path: '/', name: 'LandingView', component: LandingView,},
+    {
+      path: '/',
+      name: 'LandingView',
+      component: LandingView,
+      children: [
+        {
+          path: '',
+          name: 'TodaysPhoto',
+          component: TodaysPhoto
+        }
+      ]
+    },
     { path: '/login', name: 'LoginView', component: LoginView, },
     { path: '/signup', name: 'SignUpView', component : SignupView, },
     {

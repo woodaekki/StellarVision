@@ -6,7 +6,8 @@
     </section>
 
     <section class="todays-photo-container" ref="todaysPhotoSection">
-      <TodaysPhoto />
+      <!-- <TodaysPhoto /> -->
+      <RouterView />
     </section>
   </div>
 </template>
@@ -14,7 +15,6 @@
 <script setup>
 import { onMounted, onBeforeUnmount, ref } from 'vue';
 import LandingGlobe from '@/components/landing/LandingGlobe.vue';
-import TodaysPhoto from '@/components/landing/TodaysPhoto.vue';
 
 const videoSection = ref(null);
 const todaysPhotoSection = ref(null);
