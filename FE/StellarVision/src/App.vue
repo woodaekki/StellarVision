@@ -10,6 +10,7 @@
       <main>
         <RouterView />
       </main>
+      <MainFooter />
     </div>
   </div>
 </template>
@@ -19,6 +20,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import MainHeader from '@/components/common/MainHeader.vue'
 import MainSidebar from '@/components/common/MainSidebar.vue'
+import MainFooter from './components/common/MainFooter.vue'
 
 const sidebarRef = ref(null)
 const route = useRoute()
@@ -50,7 +52,6 @@ body {
 .app-layout {
   display: flex;
   height: 100vh;
-  overflow: hidden;
 
   .sidebar {
     position: fixed;
@@ -84,7 +85,7 @@ body {
 
   .main-content > main {
     flex-grow: 1;
-    overflow-y: auto;
+
   }
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <header v-if="!isRoomView" :class="['fixed top-0 left-0 w-full z-50', isGalleryPage ? 'bg-black text-white' : 'bg-transparent text-[#cfd8dc]']">
+  <header v-if="!isRoomView" :class="['fixed top-0 left-0 w-full z-50', isGalleryPage || isTodaysPhotoPage ? 'bg-black text-white' : 'bg-transparent text-[#cfd8dc]']">
     <div class="header flex justify-between items-center px-8 py-2">
       <div class="flex items-center gap-2">
         <img :src="logo" alt="로고" width="30px" height="42px" />
@@ -34,9 +34,10 @@ const account = useAccountStore()
 const isLogin = computed(() => account.isLogin)
 const userInfo = computed(() => account.userInfo)
 
-// 갤러리 리스트뷰일 경우에만 헤더 색상 변경
+// 갤러리 리스트뷰 또는 오늘의 사진 뷰일 경우에만 헤더 색상 변경
 const isGalleryPage = computed(() => route.name === 'MyGalleryListView' || route.path.includes('gallery'))
 const isRoomView = computed(() => route.name === 'RoomView')
+
 const handleLogout = () => {
   account.logOut()
 }
