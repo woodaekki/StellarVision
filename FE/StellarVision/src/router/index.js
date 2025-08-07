@@ -16,7 +16,7 @@ import ProfileEdit from '@/components/profile/ProfileEdit.vue'
 import ProfileHeader from '@/components/profile/ProfileHeader.vue'
 import PreRoomView from '@/views/Streaming/PreRoomView.vue'
 import ReplayView from '@/views/Streaming/ReplayView.vue'
-import UpdateReplayView from '@/views/Streaming/UpdateReplayView.vue'
+import UpdateReplayView from '@/views/Profile/UpdateReplayView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),

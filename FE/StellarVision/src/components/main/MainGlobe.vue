@@ -1,73 +1,53 @@
 <template>
   <div class="globe-wrapper">
-    <div class="globe-container" style="position: relative;">
+    <div class="globe-container">
       <canvas ref="canvas"></canvas>
 
-      <GlobePins
-        v-if="scene && globeCenter && globeRadius"
-        :scene="scene"
-        :globeCenter="globeCenter"
-        :globeRadius="globeRadius"
-        :pins="pins"
-        @pin-click="handlePinClick"
-      />
-
-      <div
-        ref="tooltip"
-        class="tooltip speech-bubble"
-        :style="tooltipStyle"
-        v-if="tooltipText"
-        @click="() => { tooltipText = ''; activePin = null; }"
-      >
-        {{ tooltipText }}
+      <div class="tooltip" :style="tooltip.style" v-if="tooltip.title || tooltip.owner">
+        <div class="speech-bubble">
+          <p class="room-title">{{ tooltip.title }}</p>
+          <p>{{ tooltip.owner }}</p>
+          <button class="go-button" @click="handleWatchClick">참여하기</button>
+        </div>
       </div>
+
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onBeforeUnmount } from "vue";
-import "@babylonjs/loaders/glTF";
-import {
-  Engine,
-  Scene,
-  ArcRotateCamera,
-  Vector3,
-  Color3,
-  Color4,
-  HemisphericLight,
-  Tools,
-  DefaultRenderingPipeline,
-  LoadAssetContainerAsync,
-  GlowLayer,
-  StandardMaterial,
-  MeshBuilder,
-  Matrix,
-} from "@babylonjs/core";
-import GlobePins from "./GlobeMarker.vue";
+import { ref, watch, onMounted, onBeforeUnmount } from 'vue';
+import { renderPins, setupPinClickHandler } from './globeMarker.js';
+import createGlobeScene from './createMainScene.js';
+import { showInfoOnClick } from './showInfoOnClick.js';
+import { Engine } from '@babylonjs/core';
 
+// Props
+const props = defineProps({
+  liveStreams: {
+    type: Array,
+    default: () => []
+  }
+});
+
+// Babylon 관련 ref들
 const canvas = ref(null);
 const engine = ref(null);
 const scene = ref(null);
 const camera = ref(null);
-
 const globeCenter = ref(null);
 const globeRadius = ref(null);
+const isHoveringGlobe = ref(false);
 
-const pins = [
-  { lat: 37.5665, lon: 126.9780, label: "서울에서 즐기는 은하수" },
-  { lat: 51.509865, lon: -0.118092, label: "런던에서 흐르는 밤하늘" },
-  { lat: 35.6895, lon: 139.6917, label: "도쿄에서 같이 올려다 보며" },
-];
+// Tooltip(지구본의 각 아이콘을 클릭할 때 나타나는 말풍선) 로직
+const {
+  tooltip,
+  handlePinInteraction,
+  handleWatchClick,
+  updateTooltipPosition
+} = showInfoOnClick({ engineRef: engine, cameraRef: camera, sceneRef: scene });
 
-let tooltipText = ref("");
-const tooltipStyle = reactive({
-  left: "0px",
-  top: "0px",
-  display: "none",
-});
-let activePin = ref(null);
-
+// 캔버스 사이즈 맞춤
 function setCanvasSize() {
   if (!canvas.value) return;
   const dpr = window.devicePixelRatio || 1;
@@ -79,141 +59,78 @@ function setCanvasSize() {
   }
 }
 
-function updateTooltipPosition() {
-  if (!scene.value || !camera.value || !engine.value || !activePin.value) {
-    tooltipStyle.display = "none";
-    return;
-  }
-
-  const pos = Vector3.Project(
-    activePin.value.position,
-    Matrix.Identity(),
-    scene.value.getTransformMatrix(),
-    camera.value.viewport.toGlobal(engine.value.getRenderWidth(), engine.value.getRenderHeight())
-  );
-
-  // 지구본 뒷편의 말풍선은 가려지게
-  if (pos.z < 0 || pos.z > 1) {
-    tooltipStyle.display = "none";
-    return;
-  }
-
-  tooltipStyle.left = `${pos.x + 10}px`;
-  tooltipStyle.top = `${pos.y - 40}px`;
-  tooltipStyle.display = "block";
-}
-
-function handlePinClick(mesh) {
-  activePin.value = mesh;
-  tooltipText.value = mesh.metadata?.label || "";
-  updateTooltipPosition();
-}
-
+// 마운트 후 초기화
 onMounted(async () => {
   engine.value = new Engine(canvas.value, true);
   setCanvasSize();
   engine.value.resize();
 
-  scene.value = await createScene();
+  scene.value = await createGlobeScene({
+    canvas: canvas.value,
+    engine: engine.value,
+    cameraRef: camera,
+    globeCenterRef: globeCenter,
+    globeRadiusRef: globeRadius,
+    isHoveringRef: isHoveringGlobe,
+  });
+
+  setupPinClickHandler(scene.value, handlePinInteraction);
 
   engine.value.runRenderLoop(() => {
-    if (camera.value) {
-      camera.value.alpha += 0.001; // 지구본 속도 조정
+    if (camera.value && !isHoveringGlobe.value) {
+      camera.value.alpha += 0.001;
     }
     scene.value.render();
     updateTooltipPosition();
   });
 
-  window.addEventListener("resize", () => {
+  window.addEventListener('resize', () => {
     setCanvasSize();
     engine.value.resize();
   });
 });
 
+// 실시간으로 스트리밍 정보를 가져오는 watch
+// 지구본 핀 랜더링 watch와 꼭 분리되어 있어야 합니다, 통합시킬 경우 무한 api 요청을 보내 페이지가 먹통됩니다
+watch(
+  () => props.liveStreams,
+  () => {
+    if (!scene.value || !globeCenter.value || !globeRadius.value) return;
+    renderPins({
+      scene: scene.value,
+      globeCenter: globeCenter.value,
+      globeRadius: globeRadius.value,
+      pins: props.liveStreams
+    });
+  },
+  {
+    immediate: true,
+    deep: true
+  }
+);
+
+// 지구본에 아이콘을 추가 생성하기 위한 watch
+watch(
+  [scene, globeCenter, globeRadius],
+  () => {
+    if (!scene.value || !globeCenter.value || !globeRadius.value) return;
+    renderPins({
+      scene: scene.value,
+      globeCenter: globeCenter.value,
+      globeRadius: globeRadius.value,
+      pins: props.liveStreams
+    });
+  },
+  { immediate: true }
+);
+
 onBeforeUnmount(() => {
-  window.removeEventListener("resize", () => {
+  window.removeEventListener('resize', () => {
     setCanvasSize();
     engine.value.resize();
   });
   if (engine.value) engine.value.dispose();
 });
-
-async function createScene() {
-  const sceneLocal = new Scene(engine.value);
-  sceneLocal.clearColor = new Color4(0, 0, 0, 0);
-
-  camera.value = new ArcRotateCamera(
-    "camera",
-    Tools.ToRadians(45),
-    Tools.ToRadians(60),
-    100,
-    new Vector3(0, 1, 0),
-    sceneLocal
-  );
-  camera.value.attachControl(canvas.value, true);
-  camera.value.lowerRadiusLimit = 50;
-
-  new HemisphericLight("light", new Vector3(0, 1, 0), sceneLocal);
-
-  const glow = new GlowLayer("glow", sceneLocal, {
-    blurKernelSize: 64,
-    intensity: 0.25,
-  });
-
-  const fogAura = MeshBuilder.CreateSphere("fogAura", { diameter: 72, segments: 96 }, sceneLocal);
-  const fogMaterial = new StandardMaterial("fogMat", sceneLocal);
-  fogMaterial.emissiveColor = new Color3(0.2, 0.8, 1.0);
-  fogMaterial.alpha = 0.005;
-  fogMaterial.backFaceCulling = false;
-  fogMaterial.disableLighting = true;
-  fogAura.material = fogMaterial;
-
-  glow.addIncludedOnlyMesh(fogAura);
-  fogAura.isPickable = false;
-  fogAura.visibility = 1;
-
-  const pipeline = new DefaultRenderingPipeline("defaultPipeline", true, sceneLocal, [camera.value]);
-  pipeline.bloomEnabled = true;
-  pipeline.bloomThreshold = 0.1;
-  pipeline.bloomIntensity = 0.1;
-
-  const container = await LoadAssetContainerAsync("/models/globe.glb", undefined, sceneLocal);
-  container.addAllToScene();
-
-  const allMeshes = container.meshes.filter((m) => m.name !== "__root__" && m.isVisible);
-
-  if (allMeshes.length > 0) {
-    globeCenter.value = allMeshes[0].getBoundingInfo().boundingSphere.centerWorld.clone();
-
-    let maxRadius = 0;
-    allMeshes.forEach((mesh) => {
-      const sphere = mesh.getBoundingInfo().boundingSphere;
-      const dist = globeCenter.value.subtract(sphere.centerWorld).length() + sphere.radiusWorld;
-      if (dist > maxRadius) maxRadius = dist;
-    });
-    globeRadius.value = maxRadius;
-
-    fogAura.position = globeCenter.value;
-    camera.value.setTarget(globeCenter.value);
-    camera.value.radius = globeRadius.value * 1.6;
-  }
-
-  container.meshes.forEach((mesh) => {
-    if (mesh.material && mesh.name === "globe") {
-      const wireframeMesh = mesh.clone(`${mesh.name}_wireframe`);
-      const wireMat = new StandardMaterial(`wireMat_${mesh.name}`, sceneLocal);
-      wireMat.wireframe = true;
-      wireMat.emissiveColor = new Color3(0.4, 0.8, 1.0);
-      wireMat.disableLighting = true;
-      wireMat.alpha = 0.3;
-      wireframeMesh.material = wireMat;
-      wireframeMesh.isPickable = false;
-      wireframeMesh.scaling = wireframeMesh.scaling.multiplyByFloats(1.001, 1.001, 1.001);
-    }
-  });
-
-  return sceneLocal;
-}
 </script>
 
 <style scoped>
@@ -252,29 +169,48 @@ canvas:focus {
   outline: none;
 }
 
-.tooltip.speech-bubble {
+.tooltip {
   position: absolute;
-  background: #222;
-  color: white;
-  padding: 8px 12px;
-  border-radius: 12px;
-  max-width: 200px;
-  font-size: 14px;
+  z-index: 10;
   pointer-events: auto;
-  cursor: pointer;
-  user-select: none;
-  z-index: 20;
+  transform: translate(-50%, -100%) !important;
+  transform-origin: top left !important;
 }
 
-.tooltip.speech-bubble::after {
+.speech-bubble {
+  position: relative;        /* ::after 위치 기준 */
+  background: black;
+  border-radius: 8px;
+  padding: 8px 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.speech-bubble::after {
   content: "";
   position: absolute;
-  bottom: -10px;
-  left: 20px;
-  border-width: 10px 10px 0;
-  border-style: solid;
-  border-color: #222 transparent transparent transparent;
+  bottom: -8px;
+  left: 20px;        /* 꼬리 좌우 위치 조정, 이걸 추후 고쳐야 함 */
   width: 0;
   height: 0;
+  border-width: 8px 8px 0 8px;
+  border-style: solid;
+  border-color: black transparent transparent transparent;
+}
+
+.room-title {
+  font-size: large;
+  margin-bottom: 4px;
+}
+
+.go-button {
+  border-radius: 8px;
+  background-color: white;
+  color: black;
+  margin-top: 6px;
 }
 </style>
