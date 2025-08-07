@@ -40,6 +40,7 @@ const hasMore = ref(true);
 
 // 캐시에 담겨진 이메일과 route에 들어간 이메일 대조
 // 각 video마다 계산하지 않고 통합하는 이유: 어차피 내 프로필 페이지는 거기 영상이 전부 내 거거나 전부 내 게 아니라서
+// 로그인 유저 검사
 const isUploader = (JSON.parse(localStorage.getItem('userInfo')).email === route.params.id);
 
 const videos = computed(() =>
@@ -51,37 +52,24 @@ const videos = computed(() =>
   }))
 );
 
-// 무한 스크롤링 구현
+// 스크롤 페칭
 const handleScroll = () => {
-  const pageElement = pageRef.value
-  if (!pageElement) return
-
-  const { scrollTop, scrollHeight, clientHeight } = pageElement
+  const el = pageRef.value;
+  if (!el) return;
+  const { scrollTop, scrollHeight, clientHeight } = el;
   if (scrollTop + clientHeight >= scrollHeight - 50 && hasMore.value) {
-    videoStore.fetchReplays(profilePk, ++page.value, 10);
+    page.value++;
+    fetchVideos();
   }
-}
+};
 
 const fetchVideos = async () => {
-  if (loading.value || !hasMore.value) return;
+  if (!hasMore.value) return;
 
   loading.value = true;
-
   try {
     const data = await videoStore.fetchReplays(profilePk, page.value, 10);
-
-    const newVideos = data.data.videos.map(v => ({
-      id: v.id,
-      name: v.originalFilename?.slice(0, -4).replace('_', ' ') || '제목 없음',
-      thumbnail: v.thumbnailDownloadUrl,
-      date: v.createdAt?.split('T')[0] || '1969-07-29',
-    }));
-
-    videos.value = [...videos.value, ...newVideos];
-
     hasMore.value = !data.data.isLast;
-
-    page.value++;
   } catch (err) {
     console.error('영상 불러오기 실패:', err);
   } finally {
@@ -95,12 +83,9 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-  if (pageRef.value) {
-    pageRef.value.removeEventListener('scroll', handleScroll);
-  }
+  pageRef.value?.removeEventListener('scroll', handleScroll);
 });
 
-// 각 videoFrame 클릭시 다시보기 방으로 이동
 function goToReplay(videoId) {
   router.push(`/replay/${videoId}`);
 }
