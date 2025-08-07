@@ -24,7 +24,7 @@
       <div class="profile-text">
         <p>{{ profileEmail || 'null' }}</p>
         <ProfileEdit @click="toggleEditMode" />
-        <p>{{ profileInfo?.description || '해당 회원은 아직 자기소개를 설정하지 않았습니다.' }}</p>
+        <p>{{ profileInfo?.description || '해당 회원은 아직 자기소개를 작성하지 않았습니다.' }}</p>
       </div>
 
     </div>
