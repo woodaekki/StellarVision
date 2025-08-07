@@ -26,6 +26,10 @@ public interface MemberCollectionRepository extends JpaRepository<MemberCollecti
 
     @Query("SELECT mc FROM MemberCollection mc JOIN FETCH mc.collection WHERE mc.member.id = :memberId AND mc.isSelect = true")
     List<MemberCollection> findByMemberIdAndIsSelectTrue(@Param("memberId") Long memberId);
+
+    @Query("SELECT COUNT(mc) > 0 FROM MemberCollection mc WHERE mc.member.id = :memberId AND mc.collection.id = :collectionId")
+    boolean existsByMemberIdAndCollectionId(@Param("memberId") Long memberId, @Param("collectionId") Long collectionId);
+
 }
 
 
