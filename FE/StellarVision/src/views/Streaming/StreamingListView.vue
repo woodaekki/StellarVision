@@ -1,6 +1,6 @@
 <!-- StreamingLiserView.vue -->
 <template>
-  <div class="flex items-center justify-between mb-6">
+  <div id="streaming-wrapper" class="flex items-center justify-between p-18 mb-6">
     <div>
       <button
       :class="activeTab === 'live' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-zinc-400'"
@@ -112,4 +112,8 @@ import VideoCard from '@/components/streaming/VideoCard.vue';
 
 </script>
 
-<style scoped lang="scss"></style>
+<style scoped>
+#streaming-wrapper{
+  background-image: url(@/assets//pictures/wallpaper/space.jpeg);
+}
+</style>

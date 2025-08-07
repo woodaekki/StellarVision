@@ -1,45 +1,47 @@
 <template>
   <div class="page" ref="pageRef">
     <div class="stars-background">
-      <div class="gallery-grid">
-        <div class="upload-box" @click="triggerGalleryUpload">
-          <span>+</span>
-          <input
-            type="file"
-            ref="galleryInput"
-            @change="uploadGalleryImage"
-            accept="image/*"
-            class="hidden"
-          />
-        </div>
+      <div class="px-4 pt-12 pb-6">
+        <h2 class="text-2xl mb-2 text-center font-pretendard" style="font-family: 'Pretendard', sans-serif !important;;">My Space Gallery</h2>
+        <hr class="border-t-2 border-neutral-200 w-full mt-2" />
+      </div>
 
-        <div
-          v-for="(item, index) in photos"
-          :key="item.id"
-          class="photo-box"
-          @click="viewPhoto(item.id)"
-        >
-          <img :src="item.url" class="photo-img" />
-          <div class="photo-text">
-            <p>{{ item.name }}</p>
-            <p class="photo-date">{{ item.date }}</p>
+      <div class="px-4 pb-12">
+        <div class="gallery-grid">
+          <div class="upload-box" @click="triggerGalleryUpload">
+            <span>+</span>
+            <input
+              type="file"
+              ref="galleryInput"
+              @change="uploadGalleryImage"
+              accept="image/*"
+              class="hidden"
+            />
           </div>
-          <button class="delete-button" @click.stop="deletePhoto(item.id)">
-            삭제
-          </button>
-        </div>
-      </div>
 
-      <div v-if="loading" class="loading-text">사진 불러오는 중...</div>
-      <div v-if="!photos.length && !loading && !hasMore" class="loading-text">
-        아직 사진이 없습니다.
-      </div>
-      <div v-if="!loading && hasMore" class="loading-text">
-        스크롤하여 더 많은 사진 보기
+          <div
+            v-for="(item, index) in photos"
+            :key="item.id"
+            class="photo-box group"
+            @click="viewPhoto(item.id)"
+          >
+            <img :src="item.url" class="photo-img" />
+            <div class="photo-text">
+              <p>{{ item.name }}</p>
+              <p class="photo-date">{{ item.date }}</p>
+            </div>
+            <button class="delete-button" @click.stop="deletePhoto(item.id)">삭제</button>
+          </div>
+        </div>
+
+        <div v-if="loading" class="loading-text">사진 불러오는 중...</div>
+        <div v-if="!photos.length && !loading && !hasMore" class="loading-text">아직 사진이 없습니다.</div>
+        <div v-if="!loading && hasMore" class="loading-text">스크롤하여 더 많은 사진 보기</div>
       </div>
     </div>
   </div>
 </template>
+
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
@@ -72,7 +74,7 @@ const fetchPhotos = async () => {
     const { data } = await axiosApi.get(`profiles/${memberId.value}/photos`, {
       params: {
         page: page.value,
-        size: 7, // 한 번에 불러올 사진 목록 수
+        size: 8, // 한 번에 불러올 사진 목록 수
       },
     })
 
@@ -230,27 +232,25 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.page {
-  background-color: black;
-  height: 100vh;
-  overflow-y: auto;
-  color: white;
-  font-family: sans-serif;
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-.stars-background {
-  padding: 2rem;
-  background: #262626;
-  position: relative;
-  min-height: 100%;
+.stars-background h2 {
+  margin-top: 48px !important;
+  margin-bottom: 52px !important;
+  margin-left: 10px;
+  text-align: left;
+  font-weight: 700;
+  font-size: medium;
+
 }
 
 .gallery-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-  max-width: 640px;
-  margin: 0 auto;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
 }
 
 .upload-box,
@@ -258,31 +258,45 @@ onBeforeUnmount(() => {
   position: relative;
   width: 100%;
   aspect-ratio: 4 / 3;
-  background-color: #ababab;
-  border-radius: 6px;
+  background-color: #1a1a1a;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.05);
 }
 
 .upload-box {
   justify-content: center;
   align-items: center;
-  font-size: 3rem;
-  transition: background 0.3s;
+  font-size: 2.5rem;
+  color: #999;
+  background: linear-gradient(135deg, #1f1f1f, #2b2b2b);
+  transition: all 0.3s ease;
 }
 
 .upload-box:hover {
-  background-color: #3a3a3a;
+  background: linear-gradient(135deg, #292929, #333);
+  color: #ddd;
+  border-color: #777;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
 }
 
-.photo-box {
-  transition: transform 0.2s;
+.upload-box span {
+  font-weight: 300;
+  font-size: 3rem;
+  line-height: 1;
 }
 
+/* 업로드 버튼 텍스트 제거 */
+input[type="file"] {
+  display: none !important;
+
+}
 .photo-box:hover {
   transform: scale(1.03);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
 }
 
 .photo-img {
@@ -297,19 +311,26 @@ onBeforeUnmount(() => {
   bottom: 0;
   width: 100%;
   background: rgba(0, 0, 0, 0.6);
-  padding: 0.4rem;
+  padding: 6px 10px;
   font-size: 0.75rem;
+  color: #eee;
+  transform: translateY(100%);
+  transition: transform 0.3s ease-in-out;
+}
+
+.photo-box:hover .photo-text {
+  transform: translateY(0);
 }
 
 .delete-button {
   position: absolute;
-  top: 5px;
-  right: 5px;
-  background-color: rgba(255, 0, 0, 0.8);
+  top: 8px;
+  right: 8px;
+  background-color: rgba(255, 0, 0, 0.75);
   color: white;
   border: none;
   border-radius: 4px;
-  padding: 5px 10px;
+  padding: 4px 8px;
   cursor: pointer;
   font-size: 12px;
   opacity: 0;
@@ -321,19 +342,10 @@ onBeforeUnmount(() => {
   opacity: 1;
 }
 
-.empty-frame {
-  width: 100%;
-  height: 100%;
-  background-color: #ababab;
-}
-
-.hidden {
-  display: none;
-}
-
 .loading-text {
   text-align: center;
   margin-top: 1rem;
   color: #ccc;
 }
+
 </style>

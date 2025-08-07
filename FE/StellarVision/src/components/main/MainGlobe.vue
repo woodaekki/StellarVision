@@ -195,7 +195,7 @@ async function createScene() {
 
     fogAura.position = globeCenter.value;
     camera.value.setTarget(globeCenter.value);
-    camera.value.radius = globeRadius.value * 1.2;
+    camera.value.radius = globeRadius.value * 1.6;
   }
 
   container.meshes.forEach((mesh) => {
@@ -219,7 +219,7 @@ async function createScene() {
 <style scoped>
 .globe-wrapper {
   position: absolute;
-  top: 60px;
+  top: 55px;
   left: 0;
   width: 100vw;
   height: calc(100vh - 60px);
