@@ -28,12 +28,6 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public boolean existsByEmail(String email) {
-        return memberRepository.existsByEmail(email);
-    }
-
-    @Override
     @Transactional
     public Long registerMember(SignUpRequest request) {
         String rawPassword = request.getPassword();

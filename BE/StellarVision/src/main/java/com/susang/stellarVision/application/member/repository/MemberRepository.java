@@ -15,10 +15,11 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     boolean existsByEmail(String email);
 
     @Query("""
-    SELECT m
-      FROM Member m
-      JOIN FETCH m.profile
-     WHERE m.id = :memberId
-    """)
+            SELECT m
+              FROM Member m
+              JOIN FETCH m.profile
+             WHERE m.id = :memberId
+              AND m.isDeleted = false
+            """)
     Optional<Member> findByIdWithProfile(@Param("memberId") Long memberId);
 }

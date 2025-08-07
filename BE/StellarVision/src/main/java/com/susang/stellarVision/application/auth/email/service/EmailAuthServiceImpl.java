@@ -8,7 +8,7 @@ import com.susang.stellarVision.application.auth.email.exception.CodeNotFoundExc
 import com.susang.stellarVision.application.auth.email.exception.VerificationCodeException;
 import com.susang.stellarVision.application.auth.email.repository.EmailAuthTokenRepository;
 import com.susang.stellarVision.application.member.exception.MemberAlreadyExistException;
-import com.susang.stellarVision.application.member.service.MemberService;
+import com.susang.stellarVision.application.member.repository.MemberRepository;
 import com.susang.stellarVision.common.utils.EmailUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +21,7 @@ import java.time.Duration;
 @Slf4j
 public class EmailAuthServiceImpl implements EmailAuthService {
 
-    private final MemberService memberService;
+    private final MemberRepository memberRepository;
     private final EmailAuthTokenRepository emailAuthTokenRepository;
     private final EmailUtil emailUtil;
 
@@ -29,7 +29,7 @@ public class EmailAuthServiceImpl implements EmailAuthService {
     public void sendVerificationCode(SendCodeRequest sendCodeRequest) {
 
         String email = sendCodeRequest.getEmail();
-        if (memberService.existsByEmail(email)) {
+        if (memberRepository.existsByEmail(email)) {
             throw new MemberAlreadyExistException(email);
         }
 

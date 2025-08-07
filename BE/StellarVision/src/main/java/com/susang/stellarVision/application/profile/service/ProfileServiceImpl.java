@@ -22,7 +22,8 @@ public class ProfileServiceImpl implements ProfileService {
     private final S3FileManager s3FileManager;
     private static final String DEFAULT_PROFILE_IMAGE_KEY = "profile/profile.png";
 
-    private String getProfileImageUrl(String s3Key) {
+    @Override
+    public String getProfileImageUrl(String s3Key) {
         if (s3Key == null || s3Key.isBlank()) {
             return s3FileManager.getPresignedDownloadUrl(DEFAULT_PROFILE_IMAGE_KEY);
         }
