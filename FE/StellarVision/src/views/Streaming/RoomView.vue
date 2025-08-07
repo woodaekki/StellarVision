@@ -10,15 +10,19 @@ import { useRecordingStore } from '@/stores/recording'
 
 const route = useRoute()
 const router = useRouter()
+//세션관련 객체
 const sessionId = route.params.id
 const userName = route.params.userName || 'Host'
-const isRecording = ref(false)
 const roomTitle = route.query.title
 const micEnabled = ref(true)
+// 녹음 관련 객체
+const isRecording = ref(false)
 const recordingId = ref(null)
 const isRecordingButtonDisabled = ref(false)
 const recorded = ref('')
 const recordingStore = useRecordingStore()
+
+
 
 // 모든 로직을 가져온다
 const { session, publisher,  leave } = openviduService(
@@ -93,6 +97,8 @@ function toggleMic(){
 }
 
 
+
+
 onMounted(()=>{
   session.on('recordingStarted', ()=>{
     isRecording.value = true
@@ -100,6 +106,7 @@ onMounted(()=>{
   session.on('recordingStopped', ()=>{
     isRecording.value = false
   })
+
 })
 
 </script>
