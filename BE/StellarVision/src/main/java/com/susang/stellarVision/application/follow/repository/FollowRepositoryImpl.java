@@ -25,6 +25,7 @@ public class FollowRepositoryImpl implements FollowRepositoryCustom {
         return jpaQueryFactory.select(Projections.constructor(
                         FollowMemberDTO.class,
                         follow.toMember.id,
+                        follow.id,
                         follow.toMember.name,
                         profile.profileS3Key,
                         follow.createdAt
@@ -48,6 +49,7 @@ public class FollowRepositoryImpl implements FollowRepositoryCustom {
         return jpaQueryFactory.select(Projections.constructor(
                         FollowMemberDTO.class,
                         follow.fromMember.id,
+                        follow.id,
                         follow.fromMember.name,
                         profile.profileS3Key,
                         follow.createdAt
