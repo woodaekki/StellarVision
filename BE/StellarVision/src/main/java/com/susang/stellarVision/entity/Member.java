@@ -10,6 +10,9 @@ import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.SQLSelect;
 
 @Entity
 @Table(
@@ -22,6 +25,9 @@ import java.time.LocalDateTime;
         }
 )
 @Getter
+@SQLDelete(sql = "UPDATE members SET is_deleted = true WHERE id = ?")
+@SQLRestriction("is_deleted = false")
+@SQLSelect(sql = "SELECT * FROM members WHERE is_deleted = false AND id = ?")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @ToString
 public class Member extends BaseEntity {
@@ -43,7 +49,6 @@ public class Member extends BaseEntity {
     @Column(nullable = false)
     private LocalDate birth;
 
-    @Setter
     @Column(name = "latest_login")
     private LocalDateTime latestLogin;
 
