@@ -8,11 +8,12 @@
     :profile-info="profileInfo"
     :profile-email="profileEmail"
     @updateProfileImageUrl="handleUpdateImageUrl"/>
-    <main class="main">
-      <div v-if="profileInfo.galleryPublic">
+    <main class="main-content">
+      <div v-if="profileInfo.galleryPublic" class="content-section">
         <MyGalleryView />
       </div>
-      <div v-if="profileInfo.videoPublic">
+      <hr class="section-divider" v-if="profileInfo.galleryPublic && profileInfo.videoPublic">
+      <div v-if="profileInfo.videoPublic" class="content-section">
         <MyVideoView
         :profilePk="profilePk"
         :recentVideos="recentVideos"
@@ -22,7 +23,6 @@
     </main>
   </div>
 </template>
-
 
 <script setup>
 import { onMounted, ref, computed } from 'vue';
@@ -41,7 +41,7 @@ const router = useRouter();
 
 const profilePk = ref(window.history.state?.memberPk);
 const profileInfo = ref(null);
-const profileEmail = route.params.id; // 이메일은 수정 불가라 ref 없이 할당
+const profileEmail = route.params.id;
 
 const loading = ref(true);
 const profileUpdateLoading = ref(false);
@@ -49,9 +49,7 @@ const profileUpdateLoading = ref(false);
 const recentVideos = computed(() => videoStore.replays);
 
 onMounted(async () => {
-  // 메인 헤더에서 직접 접근했을 경우 내 프로필을 호출
   if (!profilePk.value) {
-    // 오류 방지를 위해 토큰 존재 확인
     if (account.token) {
       commonApi.defaults.headers.common.Authorization = `Bearer ${account.token}`;
       await account.fetchMyProfile();
@@ -59,7 +57,6 @@ onMounted(async () => {
       profilePk.value = profileInfo.value.memberId;
       await videoStore.fetchReplays(profilePk.value, 0, 3);
     }
-  // 다른 경로로 들어왔을 경우 (다른 유저 프로필에 접근, pk 제공 상정)
   } else {
     profileInfo.value = await account.fetchUserProfile(profilePk);
     await videoStore.fetchReplays(profilePk.value, 0, 3);
@@ -69,7 +66,6 @@ onMounted(async () => {
   console.log('프로필 정보:', profileInfo.value);
 })
 
-// 프로필 이미지 갱신 캐치
 async function handleUpdateImageUrl() {
   profileUpdateLoading.value = true;
   if (!profilePk.value && account.token) {
@@ -92,11 +88,35 @@ function goToReplay(videoId) {
 <style scoped>
 .profile-wrapper {
   padding-top: 58px;
-  background-image: url(@/assets//pictures/wallpaper/space.jpeg);
+  background: #000;
+  background-size: cover;
   min-height: 100vh;
   color: white;
   display: flex;
   flex-direction: column;
 }
 
+.main-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 0 10px;
+  box-sizing: border-box;
+}
+
+.content-section {
+  width: 100%;
+}
+
+.section-divider {
+  width: 85%;
+  border: 0;
+  height: 1px;
+  background-color: #ccc;
+  margin: 10px 0;
+}
 </style>

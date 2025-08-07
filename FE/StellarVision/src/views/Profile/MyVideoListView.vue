@@ -1,3 +1,4 @@
+<!-- myvideolistview -->
 <template>
   <div class="page" ref="pageRef">
     <div class="stars-background">
