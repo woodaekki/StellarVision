@@ -2,9 +2,9 @@ import { ref, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { Vector3, Matrix } from '@babylonjs/core';
 
-const router = useRouter();
-
 export function showInfoOnClick({ engineRef, cameraRef, sceneRef }) {
+  const router = useRouter();
+
   const tooltip = reactive({
     title: '',
     owner: '',
@@ -58,7 +58,7 @@ export function showInfoOnClick({ engineRef, cameraRef, sceneRef }) {
     if (sessionId) {
       router.push({
         name: 'RoomView',
-        params: { sessionId }
+        params: { id: sessionId }
       })
     };
   };
