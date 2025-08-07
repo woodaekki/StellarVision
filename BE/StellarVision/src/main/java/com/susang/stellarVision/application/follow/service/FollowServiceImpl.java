@@ -1,12 +1,13 @@
 package com.susang.stellarVision.application.follow.service;
 
-import com.susang.stellarVision.application.follow.dto.FollowRequest;
 import com.susang.stellarVision.application.follow.exception.AlreadyFollowException;
+import com.susang.stellarVision.application.follow.exception.FollowNotFoundException;
 import com.susang.stellarVision.application.follow.repository.FollowRepository;
 import com.susang.stellarVision.application.follow.dto.FollowMemberDTO;
 import com.susang.stellarVision.application.member.exception.MemberNotFoundException;
 import com.susang.stellarVision.application.member.repository.MemberRepository;
 import com.susang.stellarVision.application.profile.service.ProfileService;
+import com.susang.stellarVision.common.exception.AccessDeniedException;
 import com.susang.stellarVision.entity.Follow;
 import com.susang.stellarVision.entity.Member;
 import java.util.List;
@@ -23,6 +24,7 @@ public class FollowServiceImpl implements FollowService {
     private final FollowRepository followRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public List<FollowMemberDTO> getFollowers(Long memberId) {
         if (!memberRepository.existsById(memberId)) {
             throw new MemberNotFoundException(memberId.toString());
@@ -37,6 +39,7 @@ public class FollowServiceImpl implements FollowService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<FollowMemberDTO> getFollowings(Long memberId) {
         if (!memberRepository.existsById(memberId)) {
             throw new MemberNotFoundException(memberId.toString());
@@ -52,7 +55,7 @@ public class FollowServiceImpl implements FollowService {
 
     @Override
     @Transactional
-    public Long followMember(Long toMemberId, Member fromMember) {
+    public Long followMember(Member fromMember, Long toMemberId) {
         Member toMember = memberRepository.findById(toMemberId)
                 .orElseThrow(() -> new MemberNotFoundException(toMemberId.toString()));
 
@@ -67,9 +70,32 @@ public class FollowServiceImpl implements FollowService {
                 .toMember(toMember)
                 .build();
 
+        fromMember.increaseFollowingCount();
+        toMember.increaseFollowerCount();
+
         followRepository.save(follow);
 
         return follow.getId();
+    }
+
+    @Override
+    @Transactional
+    public void deleteFollow(Long followId, Long memberId) {
+        Follow follow = followRepository.findById(followId)
+                .orElseThrow(() -> new FollowNotFoundException(followId.toString()));
+
+        Member fromMember = follow.getFromMember();
+        Member toMember = follow.getToMember();
+
+        if (fromMember.getId().equals(memberId)) {
+            fromMember.decreaseFollowingCount();
+        } else if (toMember.getId().equals(memberId)) {
+            toMember.decreaseFollowerCount();
+        } else {
+            throw new AccessDeniedException("삭제 권한이 없습니다");
+        }
+
+        followRepository.deleteById(followId);
     }
 
 
