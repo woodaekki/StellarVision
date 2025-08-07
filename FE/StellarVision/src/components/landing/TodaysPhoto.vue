@@ -70,13 +70,6 @@ onMounted(async () => {
   flex-direction: column;
 }
 
-.black-header {
-  width: 100%;
-  height: 58px;
-  background-color: #000;
-  flex-shrink: 0;
-}
-
 .content-container {
   flex: 1;
   background-color: #fff;
