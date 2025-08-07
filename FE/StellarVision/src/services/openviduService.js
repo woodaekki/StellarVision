@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { OpenVidu } from 'openvidu-browser'
 import streamingService from '@/services/streamingService'
 import router from '@/router'
+import { useAccountStore } from '@/stores/account'
 
 export default function openviduService(streamId, userName, onError = () => {}) {
   const OV = new OpenVidu()
@@ -21,11 +22,13 @@ export default function openviduService(streamId, userName, onError = () => {}) 
 
   const connect = async () => {
     try {
-      const response = await streamingService.getToken(streamId, userName)
+      const response = await streamingService.getToken(streamId)
       const token = response.data.data.token   //data에서 token과 role을 받아옴
       const role = response.data.data.role
+      const {userInfo} = useAccountStore()
+      console.log('이름 전달', userInfo.name)
       console.log('token, role', token, role)
-      await session.connect(token, { clientData: userName })
+      await session.connect(token, { clientData: userInfo.name })
       if(role === 'PUBLISHER' ){
         publisher.value = OV.initPublisher(undefined, {     //undefiend 대신 태그ID나 DOM 지정하면 바로 스트림이 붙는다.
         audioSource: undefined,

@@ -58,7 +58,7 @@ public class FollowRepositoryImpl implements FollowRepositoryCustom {
                 .join(follow.fromMember, member)
                 .leftJoin(member.profile, profile)
                 .where(
-                        follow.fromMember.id.eq(toMemberId),
+                        follow.toMember.id.eq(toMemberId),
                         follow.fromMember.isDeleted.eq(false)
                 )
                 .fetch();

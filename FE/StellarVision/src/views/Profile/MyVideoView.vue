@@ -12,6 +12,7 @@
     <div class="video-frames" v-if="recentVideos.length > 0">
       <VideoFrame
        v-for="video in recentVideos"
+       @click="goToReplayRoom(video.id)"
        :key="video.id"
        :video="video"
       />
@@ -36,7 +37,7 @@ const props = defineProps({
   },
   recentVideos : {
     type: Array,
-    required: true
+    default: () => []
   }
 })
 
@@ -47,6 +48,13 @@ const goVideoList = () => {
     state: {
       profilePk: props.profilePk
     }
+  })
+};
+
+const goToReplayRoom = (videoId) => {
+  router.push({
+    name: 'ReplayView',
+    params: { id: videoId },
   })
 };
 </script>

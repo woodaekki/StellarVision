@@ -3,5 +3,7 @@ package com.susang.stellarVision.application.follow.repository;
 import com.susang.stellarVision.entity.Follow;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface FollowRepository extends JpaRepository<Follow, Long>, FollowRepositoryCustom{
+public interface FollowRepository extends JpaRepository<Follow, Long>, FollowRepositoryCustom {
+
+    boolean existsByFromMember_IdAndToMember_Id(Long fromMemberId, Long toMemberId);
 }

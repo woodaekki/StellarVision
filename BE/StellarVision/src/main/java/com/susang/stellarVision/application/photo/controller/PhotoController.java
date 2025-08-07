@@ -3,6 +3,7 @@ package com.susang.stellarVision.application.photo.controller;
 import com.susang.stellarVision.application.photo.dto.PhotoResponse;
 import com.susang.stellarVision.application.photo.dto.PhotoTagListResponse;
 import com.susang.stellarVision.application.photo.dto.PhotoUploadCompleteRequest;
+import com.susang.stellarVision.application.photo.dto.PhotoUploadCompleteResponse;
 import com.susang.stellarVision.application.photo.dto.PhotoUploadRequest;
 import com.susang.stellarVision.application.photo.dto.PhotoUploadResponse;
 import com.susang.stellarVision.application.photo.service.PhotoService;
@@ -36,12 +37,11 @@ public class PhotoController {
     }
 
     @PostMapping("/complete")
-    public ResponseEntity<APIResponse<String>> completeUpload(
+    public ResponseEntity<APIResponse<PhotoUploadCompleteResponse>> completeUpload(
             @RequestBody PhotoUploadCompleteRequest request) {
 
-        photoService.savePhotoMeta(request.getMemberId(), request.getOriginalFilename(),
-                request.getS3Key());
-        return ResponseEntity.ok(APIResponse.success("갤러리 사진 업로드 완료 및 메타데이터 저장 성공", null));
+        PhotoUploadCompleteResponse result = photoService.completeUpload(request);
+        return ResponseEntity.ok(APIResponse.success("갤러리 사진 업로드 완료 및 메타데이터 저장 성공", result));
     }
 
     @DeleteMapping("{photoId}")

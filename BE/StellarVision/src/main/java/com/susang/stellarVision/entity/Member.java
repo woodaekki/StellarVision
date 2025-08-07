@@ -84,4 +84,20 @@ public class Member extends BaseEntity {
     public void updateLatestLogin() {
         this.latestLogin = LocalDateTime.now();
     }
+
+    public void decreaseFollowerCount() {
+        this.followerCount--;
+    }
+
+    public void decreaseFollowingCount() {
+        this.followingCount--;
+    }
+
+    public void increaseFollowerCount() {
+        this.followerCount++;
+    }
+
+    public void increaseFollowingCount() {
+        this.followingCount++;
+    }
 }

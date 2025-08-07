@@ -9,7 +9,7 @@
       <nav class="flex items-center gap-4">
         <template v-if="isLogin">
           <RouterLink :to="`/profile/${userInfo?.email}`" class="no-underline relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-[#f2f2f2] after:w-0 after:transition-all after:duration-300 hover:after:w-full font-pretendard">
-            {{ userInfo?.email }}님
+            {{ userInfo?.name }}님
           </RouterLink>
           <button @click="handleLogout" class="no-underline relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-[#f2f2f2] after:w-0 after:transition-all after:duration-300 hover:after:w-full font-pretendard bg-transparent border-none text-white cursor-pointer inline-block">로그아웃</button>
         </template>
@@ -41,6 +41,7 @@ const isRoomView = computed(() => route.name === 'RoomView')
 const handleLogout = () => {
   account.logOut()
 }
+console.log(userInfo.value)
 </script>
 
 <style>
