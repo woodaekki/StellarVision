@@ -6,6 +6,8 @@
     <ProfileHeader
     v-if="!profileUpdateLoading"
     :profile-info="profileInfo"
+    :profile-followings="profileFollowings"
+    :profile-followers="profileFollowers"
     :profile-email="profileEmail"
     @updateProfileImageUrl="handleUpdateImageUrl"/>
     <main class="main-content">
@@ -32,16 +34,20 @@ import MyGalleryView from '@/views/Profile/MyGalleryView.vue';
 import MyVideoView from '@/views/Profile/MyVideoView.vue';
 import { useAccountStore } from '@/stores/account';
 import { useVideoStore } from '@/stores/video';
+import { useProfileStore } from '@/stores/profile';
 import commonApi from '@/api/commonApi';
 
 const account = useAccountStore();
 const videoStore = useVideoStore();
+const profileStore = useProfileStore();
 const route = useRoute();
 const router = useRouter();
 
 const profilePk = ref(window.history.state?.memberPk);
 const profileInfo = ref(null);
 const profileEmail = route.params.id;
+const profileFollowers = computed(() => profileStore.followers);
+const profileFollowings = computed(() => profileStore.followings);
 
 const loading = ref(true);
 const profileUpdateLoading = ref(false);
@@ -56,14 +62,19 @@ onMounted(async () => {
       profileInfo.value = account.myProfile;
       profilePk.value = profileInfo.value.memberId;
       await videoStore.fetchReplays(profilePk.value, 0, 3);
+      await profileStore.fetchMemberFollowers(profilePk.value);
+      await profileStore.fetchMemberFollowings(profilePk.value);
     }
   } else {
-    profileInfo.value = await account.fetchUserProfile(profilePk);
+    profileInfo.value = await account.fetchUserProfile(profilePk.value);
     await videoStore.fetchReplays(profilePk.value, 0, 3);
+    await profileStore.fetchMemberFollowers(profilePk.value);
+    await profileStore.fetchMemberFollowings(profilePk.value);
   }
 
   loading.value = false;
   console.log('프로필 정보:', profileInfo.value);
+  console.log('프로필 정보:', JSON.parse(localStorage.getItem('userInfo')));
 })
 
 async function handleUpdateImageUrl() {
