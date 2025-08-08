@@ -41,7 +41,9 @@ const getCurrentLocation = () => {
   });
 };
 const createRoom = async () => {
+
   try {
+    const location = await getCurrentLocation()
     const payload = {
       title: title.value,
       latitude: location.lat,
