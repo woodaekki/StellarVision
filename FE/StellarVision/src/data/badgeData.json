@@ -5,23 +5,26 @@
     "abbreviation": "Ari",
     "description": "Aries represents the golden ram sent by Zeus to rescue Phrixus and Helle. The ram flew them across the sea, but Helle fell and drowned. Phrixus reached safety and sacrificed the ram in gratitude, hanging its golden fleece in a sacred grove.",
     "koreanDescription": "양자리는 제우스가 프릭수스와 헬레를 구하기 위해 보낸 황금 숫양을 상징합니다. 양은 바다를 날아 프릭수스를 안전하게 데려갔고, 프릭수스는 감사의 뜻으로 양을 제물로 바치고 황금 양털을 신성한 숲에 걸었습니다.",
-    "imageName": "Cons-Aries"
+    "imageName": "Cons-Aries",
+    "id": 7
   },
   {
     "name": "Taurus",
     "koreanName": "황소자리",
-    "abbreviation": null,
+    "abbreviation": "Tau",
     "description": "Taurus is linked to the myth of Zeus transforming into a white bull. He abducted Europa, a Phoenician princess, and carried her across the sea to Crete. There, he revealed his divine form and made her the queen of Crete.",
     "koreanDescription": "황소자리는 제우스가 흰 황소로 변해 페니키아의 공주 에우로파를 납치한 신화와 관련이 있습니다. 그는 그녀를 크레타섬으로 데려가 여왕으로 만들었습니다.",
-    "imageName": "placeholder"
+    "imageName": "placeholder",
+    "id": 78
   },
   {
     "name": "Gemini",
     "koreanName": "쌍둥이자리",
-    "abbreviation": null,
+    "abbreviation": "Gem",
     "description": "Gemini represents the twin brothers Castor and Pollux. One was mortal and the other divine, but they shared a deep bond. When Castor died, Pollux asked Zeus to let them stay together forever, and they were placed in the sky as the Gemini constellation.",
     "koreanDescription": "쌍둥이자리는 필사자인 카스토르와 신적인 폴룩스 형제를 상징합니다. 카스토르가 죽자 폴룩스는 제우스에게 함께 있게 해달라고 부탁했고, 그들은 하늘의 별자리가 되었습니다.",
-    "imageName": "placeholder"
+    "imageName": "placeholder",
+    "id": 38
   },
   {
     "name": "Cancer",
@@ -29,47 +32,53 @@
     "abbreviation": "Cnc",
     "description": "Cancer was the giant crab that served Hera during Heracles’ battle with the Hydra. It tried to help by pinching Heracles, but he crushed it. In gratitude, Hera placed the crab in the sky as the constellation Cancer.",
     "koreanDescription": "게자리는 헤라가 헤라클레스와 히드라의 전투 중 보낸 거대한 게를 나타냅니다. 헤라클레스를 방해하려다 짓밟혔고, 헤라는 그것을 별자리로 만들었습니다.",
-    "imageName": "Cons-Cancer"
+    "imageName": "Cons-Cancer",
+    "id": 12
   },
   {
     "name": "Leo",
     "koreanName": "사자자리",
-    "abbreviation": null,
+    "abbreviation": "Leo",
     "description": "Leo represents the Nemean Lion, a beast Heracles had to defeat as one of his twelve labors. Its hide was impervious to weapons, so Heracles strangled it with his bare hands. Zeus honored the lion by placing it among the stars.",
     "koreanDescription": "사자자리는 헤라클레스가 열두 과업 중 하나로 무찔러야 했던 네메아의 사자를 상징합니다. 무기로는 죽일 수 없어 맨손으로 목졸라 죽였고, 제우스는 이를 별자리로 기렸습니다.",
-    "imageName": "placeholder"
+    "imageName": "placeholder",
+    "id": 46
   },
   {
     "name": "Virgo",
     "koreanName": "처녀자리",
-    "abbreviation": null,
+    "abbreviation": "Vir",
     "description": "Virgo is often associated with Astraea, the goddess of innocence and purity. She lived among humans during the Golden Age but fled to the heavens as humanity grew corrupt. She became the constellation Virgo, watching over the world from the sky.",
     "koreanDescription": "처녀자리는 순수와 무고의 여신 아스트라이아와 관련이 있습니다. 인간이 타락하자 하늘로 올라가 별자리가 되었습니다.",
-    "imageName": "placeholder"
+    "imageName": "placeholder",
+    "id": 86
   },
   {
     "name": "Libra",
     "koreanName": "천칭자리",
-    "abbreviation": null,
+    "abbreviation": "Lib",
     "description": "Libra symbolizes balance and justice, often linked to Themis, the Greek goddess of law. She held the scales of justice and ensured order among gods and mortals. The constellation represents fairness and the weighing of souls.",
     "koreanDescription": "천칭자리는 정의와 균형을 상징하며, 법의 여신 테미스가 들었던 저울과 관련이 있습니다. 이는 공정성과 영혼의 무게를 재는 상징입니다.",
-    "imageName": "placeholder"
+    "imageName": "placeholder",
+    "id": 49
   },
   {
     "name": "Scorpio",
     "koreanName": "전갈자리",
-    "abbreviation": null,
+    "abbreviation": "Sco",
     "description": "Scorpio tells the tale of Orion, a great hunter who boasted he could kill all beasts. The Earth goddess sent a scorpion to stop him, and it succeeded. Zeus placed both Orion and the scorpion in the sky, but on opposite sides to avoid further conflict.",
     "koreanDescription": "전갈자리는 모든 짐승을 죽일 수 있다고 자만한 사냥꾼 오리온을 막기 위해 대지의 여신이 보낸 전갈의 이야기입니다. 제우스는 둘을 하늘에 올려 반대편에 두었습니다.",
-    "imageName": "placeholder"
+    "imageName": "placeholder",
+    "id":73
   },
   {
     "name": "Sagittarius",
     "koreanName": "사수자리",
-    "abbreviation": null,
+    "abbreviation": "Sgr",
     "description": "Sagittarius is associated with the centaur Chiron, a wise and kind teacher. Though immortal, he was wounded and could not heal. Wishing to end his suffering, he gave up his immortality, and Zeus placed him in the sky as Sagittarius.",
     "koreanDescription": "사수자리는 현명하고 친절한 켄타우로스 키론과 관련이 있습니다. 불사의 존재였지만 치유되지 않는 상처를 입었고, 고통을 끝내기 위해 불멸성을 포기하자 제우스가 별자리로 만들었습니다.",
-    "imageName": "placeholder"
+    "imageName": "placeholder",
+    "id":72
   },
   {
     "name": "Capricorn",
@@ -77,23 +86,26 @@
     "abbreviation": "Cap",
     "description": "Capricorn is linked to the goat-fish deity Pan. When the monster Typhon attacked the gods, Pan dove into the Nile, his lower half becoming a fish. His cleverness and bravery earned him a place among the stars.",
     "koreanDescription": "염소자리는 염소-물고기 신 판과 관련이 있습니다. 티폰이 신들을 공격했을 때, 그는 나일강으로 뛰어들어 하반신이 물고기로 변했고, 그의 기지가 별자리로 이어졌습니다.",
-    "imageName": "placeholder"
+    "imageName": "placeholder",
+    "id":16
   },
   {
     "name": "Aquarius",
     "koreanName": "물병자리",
-    "abbreviation": null,
+    "abbreviation": "Aqr",
     "description": "Aquarius is often connected to Ganymede, a beautiful mortal youth. Zeus abducted him to serve as cupbearer to the gods on Mount Olympus. Honoring his role, Zeus placed him in the heavens as Aquarius, the water-bearer.",
     "koreanDescription": "물병자리는 제우스가 납치한 아름다운 소년 가니메데와 관련이 있습니다. 그는 올림푸스에서 술을 따르는 역할을 하며 하늘의 별자리가 되었습니다.",
-    "imageName": "placeholder"
+    "imageName": "placeholder",
+    "id":4
   },
   {
     "name": "Pisces",
     "koreanName": "물고기자리",
-    "abbreviation": null,
+    "abbreviation": "Psc",
     "description": "Pisces symbolizes the story of Aphrodite and her son Eros. When fleeing the monster Typhon, they transformed into fish and tied themselves together with rope. Their devotion was immortalized as the constellation Pisces.",
     "koreanDescription": "물고기자리는 아프로디테와 아들 에로스가 괴물 티폰을 피해 물고기로 변해 서로를 줄로 묶은 이야기에서 유래합니다. 그들의 헌신이 별자리가 되었습니다.",
-    "imageName": "Cons-Pisces"
+    "imageName": "Cons-Pisces",
+    "id":66
   },
   {
     "name": "Cetus",
@@ -101,7 +113,8 @@
     "abbreviation": "Cet",
     "description": "Cetus is a sea monster constellation often associated with the myth of Andromeda and Perseus.",
     "koreanDescription": "고래자리는 안드로메다와 페르세우스의 신화에 등장하는 바다 괴물로 알려져 있습니다.",
-    "imageName": "Cons-Cetus"
+    "imageName": "Cons-Cetus",
+    "id":21
   },
   {
     "name": "Auriga",
@@ -109,7 +122,8 @@
     "abbreviation": "Aur",
     "description": "Auriga represents a charioteer and is known for containing the bright star Capella.",
     "koreanDescription": "마차부자리는 마부를 상징하며, 밝은 별 카펠라를 포함하고 있는 것으로 유명합니다.",
-    "imageName": "Cons-Auriga"
+    "imageName": "Cons-Auriga",
+    "id":8
   },
   {
     "name": "Bootes",
@@ -117,7 +131,8 @@
     "abbreviation": "Boo",
     "description": "Bootes is the herdsman constellation, most notable for the bright star Arcturus.",
     "koreanDescription": "목동자리는 목자를 상징하는 별자리로, 밝은 별 아크투루스로 유명합니다.",
-    "imageName": "Cons-Bootes"
+    "imageName": "Cons-Bootes",
+    "id":9
   },
   {
     "name": "Caelum",
@@ -125,7 +140,8 @@
     "abbreviation": "Cae",
     "description": "Caelum represents a sculptor’s chisel and is one of the faintest constellations in the sky.",
     "koreanDescription": "조각칼자리는 조각가의 끌을 나타내며, 하늘에서 가장 어두운 별자리 중 하나입니다.",
-    "imageName": "Cons-Caelum"
+    "imageName": "Cons-Caelum",
+    "id":10
   },
   {
     "name": "Cassiopeia",
@@ -133,7 +149,8 @@
     "abbreviation": "Cas",
     "description": "Cassiopeia is a prominent W-shaped constellation representing the vain queen in Greek mythology.",
     "koreanDescription": "카시오페이아자리는 그리스 신화 속 허영심 많은 여왕을 상징하는 W자 모양의 눈에 띄는 별자리입니다.",
-    "imageName": "Cons-Cassiopeia"
+    "imageName": "Cons-Cassiopeia",
+    "id":18
   },
   {
     "name": "Centaurus",
@@ -141,7 +158,8 @@
     "abbreviation": "Cen",
     "description": "Centaurus is a large and bright constellation representing the half-human, half-horse centaur.",
     "koreanDescription": "센타우루스자리는 반인반마의 전설적 존재인 켄타우로스를 상징하는 크고 밝은 별자리입니다.",
-    "imageName": "Cons-Centaurus"
+    "imageName": "Cons-Centaurus",
+    "id":19
   },
   {
     "name": "Cepheus",
@@ -149,6 +167,7 @@
     "abbreviation": "Cep",
     "description": "Cepheus represents a king in Greek mythology and is closely associated with Cassiopeia.",
     "koreanDescription": "세페우스자리는 그리스 신화 속 왕을 상징하며, 카시오페이아자리와 밀접한 관련이 있습니다.",
-    "imageName": "Cons-Cepheus"
+    "imageName": "Cons-Cepheus",
+    "id":20
   }
 ]
