@@ -9,6 +9,7 @@ import com.susang.stellarVision.common.s3.S3FileManager;
 import com.susang.stellarVision.config.security.authentication.CustomUserDetails;
 import com.susang.stellarVision.entity.Member;
 import com.susang.stellarVision.entity.Profile;
+import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,7 +48,7 @@ public class ProfileServiceImpl implements ProfileService {
         if (oldS3Key != null) {
             try {
                 s3FileManager.delete(oldS3Key);
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 throw new S3DeletionFailedException("S3 삭제 실패");
             }
         }
@@ -117,6 +118,24 @@ public class ProfileServiceImpl implements ProfileService {
         profile.setGalleryPublic(profileVisibilityUpdateRequest.isGalleryPublic());
         profile.setCollectionPublic(profileVisibilityUpdateRequest.isCollectionPublic());
         profile.setVideoPublic(profileVisibilityUpdateRequest.isVideoPublic());
+
+    }
+
+    @Transactional
+    public void deleteProfileImage (CustomUserDetails details) {
+        Member member = details.getMember();
+
+        Profile profile = member.getProfile();
+        if(profile.getProfileS3Key() == null) {
+            return;
+        }
+        try {
+            s3FileManager.delete(profile.getProfileS3Key());
+        } catch (RuntimeException e) {
+            throw new S3DeletionFailedException("S3 삭제 실패");
+        }
+
+        profile.updateProfileS3Key(null);
 
     }
 

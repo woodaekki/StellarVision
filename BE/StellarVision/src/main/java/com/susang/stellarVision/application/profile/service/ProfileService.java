@@ -23,4 +23,6 @@ public interface ProfileService {
             ProfileVisibilityUpdateRequest profileVisibilityUpdateRequest);
 
     String getProfileImageUrl(String s3Key);
+
+    void deleteProfileImage(CustomUserDetails userDetails);
 }
