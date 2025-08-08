@@ -1,6 +1,3 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException, Form
-from fastapi.responses import JSONResponse
-from ultralytics import YOLO
 from typing import List
 import uvicorn
 from PIL import Image
@@ -8,13 +5,39 @@ import io
 import requests
 from PIL import UnidentifiedImageError
 from pydantic import BaseModel
-app = FastAPI(title="YOLOv12n Constellation Detection API")
+from aura_sr import AuraSR
+from fastapi.responses import StreamingResponse
+import torch
+app = FastAPI(title="Stellarvision AI API")
 model = YOLO("model/yolov12n.pt")
 CONF_THRESHOLD = 0.7  # 신뢰도 기준값
 
 
+device = torch.device("cpu")
+aura_sr = AuraSR.from_pretrained()
+
+@app.post("/api/upscale/photo")
+async def upscale_photo(file: UploadFile = File(...)):
+    try:
+        image_bytes = await file.read()
+        image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+
+        upscaled_image = aura_sr.upscale_4x(image)
+
+        # 업스케일링 결과를 메모리 내 바이너리 스트림으로 저장
+        img_byte_arr = io.BytesIO()
+        upscaled_image.save(img_byte_arr, format="PNG")
+        img_byte_arr.seek(0)  # 스트림 위치 리셋
+
+        # 이미지 파일을 StreamingResponse로 반환
+        return StreamingResponse(img_byte_arr, media_type="image/png")
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Inference failed: {str(e)}")
+
+
 @app.post("/api/detect/streaming")
-async def predict_image(file: UploadFile = File(...)):
+async def detect_stream(file: UploadFile = File(...)):
 
     if file.content_type not in ["image/jpeg", "image/png"]:
         raise HTTPException(status_code=400, detail="Only JPEG or PNG images are supported.")
@@ -52,7 +75,7 @@ class ImageURLInput(BaseModel):
     photoid: int
     image_url: str
 @app.post("/api/detect/photo")
-async def predict_image(payload: ImageURLInput):
+async def detect_photo(payload: ImageURLInput):
 
     try:
         resp = requests.get(payload.image_url)
