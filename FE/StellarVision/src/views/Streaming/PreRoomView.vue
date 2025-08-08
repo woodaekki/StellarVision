@@ -11,12 +11,41 @@ const router = useRouter()
 
 const {userInfo} = useAccountStore()
 const title = ref('')
+const lat = ref(null);
+const lon = ref(null);
+const getCurrentLocation = () => {
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) {
+      console.log('브라우저 지원 X');
+      return resolve({
+        lat: 37.1234,
+        lng: 127.5678
+      });
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        console.log(' 현재 위치:', lat, lng);
+        resolve({ lat, lng });
+      },
+      (err) => {
+        console.log('API 실패:', err.message);
+        resolve({
+          lat: 37.1234,
+          lng: 127.5678
+        });
+      }
+    );
+  });
+};
 const createRoom = async () => {
   try {
     const payload = {
       title: title.value,
-      latitude: 37.1234,        // 임의 값 설정
-      longitude: 127.5678,
+      latitude: location.lat,
+      longitude: location.lng,
     };
 
     const response = await create(payload)
