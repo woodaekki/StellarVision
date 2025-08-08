@@ -1,7 +1,7 @@
 <template>
   <div class="main-wrapper">
     <section class="video-container">
-      <video autoplay muted loop playsinline class="background-video" src="/videos/test1.mp4"></video>
+      <video autoplay muted loop playsinline class="background-video" src="/videos/test6.mp4"></video>
       <MainGlobe :liveStreams="liveStreams" />
     </section>
   </div>

@@ -1,7 +1,29 @@
 <template>
   <div class="landing-wrapper">
     <section class="video-container">
-      <video autoplay muted loop playsinline class="background-video" src="/videos/test3.mp4"></video>
+      <video
+        v-show="showIntro"
+        ref="introRef"
+        class="background-video introVideo"
+        src="/videos/test3.mp4"
+        autoplay
+        muted
+        playsinline
+        @ended="onIntroEnded"
+      ></video>
+
+      <video
+        ref="loopRef"
+        class="background-video loopVideo"
+        src="/videos/test6.mp4"
+        autoplay
+        muted
+        playsinline
+        loop
+        preload="auto"
+        :class="{ 'is-visible': loopVisible }"
+      ></video>
+
       <LandingGlobe />
     </section>
 
@@ -12,8 +34,36 @@
 </template>
 
 <script setup>
-import LandingGlobe from '@/components/landing/LandingGlobe.vue';
-import TodaysPhoto from '@/components/landing/TodaysPhoto.vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue'
+import LandingGlobe from '@/components/landing/LandingGlobe.vue'
+import TodaysPhoto from '@/components/landing/TodaysPhoto.vue'
+
+const showIntro = ref(true)
+const loopVisible = ref(false)
+const introRef = ref(null)
+const loopRef = ref(null)
+
+onMounted(() => {
+  loopRef.value?.load?.()
+  introRef.value?.play?.().catch(() => {})
+})
+
+const onIntroEnded = () => {
+  loopRef.value?.play?.().catch(() => {})
+  loopVisible.value = true
+
+  introRef.value?.classList.add('fade-out')
+
+  setTimeout(() => {
+    introRef.value?.pause?.()
+    showIntro.value = false
+  }, 900)
+}
+
+onBeforeUnmount(() => {
+  introRef.value?.pause?.()
+  loopRef.value?.pause?.()
+})
 </script>
 
 <style>
@@ -40,12 +90,29 @@ html, body {
 
 .background-video {
   position: absolute;
+  top: 0; left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  top: 0;
-  left: 0;
   z-index: -1;
+}
+
+.loopVideo {
+  opacity: 0;
+  transition: opacity 1.6s ease;
+  z-index: -2;
+}
+.loopVideo.is-visible {
+  opacity: 1;
+}
+
+.introVideo {
+  opacity: 1;
+  transition: opacity 1.6s ease;
+  z-index: -1;
+}
+.introVideo.fade-out {
+  opacity: 0;
 }
 
 .todays-photo-container {
@@ -54,3 +121,4 @@ html, body {
   color: white;
 }
 </style>
+
