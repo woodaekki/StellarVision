@@ -31,6 +31,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -96,6 +97,12 @@ public class ProfileController {
     public ResponseEntity<APIResponse<String>> getProfileImage(@PathVariable Long memberId) {
         String downloadUrl = profileService.getProfileImage(memberId);
         return ResponseEntity.ok(APIResponse.success(downloadUrl));
+    }
+
+    @DeleteMapping("/{memberId}/image")
+    public ResponseEntity<APIResponse<String>> deleteProfileImage(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        profileService.deleteProfileImage(userDetails);
+        return ResponseEntity.ok(APIResponse.success("프로필 이미지 삭제 성공",null));
     }
 
     @PatchMapping("/videos/{videoId}")
