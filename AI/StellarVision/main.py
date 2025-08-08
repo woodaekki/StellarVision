@@ -22,8 +22,6 @@ CONF_THRESHOLD = 0.7  # 신뢰도 기준값
 
 origins = [
     "http://localhost:5173",
-    "https://localhost:5173",  # HTTPS
-    "https://i13c106.p.ssafy.io"
 ]
 
 app.add_middleware(
