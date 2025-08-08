@@ -88,7 +88,7 @@ function goToReplay(videoId) {
 <style scoped>
 .profile-wrapper {
   padding-top: 58px;
-  background: #000;
+  background-color: #ffffff;
   background-size: cover;
   min-height: 100vh;
   color: white;

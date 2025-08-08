@@ -38,6 +38,7 @@ const emit = defineEmits(['select'])
 const router = useRouter()
 
 // 링크는 그냥 임의로 넣음, 추후 다시보기 수정 view 생성 및 router 연결 후 고칠 예정
+// 여기서 태그 추가, 수정, 삭제 다하면 될 것 같아요
 function goToReplayEdit() {
   router.push(`/replay/${props.video.id}/edit`)
 }

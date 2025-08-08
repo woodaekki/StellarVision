@@ -59,6 +59,7 @@ const goToReplayRoom = (videoId) => {
 }
 </script>
 
+
 <style scoped>
 .profile-section-container {
   display: flex;
@@ -68,7 +69,7 @@ const goToReplayRoom = (videoId) => {
 
 .profile-section {
   width: 100%;
-  max-width: 1200px; 
+  max-width: 1200px;
   margin: 0;
   padding: 10px 0;
 }
@@ -85,14 +86,14 @@ const goToReplayRoom = (videoId) => {
 .section-title {
   font-size: 18px;
   font-weight: 700;
-  color: #fff;
+  color: #000;
 }
 
 .detail-button {
-  color: #fff;
+  color: #000;
   cursor: pointer;
   background: transparent;
-  border: 1px solid #fff;
+  border: 1px solid #000;
   padding: 5px 12px;
   border-radius: 4px;
 }
@@ -107,7 +108,7 @@ const goToReplayRoom = (videoId) => {
 
 .content-frame,
 .empty-frame {
-  width: calc(33.33% - 10px);
+  flex-basis: calc(33.33% - 10px);
   max-width: 300px;
   aspect-ratio: 1.4;
   cursor: pointer;
@@ -115,6 +116,10 @@ const goToReplayRoom = (videoId) => {
   flex-direction: column;
   position: relative;
   overflow: hidden;
+}
+
+.content-frame.video-frame {
+  background: #fff;
 }
 
 .empty-frame {

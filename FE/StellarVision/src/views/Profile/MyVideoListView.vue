@@ -1,7 +1,10 @@
-<!-- myvideolistview -->
 <template>
   <div class="page" ref="pageRef">
     <div class="stars-background">
+      <div class="header">
+        <h1>내 동영상 목록</h1>
+      </div>
+
       <div v-if="!loading && videos.length > 0" class="video-list-wrapper">
         <VideoCell
           v-for="video in videos"
@@ -10,14 +13,15 @@
           :show-edit="isUploader"
           @select="goToReplay(video.id)"
         />
+        <div v-if="loadingMore" class="loading-more">로딩 중...</div>
       </div>
 
-      <div v-else-if="!loading && videos.length === 0" class="video-list-wrapper">
+      <div v-else-if="!loading" class="empty-state">
         <p>아직 업로드한 영상이 없습니다.</p>
       </div>
 
-      <div v-else class="video-list-wrapper">
-        <p>로딩 중...</p>
+      <div v-else class="loading-state">
+        <p>영상 목록을 불러오는 중...</p>
       </div>
     </div>
   </div>
@@ -25,88 +29,92 @@
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useVideoStore } from '@/stores/video';
 import VideoCell from '@/components/video/VideoCell.vue';
 
-const router = useRouter();
 const route = useRoute();
+const router = useRouter();
 const videoStore = useVideoStore();
-const profilePk = window.history.state?.profilePk;
 
 const loading = ref(true);
-const pageRef = ref(null);
-const page = ref(0);
+const loadingMore = ref(false);
 const hasMore = ref(true);
+const page = ref(0);
+const pageRef = ref(null);
 
-// 캐시에 담겨진 이메일과 route에 들어간 이메일 대조
-// 각 video마다 계산하지 않고 통합하는 이유: 어차피 내 프로필 페이지는 거기 영상이 전부 내 거거나 전부 내 게 아니라서
-// 로그인 유저 검사
-const isUploader = (JSON.parse(localStorage.getItem('userInfo')).email === route.params.id);
+const profilePk = window.history.state?.profilePk || route.params.profilePk;
+const isUploader = JSON.parse(localStorage.getItem('userInfo'))?.email === route.params.id;
 
 const videos = computed(() =>
   videoStore.replays.map(v => ({
     id: v.id,
-    name: v.originalFilename?.slice(0, -4).replace('_', ' ') || '제목 없음',
+    name: v.originalFilename,
     thumbnail: v.thumbnailDownloadUrl,
-    date: v.createdAt?.split('T')[0] || '1969-07-29',
+    date: v.createdAt?.split('T')[0],
   }))
 );
-
-// 스크롤 페칭
-const handleScroll = () => {
-  const el = pageRef.value;
-  if (!el) return;
-  const { scrollTop, scrollHeight, clientHeight } = el;
-  if (scrollTop + clientHeight >= scrollHeight - 50 && hasMore.value) {
-    page.value++;
-    fetchVideos();
-  }
-};
 
 const fetchVideos = async () => {
   if (!hasMore.value) return;
 
-  loading.value = true;
+  if (page.value === 0) loading.value = true;
+  else loadingMore.value = true;
+
   try {
     const data = await videoStore.fetchReplays(profilePk, page.value, 10);
-    hasMore.value = !data.data.isLast;
+    hasMore.value = !data.isLast;
+    page.value++;
   } catch (err) {
-    console.error('영상 불러오기 실패:', err);
+    console.error('동영상 불러오기 실패:', err);
   } finally {
     loading.value = false;
+    loadingMore.value = false;
   }
+};
+
+const handleScroll = () => {
+  const el = pageRef.value;
+  if (!el || loadingMore.value || !hasMore.value) return;
+
+  const { scrollTop, scrollHeight, clientHeight } = el;
+  if (scrollTop + clientHeight >= scrollHeight - 100) {
+    fetchVideos();
+  }
+};
+
+const goToReplay = (videoId) => {
+  router.push(`/replay/${videoId}`);
 };
 
 onMounted(() => {
   fetchVideos();
-  pageRef.value.addEventListener('scroll', handleScroll);
+  pageRef.value?.addEventListener('scroll', handleScroll);
 });
 
 onBeforeUnmount(() => {
   pageRef.value?.removeEventListener('scroll', handleScroll);
 });
-
-function goToReplay(videoId) {
-  router.push(`/replay/${videoId}`);
-}
 </script>
 
 <style scoped>
 .page {
-  background-color: black;
+  background-color: #fff;
   min-height: 100vh;
   color: white;
   font-family: sans-serif;
-}
-
-.stars-background {
-  padding: 2rem;
-  background: #262626;
-  position: relative;
+  overflow-y: auto;
 }
 
 .video-list-wrapper {
   text-align: center;
+  padding: 1rem;
+}
+
+.loading-more,
+.loading-state,
+.empty-state {
+  text-align: center;
+  margin-top: 2rem;
 }
 </style>
