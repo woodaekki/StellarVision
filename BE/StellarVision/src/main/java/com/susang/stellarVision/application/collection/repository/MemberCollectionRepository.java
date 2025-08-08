@@ -12,7 +12,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface MemberCollectionRepository extends JpaRepository<MemberCollection, Long> {
     @Query("SELECT mc.collection.id FROM MemberCollection mc WHERE mc.member.id = :memberId")
-    Set<Long> findCollectionIdsByMemberId(@Param("memberId") Long memberId);
+    Set<Integer> findCollectionIdsByMemberId(@Param("memberId") Long memberId);
 
     List<MemberCollection> findByMemberId(Long memberId);
 

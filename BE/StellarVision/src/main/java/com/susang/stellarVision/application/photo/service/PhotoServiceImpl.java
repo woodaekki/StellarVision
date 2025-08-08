@@ -197,9 +197,9 @@ public class PhotoServiceImpl implements PhotoService {
 
         List<Collection> newCollections = new java.util.ArrayList<>();
         List<Collection> matchedCollections = collectionRepository.findByAbbreviationIn(tags);
-        Set<Long> existingIds = memberCollectionRepository.findCollectionIdsByMemberId(member.getId());
+        Set<Integer> existingIds = memberCollectionRepository.findCollectionIdsByMemberId(member.getId());
         for (Collection collection : matchedCollections) {
-            if (existingIds.contains(collection.getId().longValue())) {
+            if (existingIds.contains(collection.getId().intValue())) {
                 continue;
             }
 
