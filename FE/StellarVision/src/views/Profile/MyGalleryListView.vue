@@ -1,9 +1,10 @@
-<!-- mygallerylistview -->
 <template>
   <div class="page" ref="pageRef">
     <div class="stars-background">
       <div class="px-4 pt-12 pb-6">
-        <h2 class="text-2xl mb-2 text-center font-pretendard" style="font-family: 'Pretendard', sans-serif !important;;">My Space Gallery</h2>
+        <h2 class="text-2xl mb-2 text-center font-pretendard" style="font-family: 'Pretendard', sans-serif !important;">
+          My Space Gallery
+        </h2>
         <hr class="border-t-2 border-neutral-200 w-full mt-2" />
       </div>
 
@@ -43,7 +44,6 @@
   </div>
 </template>
 
-
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useAccountStore } from '@/stores/account'
@@ -75,7 +75,7 @@ const fetchPhotos = async () => {
     const { data } = await axiosApi.get(`profiles/${memberId.value}/photos`, {
       params: {
         page: page.value,
-        size: 8, // 한 번에 불러올 사진 목록 수
+        size: 8,
       },
     })
 
@@ -144,14 +144,14 @@ const uploadGalleryImage = async (e) => {
       maxBodyLength: Infinity,
     })
 
-    // 업로드 완료 후, 서버로부터 응답 대기
+    // 업로드 완료 후 서버로부터 응답 대기
     await axiosApi.post('/photos/complete', {
       memberId: memberId.value,
       originalFilename: file.name,
       s3Key: presignedData.s3Key,
     })
 
-    // 업로드가 완료되면 전체 목록을 초기화하고 새로고침
+    // 업로드 완료 후 사진 목록 초기화 및 새로고침
     page.value = 0
     photos.value = []
     hasMore.value = true
@@ -164,11 +164,10 @@ const uploadGalleryImage = async (e) => {
   }
 }
 
-// 단건 조회 API를 호출하여 새 창에서 사진 띄우기
+// 단건 조회 후 새 창 열기
 const viewPhoto = async (photoId) => {
   try {
     const { data } = await axiosApi.get(`/photos/${photoId}`)
-
     const photoUrl = data.data.downloadUrl
 
     if (photoUrl) {
@@ -180,7 +179,7 @@ const viewPhoto = async (photoId) => {
   }
 }
 
-// 사진 삭제 함수
+// 사진 삭제
 const deletePhoto = async (photoId) => {
   if (!canUpload.value) {
     alert('삭제 권한이 없습니다. 로그인 후 다시 시도해주세요.')
@@ -191,11 +190,7 @@ const deletePhoto = async (photoId) => {
   try {
     await axiosApi.delete(`/photos/${photoId}`)
 
-    // 삭제 후 전체 목록을 초기화하고 새로 고침
-    page.value = 0
-    photos.value = []
-    hasMore.value = true
-    await fetchPhotos()
+    photos.value = photos.value.filter(p => p.id !== photoId)
 
     alert('사진이 성공적으로 삭제되었습니다.')
   } catch (e) {
@@ -206,11 +201,13 @@ const deletePhoto = async (photoId) => {
 
 // 스크롤 이벤트 핸들러
 const handleScroll = () => {
-  const pageElement = pageRef.value
-  if (!pageElement) return
+  const el = pageRef.value
+  if (!el || loading.value || !hasMore.value) return
 
-  const { scrollTop, scrollHeight, clientHeight } = pageElement
-  if (scrollTop + clientHeight >= scrollHeight - 50 && hasMore.value) {
+  const scrollBottom = el.scrollTop + el.clientHeight
+  const threshold = el.scrollHeight - 50
+
+  if (scrollBottom >= threshold) {
     fetchPhotos()
   }
 }
@@ -233,9 +230,9 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
+.page {
+  height: 100vh; /* 화면 높이 꽉 채우기 */
+  overflow-y: auto; /* 세로 스크롤 가능하도록 */
 }
 
 .stars-background h2 {
@@ -245,7 +242,6 @@ onBeforeUnmount(() => {
   text-align: left;
   font-weight: 700;
   font-size: medium;
-
 }
 
 .gallery-grid {
@@ -293,8 +289,8 @@ onBeforeUnmount(() => {
 /* 업로드 버튼 텍스트 제거 */
 input[type="file"] {
   display: none !important;
-
 }
+
 .photo-box:hover {
   transform: scale(1.03);
   box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
@@ -348,5 +344,4 @@ input[type="file"] {
   margin-top: 1rem;
   color: #ccc;
 }
-
 </style>
