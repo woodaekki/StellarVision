@@ -5,19 +5,45 @@ from typing import List
 import uvicorn
 from PIL import Image
 import io
+import cv2
 import requests
 from PIL import UnidentifiedImageError
 from pydantic import BaseModel
-from aura_sr import AuraSR
 from fastapi.responses import StreamingResponse
 import torch
+import numpy as np
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 app = FastAPI(title="Stellarvision AI API")
 model = YOLO("model/yolov12n.pt")
+model_EDSR="model/EDSR_x2.pb"
 CONF_THRESHOLD = 0.7  # 신뢰도 기준값
 
 
-device = torch.device("cpu")
-aura_sr = AuraSR.from_pretrained()
+class OpenCvSuperRes:
+    def __init__(self, model_path: str = model_EDSR, model_name: str = "edsr", scale: int = 2):
+        self.sr = cv2.dnn_superres.DnnSuperResImpl_create()
+        self.sr.readModel(model_path)
+        self.sr.setModel(model_name, scale)
+
+    def upscale(self, pil_img: Image.Image) -> Image.Image:
+        # PIL 이미지를 OpenCV 이미지로 변환 (RGB -> BGR)
+        cv_image = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
+        # OpenCV DNN 슈퍼해상도로 업스케일
+        upscaled_cv = self.sr.upsample(cv_image)
+        # OpenCV 이미지 → PIL 이미지로 변환 (BGR -> RGB)
+        upscaled_pil = Image.fromarray(cv2.cvtColor(upscaled_cv, cv2.COLOR_BGR2RGB))
+        return upscaled_pil
+
+opencv_sr = OpenCvSuperRes(model_path=model_EDSR, model_name="edsr", scale=2)
+executor = ThreadPoolExecutor(max_workers=2)
+
+async def run_in_threadpool(func, *args):
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(executor, func, *args)
+
+def upscale_sync(pil_img):
+    return opencv_sr.upscale(pil_img)
 
 @app.post("/api/upscale/photo")
 async def upscale_photo(file: UploadFile = File(...)):
@@ -25,14 +51,12 @@ async def upscale_photo(file: UploadFile = File(...)):
         image_bytes = await file.read()
         image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
 
-        upscaled_image = aura_sr.upscale_4x(image)
+        upscaled_image = await run_in_threadpool(upscale_sync, image)  # 동기 작업을 비동기로 실행
 
-        # 업스케일링 결과를 메모리 내 바이너리 스트림으로 저장
         img_byte_arr = io.BytesIO()
         upscaled_image.save(img_byte_arr, format="PNG")
-        img_byte_arr.seek(0)  # 스트림 위치 리셋
+        img_byte_arr.seek(0)
 
-        # 이미지 파일을 StreamingResponse로 반환
         return StreamingResponse(img_byte_arr, media_type="image/png")
 
     except Exception as e:
