@@ -20,13 +20,12 @@ model = YOLO("model/yolov12n.pt")
 model_EDSR="model/EDSR_x2.pb"
 CONF_THRESHOLD = 0.7  # 신뢰도 기준값
 
-origins = [
-    "http://localhost:5173",
-]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=[
+        "http://localhost:5173",
+        "https://i13c106.p.ssafy.io",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
