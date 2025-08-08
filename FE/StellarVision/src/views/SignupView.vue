@@ -1,132 +1,104 @@
 <template>
-  <div class="signupContainer">
-    <h2>회원가입</h2>
-    <form class="signupForm" @submit.prevent="onSignUp">
-      <!-- 이메일 입력 -->
-      <div class="formGroup email-group">
+  <div class="form-container">
+    <h2 class="form-title">회원가입</h2>
+
+    <form @submit.prevent="onSignUp" class="form-body">
+      <div class="input-group-row">
         <input
-          type="text"
-          id="userid"
-          placeholder="아이디 입력"
-          v-model="formData.userId"
+          type="email"
+          id="email"
+          placeholder="이메일 입력"
+          v-model="formData.email"
           :disabled="emailVerified"
+          class="input-field-inline"
         />
-        <select
-          class="box"
-          id="email-box"
-          v-model="formData.userDomain"
-          :disabled="emailVerified"
-        >
-          <option disabled value="">이메일을 선택해주세요</option>
-          <option value="naver.com">@naver.com</option>
-          <option value="gmail.com">@gmail.com</option>
-          <option value="hanmail.net">@hanmail.net</option>
-
-        </select>
-      </div>
-
-      <!-- 이메일 인증 버튼 -->
-      <div class="formGroup">
         <button
           type="button"
-          class="btn-verify"
           @click="sendVerificationCode"
           :disabled="!isEmailValid || emailVerificationSent || emailVerified"
+          class="black-button small-button"
+          :class="{ 'button-disabled': !isEmailValid || emailVerificationSent || emailVerified }"
         >
-          {{ emailVerified ? '인증완료' : emailVerificationSent ? '인증코드 재전송' : '인증코드 전송' }}
+          {{ emailVerified ? '인증완료' : emailVerificationSent ? '재전송' : '인증' }}
         </button>
-        <p v-if="!isEmailValid && formData.userId && formData.userDomain" class="error">
-          유효한 이메일 주소를 입력해주세요.
-        </p>
-        <p v-if="emailVerificationSent && !emailVerified" class="info">
-          {{ email }}로 인증코드가 전송되었습니다.
-        </p>
       </div>
+      <p v-if="!isEmailValid && formData.email" class="error-message">
+        유효한 이메일 주소를 입력해주세요.
+      </p>
+      <p v-if="emailVerificationSent && !emailVerified" class="info-message">
+        {{ formData.email }}로 인증코드가 전송되었습니다.
+      </p>
 
-      <!-- 인증코드 입력 (이메일 인증코드 전송 후 표시) -->
-      <div v-if="emailVerificationSent && !emailVerified" class="formGroup">
-        <div class="verification-group">
-          <input
-            type="text"
-            id="verification-code"
-            placeholder="인증코드 입력"
-            v-model="formData.verificationCode"
-            maxlength="6"
-          />
-          <button
-            type="button"
-            class="btn-verify-code"
-            @click="verifyCode"
-            :disabled="!formData.verificationCode || isVerifying"
-          >
-            {{ isVerifying ? '확인중...' : '확인' }}
-          </button>
-        </div>
-        <p v-if="verificationError" class="error">
-          {{ verificationError }}
-        </p>
-      </div>
-
-      <!-- 인증 성공 메시지 -->
-      <div v-if="emailVerified" class="formGroup">
-        <p class="success">✓ 이메일 인증이 완료되었습니다.</p>
-      </div>
-
-      <!-- 닉네임 입력 -->
-      <div class="formGroup">
+      <div v-if="emailVerificationSent && !emailVerified" class="input-group-row">
         <input
           type="text"
-          id="name"
-          placeholder="닉네임명"
+          placeholder="인증코드 입력"
+          v-model="formData.verificationCode"
+          maxlength="6"
+          class="input-field-inline"
+        />
+        <button
+          type="button"
+          @click="verifyCode"
+          :disabled="!formData.verificationCode || isVerifying"
+          class="black-button small-button"
+          :class="{ 'button-disabled': !formData.verificationCode || isVerifying }"
+        >
+          {{ isVerifying ? '확인중' : '확인' }}
+        </button>
+      </div>
+      <p v-if="verificationError" class="error-message">{{ verificationError }}</p>
+
+      <div v-if="emailVerified">
+        <p class="success-message">✓ 이메일 인증이 완료되었습니다.</p>
+      </div>
+
+      <div class="input-group">
+        <input
+          type="text"
+          placeholder="닉네임"
           v-model="formData.name"
+          class="input-field"
         />
       </div>
 
-      <!-- 비밀번호 입력 -->
-      <div class="formGroup">
+      <div class="input-group">
         <input
           type="password"
-          id="password"
           placeholder="비밀번호"
           v-model="formData.password1"
+          class="input-field"
         />
       </div>
 
-      <!-- 비밀번호 확인 -->
-      <div class="formGroup">
+      <div class="relative-container">
         <input
           type="password"
-          id="password-confirm"
           placeholder="비밀번호 확인"
           v-model="formData.password2"
+          class="input-field"
         />
-        <p
-          v-if="formData.password2 && !isPasswordMatched"
-          class="error"
-        >
+        <div v-if="formData.password2 && isPasswordMatched" class="check-icon">
+          ✓
+        </div>
+        <p v-if="formData.password2 && !isPasswordMatched" class="error-message">
           비밀번호가 일치하지 않습니다.
-        </p>
-        <p
-          v-else-if="formData.password2 && isPasswordMatched"
-          class="success"
-        >
-          비밀번호가 일치합니다.
         </p>
       </div>
 
-      <!-- 생일 입력 -->
-      <div class="formGroup">
+      <div class="input-group">
         <input
           type="date"
-          id="birth"
           v-model="formData.birthday"
+          class="input-field"
         />
       </div>
 
       <button
         type="submit"
-        class="btn"
         :disabled="!canSubmit"
+        class="black-button large-button"
+        :class="{ 'button-disabled': !canSubmit }"
       >
         가입하기
       </button>
@@ -139,8 +111,7 @@ import { useAccountStore } from '@/stores/account';
 import { computed, reactive, ref } from 'vue';
 
 const formData = reactive({
-  userId: '',
-  userDomain: '',
+  email: '',
   name: '',
   password1: '',
   password2: '',
@@ -150,58 +121,45 @@ const formData = reactive({
 
 const accountStore = useAccountStore()
 
-// 이메일 인증 관련 상태
 const emailVerificationSent = ref(false)
 const emailVerified = ref(false)
 const isVerifying = ref(false)
 const verificationError = ref('')
 
-// 이메일 유효성 검증
 const isEmailValid = computed(() => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  return emailRegex.test(email.value)
+  return emailRegex.test(formData.email)
 })
 
-// 비밀번호 일치 여부 확인
 const isPasswordMatched = computed(() => {
   return formData.password1 && formData.password1 === formData.password2
 })
 
-// 완성된 이메일 주소
-const email = computed(() => {
-  return formData.userDomain
-    ? `${formData.userId}@${formData.userDomain}`
-    : ''
-})
-
-// 회원가입 버튼 활성화 조건
 const canSubmit = computed(() => {
   return emailVerified.value &&
-         formData.name &&
-         isPasswordMatched.value &&
-         formData.birthday
+           formData.name &&
+           isPasswordMatched.value &&
+           formData.birthday
 })
 
-// 인증코드 전송
 const sendVerificationCode = async () => {
   if (!isEmailValid.value) {
     alert('유효한 이메일 주소를 입력해주세요.')
     return
   }
 
-  const result = await accountStore.sendEmailVerificationCode(email.value)
+  const result = await accountStore.sendEmailVerificationCode(formData.email)
 
   if (result.success) {
     emailVerificationSent.value = true
     verificationError.value = ''
     formData.verificationCode = ''
-    alert(`${email.value}로 인증코드가 전송되었습니다.`)
+    alert(`${formData.email}로 인증코드가 전송되었습니다.`)
   } else {
     alert(result.message)
   }
 }
 
-// 인증코드 검증
 const verifyCode = async () => {
   if (!formData.verificationCode) {
     verificationError.value = '인증코드를 입력해주세요.'
@@ -211,7 +169,7 @@ const verifyCode = async () => {
   isVerifying.value = true
   verificationError.value = ''
 
-  const result = await accountStore.verifyEmailCode(email.value, formData.verificationCode)
+  const result = await accountStore.verifyEmailCode(formData.email, formData.verificationCode)
 
   if (result.success) {
     emailVerified.value = true
@@ -225,21 +183,17 @@ const verifyCode = async () => {
   isVerifying.value = false
 }
 
-// 회원가입 요청 함수
 const onSignUp = async () => {
-  // 이메일 인증 확인
   if (!emailVerified.value) {
     alert('이메일 인증을 완료해주세요.')
     return
   }
 
-  // 비밀번호 확인
   if (!isPasswordMatched.value) {
     alert('비밀번호가 일치하지 않습니다.')
     return
   }
 
-  // 필수 정보 확인
   if (!formData.name) {
     alert('닉네임을 입력해주세요.')
     return
@@ -251,7 +205,7 @@ const onSignUp = async () => {
   }
 
   const userInfo = {
-    email: email.value,
+    email: formData.email,
     name: formData.name,
     password: formData.password1,
     birth: formData.birthday
@@ -265,129 +219,167 @@ const onSignUp = async () => {
 }
 </script>
 
-<style>
-.signupContainer {
-  max-width: 400px;
+<style scoped>
+/* 모바일 우선 (2/3 크기) */
+.form-container {
+  width: 100%;
+  max-width: 341px;
   margin: 0 auto;
-  background-image: url(@/assets//pictures/wallpaper/space.jpeg); 
-  padding-top: 58px; 
+  padding: 42px 10px;
 }
 
-.email-group {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+.form-title {
+  font-size: 20px;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 30px;
+  margin-bottom: 26px;
 }
 
-.verification-group {
+.form-body {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.input-group-row {
+  display: flex;
   gap: 8px;
 }
 
-.verification-group input {
-  flex: 1;
-}
-
-.formGroup {
-  margin: 16px 0;
-}
-
-.btn {
+.input-field {
   width: 100%;
-  padding: 12px;
-  background: #2C2C2C;
+  padding: 8px 13px;
+  border: 1px solid #d1d5db;
+  border-radius: 5px;
+  font-size: 12px;
+}
+
+.input-field-inline {
+  flex-grow: 1;
+  padding: 8px 13px;
+  border: 1px solid #d1d5db;
+  border-radius: 5px;
+  font-size: 12px;
+}
+
+.black-button {
+  background-color: black;
   color: white;
-  border: none;
-  border-radius: 4px;
+  border-radius: 5px;
+  font-weight: 600;
   cursor: pointer;
-}
-
-.btn:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-}
-
-.btn-verify {
-  width: 100%;
-  padding: 10px;
-  background: #007bff;
-  color: white;
   border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-top: 8px;
 }
 
-.btn-verify:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-}
-
-.btn-verify-code {
-  padding: 10px 16px;
-  background: #28a745;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
+.small-button {
+  padding: 8px 13px;
+  font-size: 10px;
   white-space: nowrap;
 }
 
-.btn-verify-code:disabled {
-  background: #ccc;
+.large-button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.button-disabled {
+  background-color: #d1d5db;
   cursor: not-allowed;
+  color: #6b7280;
 }
 
-.error {
-  color: #e74c3c;
-  font-size: 0.9em;
-  margin-top: 4px;
+.error-message {
+  color: #ef4444;
+  font-size: 9px;
+  margin-top: 2px;
 }
 
-.success {
-  color: #2ecc71;
-  font-size: 0.9em;
-  margin-top: 4px;
+.info-message {
+  color: #4b5563;
+  font-size: 9px;
+  margin-top: 2px;
 }
 
-.info {
-  font-size: 0.8em;
-  color: #555;
-  margin-top: 4px;
+.relative-container {
+  position: relative;
 }
 
-input {
-  display: flex;
-  width: 400px;
-  height: 40px;
-  padding: 8px 16px;
-  align-items: center;
-  gap: 16px;
-  border-radius: 8px;
-  border: 1px solid #E0E0E0;
-  background: #FFF;
+.check-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #16a34a;
+  font-size: 16px;
 }
 
-input:disabled {
-  background: #f5f5f5;
-  color: #666;
+.success-message {
+  color: #16a34a;
+  font-size: 9px;
 }
 
-.box {
-  display: flex;
-  width: 400px;
-  height: 40px;
-  padding: 8px 16px;
-  align-items: center;
-  gap: 16px;
-  border-radius: 8px;
-  border: 1px solid #E0E0E0;
-  background: #FFF;
-}
+/* 데스크탑 (768px 이상) */
+@media (min-width: 768px) {
+  .form-container {
+    max-width: 512px;
+    padding: 64px 16px;
+  }
 
-.box:disabled {
-  background: #f5f5f5;
-  color: #666;
+  .form-title {
+    font-size: 30px;
+    margin-top: 45px;
+    margin-bottom: 40px;
+  }
+
+  .form-body {
+    gap: 16px;
+  }
+
+  .input-group-row {
+    gap: 12px;
+  }
+
+  .input-field,
+  .input-field-inline {
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 18px;
+  }
+
+  .black-button {
+    border-radius: 8px;
+  }
+
+  .small-button {
+    padding: 12px 20px;
+    font-size: 16px;
+  }
+
+  .large-button {
+    padding: 16px;
+    margin-top: 12px;
+    font-size: 18px;
+  }
+
+  .error-message,
+  .info-message,
+  .success-message {
+    font-size: 14px;
+    margin-top: 4px;
+  }
+
+  .check-icon {
+    right: 16px;
+    font-size: 24px;
+  }
 }
 </style>
