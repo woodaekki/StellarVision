@@ -1,5 +1,4 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException, Form
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from ultralytics import YOLO
 from typing import List
@@ -20,16 +19,6 @@ model = YOLO("model/yolov12n.pt")
 model_EDSR="model/EDSR_x2.pb"
 CONF_THRESHOLD = 0.7  # 신뢰도 기준값
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "https://i13c106.p.ssafy.io",
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 class OpenCvSuperRes:
     def __init__(self, model_path: str = model_EDSR, model_name: str = "edsr", scale: int = 2):
