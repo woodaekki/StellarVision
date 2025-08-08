@@ -38,7 +38,7 @@ public class CollectionServiceImpl implements CollectionService {
                 .orElseThrow(() -> new MemberNotFoundException(memberId.toString()));
 
         List<Collection> all = collectionRepository.findAll();
-        Set<Long> collectedIds = memberCollectionRepository.findCollectionIdsByMemberId(memberId);
+        Set<Integer> collectedIds = memberCollectionRepository.findCollectionIdsByMemberId(memberId);
 
         List<CollectionResponse> responses = all.stream()
                 .map(c -> CollectionResponse.builder()
@@ -46,7 +46,7 @@ public class CollectionServiceImpl implements CollectionService {
                         .name(c.getName())
                         .koreanName(c.getKoreanName())
                         .abbreviation(c.getAbbreviation())
-                        .collected(collectedIds.contains(c.getId()))
+                        .collected(collectedIds.contains(c.getId().intValue()))
                         .build())
                 .toList();
 
@@ -82,7 +82,7 @@ public class CollectionServiceImpl implements CollectionService {
             SelectCollectionRequest selectCollectionRequest) {
         Long memberId = userDetails.getMember().getId();
 
-        Set<Long> collectedIds = memberCollectionRepository.findCollectionIdsByMemberId(memberId);
+        Set<Integer> collectedIds = memberCollectionRepository.findCollectionIdsByMemberId(memberId);
 
         List<Long> selectedIds = selectCollectionRequest.getIds()
                 .stream()
