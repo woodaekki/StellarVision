@@ -33,31 +33,63 @@ import Badge from '@/components/badge/Badge.vue';
 import badgeData from '@/data/badgeData.json';
 import { useAccountStore } from '@/stores/account'
 import { useBadgeStore } from '@/stores/badge';
+import axios from 'axios';
+
+
+
 
 const accountStore = useAccountStore();
 const badgeStore = useBadgeStore();
 // 현재 전체 뱃지 조회는 자기 것만 되는 걸 상정하기 때문에 myProfile에서 가져옴
 const memberId = computed(() => accountStore.myProfile?.memberId);
-const collectedBadges = computed(() => badgeStore.collectedBadges);
+
+
+const data = ref([]);
 
 // .json과 api에서 받아온 정보를 합침
 const badgeList = ref([]);
+// /api/collections 전체 별자리 + 사용자 수집 여부
 
 function updateBadgeList() {
-  badgeList.value = badgeData.map((badge) => ({
-    ...badge,
-    collected: collectedBadges.value.some(
-      (collectedBadge) => collectedBadge.name === badge.name
-    )
-  }));
+  if (!data.value || !data.value.collections) {
+    console.warn('컬렉션 데이터 없음');
+    return;
+  }
+
+  console.log('badgeData length:', badgeData.length);
+  console.log('data.value.collections:', data.value.collections);
+
+  badgeList.value = badgeData.map((badge) => {
+    const matchedApiBadge = data.value.collections.find(
+      (apiBadge) => apiBadge.id === badge.id , console.log("id",badge.id , badge)
+    );
+
+    return {
+      ...badge,
+      collected: matchedApiBadge ? matchedApiBadge.collected : false
+    };
+  });
+
+  console.log('badgeList 완성:', badgeList.value);
 }
 
 onMounted(async () => {
+  const token = localStorage.getItem('jwt');
+  const response = await axios.get('https://i13c106.p.ssafy.io/api/collections', {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+  console.log(response);
+  data.value = response.data.data || {};
+
+
   await accountStore.fetchMyProfile()
   if (memberId.value) {
     await badgeStore.fetchCollectedBadges(memberId.value)
-    updateBadgeList();
   }
+  updateBadgeList();
+
 })
 
 // 각 뱃지 클릭 시 말풍선이 뜨는 위치 계산 로직
@@ -66,6 +98,8 @@ const tooltipX = ref(0);
 const tooltipY = ref(0);
 const tooltipPosition = ref('right');
 const containerRef = ref(null);
+
+
 
 function handleBadgeClick(event, badge) {
   selectedBadge.value = badge;
@@ -89,6 +123,8 @@ function handleBadgeClick(event, badge) {
   tooltipY.value = clickY;
 }
 
+
+
 </script>
 
 <style scoped>
@@ -102,8 +138,8 @@ function handleBadgeClick(event, badge) {
 }
 
 .badge-wrapper {
-  background-image: url(@/assets//pictures/wallpaper/space.jpeg); 
-  padding-top: 58px; 
+  background-image: url(@/assets//pictures/wallpaper/space.jpeg);
+  padding-top: 58px;
   position: relative;
   display: flex;
   justify-content: center;
