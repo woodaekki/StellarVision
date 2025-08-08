@@ -1,11 +1,12 @@
 <script setup>
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import openviduService from '@/services/openviduService'
 import streamingService from '@/services/streamingService'
 import { Cone, DoorOpen, ImageDown, MessageCircle, Mic, MicOff, Square, SquareStop } from 'lucide-vue-next'
 import ChatPanel from '@/components/comment/ChatPanel.vue'
 import { useRecordingStore } from '@/stores/recording'
+import { createAIAnalyzeService } from '@/services/AIAnalyeService'
 
 const route = useRoute()
 const router = useRouter()
@@ -35,6 +36,18 @@ const { session, publisher, subscribers, connect, leave, setPublisherEl, attachS
 
   // 로컬(퍼블리셔) 프리뷰 엘리먼트
   const localVideo = ref(null)
+  // 로컬 오버레이 캔버스
+  const overlayLocal = ref(null)
+
+  // 로컬용 AI 분석기
+  const localAnalyzer = createAIAnalyzeService({
+    endpoint: 'https://i13c106.p.ssafy.io/api/detect/streaming', // TODO: 실제 주소로 교체
+    minConfidence: 0.7,
+    targetFps: 3,
+  })
+
+  // 구독자별 분석기/캔버스 관리
+  const subAnalyzers = new Map() // streamId -> { svc, canvas }
 
   // 퍼블리셔/엘리먼트 준비 시 재부착 보강
   watch([publisher, localVideo], () => {
@@ -47,6 +60,51 @@ const { session, publisher, subscribers, connect, leave, setPublisherEl, attachS
         localVideo.value.play?.().catch(()=>{})
       } catch {}
     }
+  })
+
+  // 구독자 비디오에 AI 오버레이 붙이는 래퍼
+  function attachSubElWithAI(sub, el) {
+    attachSubEl(sub, el)            // 기존 OpenVidu 부착
+    if (!el) return
+
+    const streamId = sub.stream.streamId
+
+    // 비디오 메타데이터 준비되면 시작
+    const start = () => {
+      // 비디오를 감싸는 컨테이너가 relative 아니면 덮을 수 없으므로 보장
+      el.parentElement?.classList.add('relative')
+
+      // 캔버스 생성 & 비디오 위에 얹기
+      const canvas = document.createElement('canvas')
+      canvas.className = 'pointer-events-none absolute inset-0'
+      el.parentElement?.appendChild(canvas)
+
+      // 구독자용 분석기 만들고 시작
+      const svc = createAIAnalyzeService({
+        endpoint: 'https://i13c106.p.ssafy.io/api/detect/streaming',
+        minConfidence: 0.7,
+        targetFps: 3
+      })
+      svc.attach({ video: el, overlay: canvas })
+
+      subAnalyzers.set(streamId, { svc, canvas })
+    }
+
+    if (el.readyState >= 1 && el.videoWidth) start()
+    else el.addEventListener('loadedmetadata', start, { once: true })
+  }
+
+  // 구독 스트림 종료 시 정리
+  onMounted(() => {
+    session.on('streamDestroyed', (ev) => {
+      const streamId = ev.stream.streamId
+      const found = subAnalyzers.get(streamId)
+      if (found) {
+        found.svc.destroy()
+        found.canvas.remove()
+        subAnalyzers.delete(streamId)
+      }
+    })
   })
 
 // 녹화 시작/중단 api 요청
@@ -102,11 +160,50 @@ async function toggleRecording() {
     publisher.value.publishAudio(micEnabled.value)
   }
 
+  const TEN_MIN = 10 * 1000
+  let intervalId = null
+  let inFlight = false
+
+  async function runOnceAll() {
+    if (inFlight) return
+    inFlight = true
+    try {
+      // 로컬 1회 분석
+      await localAnalyzer.once()
+      // 구독자 전부 1회 분석
+      for (const { svc } of subAnalyzers.values()) {
+        await svc.once()
+      }
+    } catch (e) {
+      console.debug('[AI test] once error', e)
+    } finally {
+      inFlight = false
+    }
+  }
+
   onMounted(() => {
     // 퍼블리셔라면 프리뷰가 이 엘리먼트에 붙는다
     setPublisherEl(localVideo.value)
     session.on('recordingStarted', ()=>{ isRecording.value = true })
     session.on('recordingStopped', ()=>{ isRecording.value = false })
+
+    // 로컬 분석 attach (start()는 호출하지 않음)
+    const v = localVideo.value
+    const attachLocal = () => {
+      localAnalyzer.attach({ video: v, overlay: overlayLocal.value })
+    }
+    if (v?.readyState >= 1 && v.videoWidth) attachLocal()
+    else v?.addEventListener('loadedmetadata', attachLocal, { once: true })
+
+    runOnceAll()
+    intervalId = window.setInterval(runOnceAll, TEN_MIN)
+  })
+
+  onUnmounted(() => {
+    if (intervalId) { clearInterval(intervalId); intervalId = null }
+    localAnalyzer.destroy()
+    subAnalyzers.forEach(({ svc, canvas }) => { svc.destroy(); canvas.remove() })
+    subAnalyzers.clear()
   })
 </script>
 
@@ -119,29 +216,36 @@ async function toggleRecording() {
         :class="['relative bg-black transition-all duration-300',
         showChat ? 'sm:w-[70%] w-full' :'w-full']">
 
-          <!-- 로컬 프리뷰: 퍼블리셔일 경우 영상, 아니면 빈 화면 -->
+        <!-- 변경: 로컬 프리뷰 + 오버레이 -->
+        <div class="relative w-full h-full">
           <video
             ref="localVideo"
             autoplay
             playsinline
             muted
-            class="w-full h-full object-fill rounded-2xl"
+            class="w-full h-full object-contain rounded-2xl"
           ></video>
+          <!-- 로컬 오버레이 캔버스 -->
+          <canvas ref="overlayLocal" class="pointer-events-none absolute inset-0"></canvas>
+        </div>
 
-          <!-- 원격 구독 영상 컨테이너 -->
+        <!-- 변경: 원격 구독 영상 컨테이너 각 비디오를 relative 래퍼로 감싸고, ref 콜백을 attachSubElWithAI로 교체 -->
+        <div class="absolute inset-0 grid gap-2 p-2 z-0">
           <div
-            class="absolute inset-0 grid gap-2 p-2 z-0">
+            v-for="sub in subscribers"
+            :key="sub.stream.streamId"
+            class="relative w-full h-full">
             <video
-              v-for="sub in subscribers"
-              :key="sub.stream.streamId"
               :data-stream-id="sub.stream.streamId"
               autoplay
               playsinline
               muted
-              class="w-full h-full object-fill"
-              :ref="el => attachSubEl(sub, el)"
+              class="w-full h-full object-contain"
+              :ref="el => attachSubElWithAI(sub, el)"
             ></video>
+            <!-- 구독자 오버레이 캔버스는 JS에서 동적 생성해서 append -->
           </div>
+        </div>
 
           <!-- 방 제목 -->
           <h2 class="text-xl text-white font-bold my-2 absolute left-3 top-3 z-10">
