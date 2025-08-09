@@ -167,8 +167,8 @@ onMounted(async () => {
 }
 
 :deep(.vc-day-content) {
-  height: 155px; /* 기존 140px에서 +15px */
-  padding: 6px 8px; /* padding도 살짝 늘림 */
+  height: 160px; 
+  padding: 6px 8px; 
   background-color: #fafafa;
   border: 1px solid #ddd;
   box-sizing: border-box;
@@ -176,7 +176,7 @@ onMounted(async () => {
 }
 
 :deep(.vc-day) {
-  height: 115px !important; /* 기존 100px에서 +15px */
+  height: 115px !important; 
   flex: none !important;
 }
 
@@ -195,7 +195,7 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  max-height: 105px; /* 기존 90px에서 +15px */
+  max-height: 105px;
   overflow-y: auto;
 }
 
@@ -204,7 +204,7 @@ onMounted(async () => {
   color: #1e3a8a;
   font-size: 0.75rem;
   font-weight: 500;
-  padding: 3px 5px; /* padding 조금 증가 */
+  padding: 3px 5px; 
   border: 1px solid #ccd6e0;
   border-radius: 2px;
   white-space: normal;
@@ -217,7 +217,6 @@ onMounted(async () => {
   line-height: 1.1;
 }
 
-/* 반응형: 화면이 768px 이하일 때 너비 90vw, 폰트 및 패딩 조정 */
 @media (max-width: 768px) {
   .header-wrapper,
   .container {
@@ -230,7 +229,7 @@ onMounted(async () => {
     padding-bottom: 4px;
   }
   :deep(.vc-day-content) {
-    height: 140px; /* 살짝 줄임 */
+    height: 140px; 
     padding: 4px 6px;
   }
   :deep(.vc-day) {
