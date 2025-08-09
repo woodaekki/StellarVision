@@ -1,6 +1,9 @@
 <template>
-  <h1 class="title">Special Space Day</h1>
-  <hr class="text-line">
+  <div class="header-wrapper">
+    <h1 class="title">Special Space Day</h1>
+    <hr class="text-line" />
+  </div>
+
   <div class="container">
     <div v-if="loading" class="loading">데이터 불러오는 중...</div>
 
@@ -85,7 +88,7 @@ const fetchAstroEvents = async (year, months) => {
 onMounted(async () => {
   const currentYear = new Date().getFullYear()
   const years = [String(currentYear - 2), String(currentYear - 1), String(currentYear)]
-  const months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
+  const months = ['01','02','03','04','05','06','07','08','09','10','11','12']
 
   try {
     const allData = await Promise.all(years.map((y) => fetchAstroEvents(y, months)))
@@ -99,46 +102,52 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.text-line {
-   border-top: 2px solid rgb(229, 229, 229);
-  width: 85vw;
-  max-width: 1400px; 
-  margin: 0 auto; 
-  margin-top: 0.5rem;
-}
-.container {
-  background-color: #ffffff;
-  min-height: 100vh;
-  padding: 20px;
+.header-wrapper {
+  width: 75vw;
+  max-width: 1100px;
+  margin: 100px auto 0;
+  padding-left: 20px;
   box-sizing: border-box;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: #333;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin: 0 auto;
-  margin-top: 10px;
 }
 
 .title {
-  margin-top: 100px;
-  margin-left: 140px;
-  text-align: left;
+  margin: 0;
   font-weight: 700;
-  font-size: medium;
+  font-size: 1.1rem;
+  text-align: left;
+}
+
+.text-line {
+  border-top: 2px solid rgb(229, 229, 229);
+  margin-top: 0.8rem;
+  margin-bottom: 0;
+  width: 100%;
+}
+
+.container {
+  background-color: #ffffff;
+  min-height: 100vh;
+  padding: 10px 15px;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+  margin: 0 auto;
+  width: 75vw;
+  max-width: 1100px;
+  display: flex;
+  flex-direction: column;
 }
 
 .loading {
-  font-size: 1.2rem;
+  font-size: 1rem;
   color: #888;
-  margin: 50px 0;
+  margin: 30px 0;
 }
 
 .calendar-wrapper {
-  width: 85vw; 
-  max-width: 1400px;
+  width: 100%;
   background-color: #fff;
-  padding: 10px;
+  padding: 8px;
   margin: 0 auto;
   box-sizing: border-box;
 }
@@ -146,27 +155,29 @@ onMounted(async () => {
 :deep(.vc-container) {
   border: none;
   font-family: inherit;
-  width: 100%;;
+  width: 100%;
   table-layout: fixed;
 }
 
 :deep(.vc-title) {
-  font-size: 1.6rem;
+  font-size: 1.3rem;
   font-weight: 600;
   color: #2c3e50;
+  padding-bottom: 6px;
 }
 
 :deep(.vc-day-content) {
-  height: 300px;
-  padding: 8px;
+  height: 155px; /* 기존 140px에서 +15px */
+  padding: 6px 8px; /* padding도 살짝 늘림 */
   background-color: #fafafa;
   border: 1px solid #ddd;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 :deep(.vc-day) {
-  height: 170px !important; 
-  flex: none !important; 
+  height: 115px !important; /* 기존 100px에서 +15px */
+  flex: none !important;
 }
 
 :deep(.vc-day-content.is-today) {
@@ -175,29 +186,63 @@ onMounted(async () => {
 }
 
 .day-number {
-  font-size: 1.2rem;
+  font-size: 1rem;
   font-weight: 700;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .event-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
+  max-height: 105px; /* 기존 90px에서 +15px */
+  overflow-y: auto;
 }
 
 .event {
   background-color: #f0f4f8;
   color: #1e3a8a;
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   font-weight: 500;
-  padding: 4px 6px;
+  padding: 3px 5px; /* padding 조금 증가 */
   border: 1px solid #ccd6e0;
+  border-radius: 2px;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .event-text {
   overflow-wrap: break-word;
   word-break: break-word;
+  line-height: 1.1;
 }
-</style>
 
+/* 반응형: 화면이 768px 이하일 때 너비 90vw, 폰트 및 패딩 조정 */
+@media (max-width: 768px) {
+  .header-wrapper,
+  .container {
+    width: 90vw;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  :deep(.vc-title) {
+    font-size: 1.1rem;
+    padding-bottom: 4px;
+  }
+  :deep(.vc-day-content) {
+    height: 140px; /* 살짝 줄임 */
+    padding: 4px 6px;
+  }
+  :deep(.vc-day) {
+    height: 100px !important;
+  }
+  .event-list {
+    max-height: 85px;
+  }
+  .event {
+    font-size: 0.7rem;
+    padding: 2px 3px;
+  }
+}
+
+</style>
