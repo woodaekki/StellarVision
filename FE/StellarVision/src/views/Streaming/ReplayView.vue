@@ -1,7 +1,6 @@
 <template>
   <div class="replay-page">
-    <h2>다시보기 영상</h2>
-    <video v-if="videoUrl" controls width="640" height="360">
+    <video v-if="videoUrl" controls>
       <source :src="videoUrl" type="video/mp4" />
       브라우저가 video 태그를 지원하지 않습니다.
     </video>
@@ -40,9 +39,22 @@ onMounted(async () => {
 
 <style scoped>
 .replay-page {
-  padding: 2rem;
+  padding: 0;
+  margin: 0;
+  background-color: #fff;
   color: white;
-  background-color: #121212;
-  text-align: center;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+video {
+  width: 90vw;  
+  height: 90vh; 
+  max-width: 1280px; 
+  max-height: 720px;  
+  object-fit: contain; 
+  background-color: #fff;
 }
 </style>

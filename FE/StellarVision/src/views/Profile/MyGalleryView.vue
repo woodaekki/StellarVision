@@ -94,6 +94,8 @@ onMounted(async () => {
 
 <style scoped>
 .profile-section-container {
+  margin-top: 15px;
+  margin-bottom: 8px;
   display: flex;
   justify-content: center;
   width: 100%;

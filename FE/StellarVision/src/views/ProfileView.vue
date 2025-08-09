@@ -4,10 +4,10 @@
   </div>
   <div v-else class="profile-wrapper">
     <ProfileHeader
-    v-if="!profileUpdateLoading"
-    :profile-info="profileInfo"
-    :profile-email="profileEmail"
-    @updateProfileImageUrl="handleUpdateImageUrl"/>
+      v-if="!profileUpdateLoading"
+      :profile-info="profileInfo"
+      :profile-email="profileEmail"
+      @updateProfileImageUrl="handleUpdateImageUrl"/>
     <main class="main-content">
       <div v-if="profileInfo.galleryPublic" class="content-section">
         <MyGalleryView />
@@ -15,10 +15,10 @@
       <hr class="section-divider" v-if="profileInfo.galleryPublic && profileInfo.videoPublic">
       <div v-if="profileInfo.videoPublic" class="content-section">
         <MyVideoView
-        :profilePk="profilePk"
-        :recentVideos="recentVideos"
-        @select="goToReplay(video.id)"
-      />
+          :profilePk="profilePk"
+          :recentVideos="recentVideos"
+          @select="goToReplay(video.id)"
+        />
       </div>
     </main>
   </div>
@@ -97,15 +97,16 @@ function goToReplay(videoId) {
 }
 
 .main-content {
-  flex-grow: 1;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   width: 100%;
-  max-width: 1500px;
   margin: 0 auto;
   padding: 0 10px;
   box-sizing: border-box;
+  overflow-y: auto;
+  max-height: calc(100vh - 130px); /* 기본(데스크톱) */
 }
 
 .content-section {
@@ -119,4 +120,36 @@ function goToReplay(videoId) {
   background-color: #ccc;
   margin: 10px 0;
 }
+
+/* 1500px 이하: 패딩 조금 늘리고 높이 보정 */
+@media (max-width: 1500px) {
+  .main-content {
+    padding: 0 20px;
+    max-height: calc(100vh - 120px);
+  }
+  .section-divider {
+    width: 90%;
+  }
+}
+
+@media (max-width: 1024px) {
+  .main-content {
+    max-height: calc(100vh - 110px);
+  }
+}
+
+@media (max-width: 767px) {
+  .profile-wrapper {
+    padding-top: 50px;
+  }
+  .main-content {
+    padding: 0 10px;
+    max-height: calc(100vh - 300px);
+  }
+  .section-divider {
+    width: 95%;
+    margin: 5px 0;
+  }
+}
 </style>
+

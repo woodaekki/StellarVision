@@ -53,38 +53,44 @@ main {
   flex-grow: 1;
 }
 
-.app-layout {
-  display: flex;
-  height: 100vh;
-
-  .sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 175px;
-    height: 100vh;
-    background-color: #0b0c10;
-    z-index: 1000;
-    transition: transform 0.3s ease;
-    transform: translateX(-100%);
-  }
-
-  &.sidebar-open .sidebar {
-    transform: translateX(0);
-  }
-
-  .main-content {
-    margin-left: 0;
-    width: 100%;
-    transition: margin-left 0.3s ease, width 0.3s ease;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-  }
-
-  &.sidebar-open .main-content {
-    margin-left: 175px;
-    width: calc(100% - 175px);
-  }
+.sidebar {
+  z-index: 100;
 }
+
+// 사이드바를 열었을때 중앙정렬이 되지 않는 화면이 많아 우선 주석 처리해두었습니다.
+// .app-layout {
+//   display: flex;
+//   height: 100vh;
+
+//   .sidebar {
+//     position: fixed;
+//     top: 0;
+//     left: 0;
+//     width: 175px;
+//     height: 100vh;
+//     background-color: #0b0c10;
+//     z-index: 1000;
+//     transition: transform 0.3s ease;
+//     transform: translateX(-100%);
+//   }
+
+//   &.sidebar-open .sidebar {
+//     transform: translateX(0);
+//   }
+
+//   .main-content {
+//     margin-left: 0;
+//     width: 100%;
+//     transition: margin-left 0.3s ease, width 0.3s ease;
+//     display: flex;
+//     flex-direction: column;
+//     height: 100vh;
+    
+//   }
+
+//   &.sidebar-open .main-content {
+//     margin-left: 175px;
+//     width: calc(100% - 175px);
+//   }
+// }
 </style>

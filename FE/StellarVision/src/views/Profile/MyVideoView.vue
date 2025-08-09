@@ -8,13 +8,19 @@
         </button>
       </div>
       <div class="content-frames">
-        <VideoFrame
+        <div
           v-for="video in recentVideos"
-          @click="goToReplayRoom(video.id)"
           :key="video.id"
-          :video="video"
           class="content-frame video-frame"
-        />
+          @click="goToReplayRoom(video.id)"
+        >
+          <img
+            :src="video.thumbnailDownloadUrl"
+            alt="video thumbnail"
+            style="width: 100%; height: 100%; object-fit: cover"
+          />
+          <p class="content-info video-date">Date: {{ video.createdAt?.split('T')[0] }}</p>
+        </div>
         <div v-if="recentVideos.length === 0" class="empty-frame">
           <p class="empty-text">업로드한 영상이 없습니다.</p>
         </div>
@@ -25,7 +31,6 @@
 
 <script setup>
 import { useRouter, useRoute } from 'vue-router'
-import VideoFrame from './VideoFrame.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -58,7 +63,6 @@ const goToReplayRoom = (videoId) => {
   })
 }
 </script>
-
 
 <style scoped>
 .profile-section-container {
@@ -109,6 +113,7 @@ const goToReplayRoom = (videoId) => {
 .content-frame,
 .empty-frame {
   flex-basis: calc(33.33% - 10px);
+  width: calc(33.33% - 10px);
   max-width: 300px;
   aspect-ratio: 1.4;
   cursor: pointer;
@@ -118,8 +123,26 @@ const goToReplayRoom = (videoId) => {
   overflow: hidden;
 }
 
-.content-frame.video-frame {
+.video-frame {
   background: #fff;
+}
+
+.content-info {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 2px 4px;
+  border-radius: 2px;
+  font-size: 10px;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.content-frame:hover .content-info {
+  opacity: 1;
 }
 
 .empty-frame {

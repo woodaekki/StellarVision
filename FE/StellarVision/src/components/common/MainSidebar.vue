@@ -17,7 +17,4 @@ const isOpen = ref(false);
 defineExpose({ isOpen });
 </script>
 
-<style scoped lang="scss">
 
-
-</style>
