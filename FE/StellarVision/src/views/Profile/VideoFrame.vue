@@ -18,34 +18,47 @@ const props = defineProps({
 
 <style scoped>
 .video-frame {
-  width: 480px;
-  height: 300px;
-  background: #fff;
+  aspect-ratio: 1.4;
   cursor: pointer;
   display: flex;
   justify-content: center;
   align-items: center;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
   flex-shrink: 0;
+  transition: transform 0.25s ease;
+  overflow: hidden;
+}
+
+.video-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .video-frame:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+  transform: translateY(-4px) scale(1.02);
+}
+
+.video-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(4, 1fr); 
 }
 
 @media (max-width: 1500px) {
-  .video-frame {
-    width: calc(50% - 16px);
-    margin-bottom: 32px;
+  .video-grid {
+    grid-template-columns: repeat(3, 1fr); 
+  }
+}
+
+@media (max-width: 1024px) {
+  .video-grid {
+    grid-template-columns: repeat(2, 1fr); 
   }
 }
 
 @media (max-width: 768px) {
-  .video-frame {
-    width: 100%;
-    height: 200px;
+  .video-grid {
+    grid-template-columns: repeat(1, 1fr); 
   }
 }
 </style>

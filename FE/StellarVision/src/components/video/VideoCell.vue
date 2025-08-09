@@ -1,18 +1,19 @@
 <template>
   <div class="video-cell" @click="$emit('select')">
-    <img :src="video.thumbnail" class="video-thumbnail"/>
+    <div class="thumbnail-container">
+      <img :src="video.thumbnail" class="video-thumbnail"/>
+    </div>
     <div class="video-info">
-      <div class="video-title">
+      <div class="video-title ">
         {{ video.name }}
         <button
           v-if="showEdit"
           class="edit-button"
           @click.stop="goToReplayEdit"
         >
-          <VideoEditIcon />
+          <VideoEditIcon class="edit-icon"/>
         </button>
       </div>
-      <!-- 여기에 비디오 태그들이 들어가야 함 -->
       <p class="video-date">{{ video.date }}</p>
     </div>
   </div>
@@ -37,58 +38,58 @@ const emit = defineEmits(['select'])
 
 const router = useRouter()
 
-// 링크는 그냥 임의로 넣음, 추후 다시보기 수정 view 생성 및 router 연결 후 고칠 예정
 function goToReplayEdit() {
   router.push(`/replay/${props.video.id}/edit`)
 }
 </script>
 
-<style lang="scss" scoped>
+<style scoped>
 .video-cell {
   display: flex;
-  align-items: center;
-  border-radius: 12px;
+  flex-direction: column;
   overflow: hidden;
-  transition: background 0.2s;
   cursor: pointer;
-  margin: 1rem, 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e0e0e0;
+  transition: transform 0.3s ease-in-out;
 }
 
 .video-cell:hover {
-  background-color: white;
-  color: black;
+  transform: translateY(-3px);
+}
+
+.thumbnail-container {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
 }
 
 .video-thumbnail {
-  width: 480px;
-  height: 300px;
-  cursor: pointer;
-  display: flex;
-  border: 1px solid white;
-  border-radius: 12px;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   object-position: center;
-  margin: 1rem;
 }
 
-
 .video-info {
-  padding: 16px;
+  padding: 10px 12px;
+  background-color: #fff;
+  color: #333;
 }
 
 .video-title {
-  font-size: 1.2rem;
-  font-weight: 600;
-  margin: 0 0 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 6px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
 }
 
 .video-date {
-  font-size: 0.95rem;
-  color: #666;
+  font-size: 0.8rem;
+  color: #777;
+  margin: 0;
 }
 
 .edit-button {
@@ -96,10 +97,18 @@ function goToReplayEdit() {
   background: none;
   border: none;
   padding: 0;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.edit-button:hover {
+  opacity: 1;
 }
 
 .edit-icon {
-  fill: #666;
+  fill: #777;
   vertical-align: middle;
+  width: 14px;
+  height: 14px;
 }
 </style>

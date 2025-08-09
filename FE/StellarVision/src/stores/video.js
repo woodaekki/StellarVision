@@ -5,22 +5,44 @@ import commonApi from '@/api/commonApi';
 export const useVideoStore = defineStore('video', () => {
   const replays = ref([]);
 
+  const setReplays = (videos) => {
+    replays.value = videos;
+  };
+
+  const addReplays = (videos) => {
+    replays.value.push(...videos);
+  };
+
+  const clearReplays = () => {
+    replays.value = [];
+  };
+
   const fetchReplays = async (memberId, page, size) => {
     try {
       const res = await commonApi.get(`/profiles/${memberId}/videos`, {
-        params: {
-          page: page,
-          size: size
-        }
+        params: { page, size }
       });
-      replays.value = res.data.data.videos;
+
+      const videos = res.data.data.videos || [];
+
+      if (page === 0) {
+        setReplays(videos);
+      } else {
+        addReplays(videos);
+      }
+
+      return res.data;
     } catch (err) {
-      console.error(`${memberId}번 회원의 다시보기를 호출할 수 없었습니다:`, err);
-      console.error(err.response);
+      console.error(`${memberId}번 회원의 다시보기를 불러올 수 없습니다.`, err);
+      throw err;
     }
   };
 
   return {
-    replays, fetchReplays
+    replays,
+    setReplays,
+    addReplays,
+    clearReplays,
+    fetchReplays
   };
 });

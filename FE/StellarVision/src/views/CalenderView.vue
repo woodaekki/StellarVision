@@ -95,10 +95,10 @@ onMounted(async () => {
 
 <style scoped>
 .container {
-  background-image: url(@/assets//pictures/wallpaper/space.jpeg); 
+  background-color: #fff;
   min-height: 100vh;
   padding: 16px;
-  padding-top: 58px; 
+  padding-top: 58px;
   box-sizing: border-box;
   font-family: Paperlogy-8ExtraBold, sans-serif;
   color: #fff;

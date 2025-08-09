@@ -17,10 +17,10 @@
       <hr class="section-divider" v-if="profileInfo.galleryPublic && profileInfo.videoPublic">
       <div v-if="profileInfo.videoPublic" class="content-section">
         <MyVideoView
-        :profilePk="profilePk"
-        :recentVideos="recentVideos"
-        @select="goToReplay(video.id)"
-      />
+          :profilePk="profilePk"
+          :recentVideos="recentVideos"
+          @select="goToReplay(video.id)"
+        />
       </div>
     </main>
   </div>
@@ -99,24 +99,26 @@ function goToReplay(videoId) {
 <style scoped>
 .profile-wrapper {
   padding-top: 58px;
-  background: #000;
+  background-color: #ffffff;
   background-size: cover;
   min-height: 100vh;
   color: white;
   display: flex;
   flex-direction: column;
+  margin-bottom: 30px;
 }
 
 .main-content {
-  flex-grow: 1;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   width: 100%;
-  max-width: 1500px;
   margin: 0 auto;
   padding: 0 10px;
   box-sizing: border-box;
+  overflow-y: auto;
+  max-height: calc(100vh - 130px);
 }
 
 .content-section {

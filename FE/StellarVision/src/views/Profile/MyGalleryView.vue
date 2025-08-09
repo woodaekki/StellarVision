@@ -94,6 +94,8 @@ onMounted(async () => {
 
 <style scoped>
 .profile-section-container {
+  margin-top: 15px;
+  margin-bottom: 8px;
   display: flex;
   justify-content: center;
   width: 100%;
@@ -101,7 +103,7 @@ onMounted(async () => {
 
 .profile-section {
   width: 100%;
-  max-width: 1200px; 
+  max-width: 1200px;
   margin: 0;
   padding: 10px 0;
 }
@@ -118,14 +120,14 @@ onMounted(async () => {
 .section-title {
   font-size: 18px;
   font-weight: 700;
-  color: #fff;
+  color: #000;
 }
 
 .detail-button {
-  color: #fff;
+  color: #000;
   cursor: pointer;
   background: transparent;
-  border: 1px solid #fff;
+  border: 1px solid #000;
   padding: 5px 12px;
   border-radius: 4px;
 }
