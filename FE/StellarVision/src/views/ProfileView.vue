@@ -4,19 +4,12 @@
   </div>
   <div v-else class="profile-wrapper">
     <ProfileHeader
-<<<<<<< HEAD
-      v-if="!profileUpdateLoading"
-      :profile-info="profileInfo"
-      :profile-email="profileEmail"
-      @updateProfileImageUrl="handleUpdateImageUrl"/>
-=======
     v-if="!profileUpdateLoading"
     :profile-info="profileInfo"
     :profile-followings="profileFollowings"
     :profile-followers="profileFollowers"
     :profile-email="profileEmail"
     @updateProfileImageUrl="handleUpdateImageUrl"/>
->>>>>>> develop
     <main class="main-content">
       <div v-if="profileInfo.galleryPublic" class="content-section">
         <MyGalleryView />
@@ -124,7 +117,7 @@ function goToReplay(videoId) {
   padding: 0 10px;
   box-sizing: border-box;
   overflow-y: auto;
-  max-height: calc(100vh - 130px); /* 기본(데스크톱) */
+  max-height: calc(100vh - 130px);
 }
 
 .content-section {
