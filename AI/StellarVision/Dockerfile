@@ -17,8 +17,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the application code into the container
 COPY . .
-# Overlap modified aura_sr.py to local directory 
-COPY aura_sr.py /usr/local/lib/python3.11/site-packages/aura_sr.py
 # Expose the port FastAPI will run on
 EXPOSE 8000
 

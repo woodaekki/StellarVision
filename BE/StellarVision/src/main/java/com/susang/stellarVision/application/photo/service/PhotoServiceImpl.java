@@ -124,6 +124,7 @@ public class PhotoServiceImpl implements PhotoService {
         Photo photo = photoRepository.findById(photoId)
                 .orElseThrow(() -> new PhotoNotFoundException(photoId.toString()) {
                 });
+        photoTagRepository.deleteByPhotoId(photoId);
         s3FileManager.delete(photo.getPhotoS3Key());
         photoRepository.delete(photo);
     }

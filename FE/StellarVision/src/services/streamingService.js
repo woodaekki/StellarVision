@@ -23,8 +23,6 @@ export default {
     })
   },
 
-
-
   // 3) 녹화 시작
   startRecording(sessionId) {
     return streamingApi.post(`/streamings/${sessionId}/recordings/start`)
@@ -46,12 +44,9 @@ export default {
   },
 
   // 토큰 발급용 메서드 추가
-  getToken(sessionId, role = 'SUBSCRIBER') {
+  getToken(sessionId) {
     return streamingApi.post(
-      `/streamings/${sessionId}/connection`,
-      { role }
+      `/streamings/${sessionId}/connection`
     )
   },
-
-
 }

@@ -24,9 +24,21 @@
       <div class="profile-text">
         <p>{{ profileEmail || 'null' }}</p>
         <ProfileEdit @click="toggleEditMode" />
+        <FollowButton
+        :profile-info="profileInfo"
+        :profile-followers="profileFollowers"
+        />
         <p>{{ profileInfo?.description || '해당 회원은 아직 자기소개를 작성하지 않았습니다.' }}</p>
+        <p>
+          <button type="button" class="follow-link" @click="openModal('following')">
+            팔로잉 {{ profileInfo?.followingCount ?? 0 }}
+          </button>
+          <span style="margin: 0 8px;"></span>
+          <button type="button" class="follow-link" @click="openModal('follower')">
+            팔로워 {{ profileInfo?.followerCount ?? 0 }}
+          </button>
+        </p>
       </div>
-
     </div>
 
     <div class="profile-header-right">
@@ -34,13 +46,21 @@
         수정
       </RouterLink>
     </div>
+
+    <UserListModal
+      v-if="showFollowModal"
+      :userList="modalList"
+      @close="showFollowModal = false"
+    />
  </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { RouterLink } from 'vue-router';
 import ProfileEdit from './ProfileEdit.vue';
+import FollowButton from './FollowButton.vue';
+import UserListModal from './UserListModal.vue';
 import axios from 'axios';
 import axiosApi from '@/api/axiosApi';
 
@@ -52,6 +72,14 @@ const props = defineProps({
   profileEmail: {
     type: String,
     required: false
+  },
+  profileFollowings: {
+    type: Array,
+    default: () => []
+  },
+  profileFollowers: {
+    type: Array,
+    default: () => []
   }
 });
 
@@ -59,11 +87,7 @@ const memberId = props.profileInfo?.memberId;
 
 // 편집 모드 전환
 const editMode = ref(false);
-
-function toggleEditMode() {
-  editMode.value = !editMode.value;
-  console.log('편집 모드:', editMode.value);
-};
+const toggleEditMode = () => { editMode.value = !editMode.value };
 
 // 프로필 이미지 업데이트
 const profileImageInput = ref(null);
@@ -117,6 +141,19 @@ const uploadProfileImage = async (e) => {
     console.error('업로드 실패:', err)
   }
 }
+
+// 팔로잉 & 팔로워 목록 보여주기
+const showFollowModal = ref(false);
+const modalType = ref(null); // 'following' | 'follower'
+
+const openModal = (type) => {
+  modalType.value = type;
+  showFollowModal.value = true;
+};
+
+const modalList = computed(() =>
+  modalType.value === 'following' ? props.profileFollowings : props.profileFollowers
+);
 </script>
 
 <style scoped>

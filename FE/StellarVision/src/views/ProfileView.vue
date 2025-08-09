@@ -4,10 +4,19 @@
   </div>
   <div v-else class="profile-wrapper">
     <ProfileHeader
+<<<<<<< HEAD
       v-if="!profileUpdateLoading"
       :profile-info="profileInfo"
       :profile-email="profileEmail"
       @updateProfileImageUrl="handleUpdateImageUrl"/>
+=======
+    v-if="!profileUpdateLoading"
+    :profile-info="profileInfo"
+    :profile-followings="profileFollowings"
+    :profile-followers="profileFollowers"
+    :profile-email="profileEmail"
+    @updateProfileImageUrl="handleUpdateImageUrl"/>
+>>>>>>> develop
     <main class="main-content">
       <div v-if="profileInfo.galleryPublic" class="content-section">
         <MyGalleryView />
@@ -32,16 +41,20 @@ import MyGalleryView from '@/views/Profile/MyGalleryView.vue';
 import MyVideoView from '@/views/Profile/MyVideoView.vue';
 import { useAccountStore } from '@/stores/account';
 import { useVideoStore } from '@/stores/video';
+import { useProfileStore } from '@/stores/profile';
 import commonApi from '@/api/commonApi';
 
 const account = useAccountStore();
 const videoStore = useVideoStore();
+const profileStore = useProfileStore();
 const route = useRoute();
 const router = useRouter();
 
 const profilePk = ref(window.history.state?.memberPk);
 const profileInfo = ref(null);
 const profileEmail = route.params.id;
+const profileFollowers = computed(() => profileStore.followers);
+const profileFollowings = computed(() => profileStore.followings);
 
 const loading = ref(true);
 const profileUpdateLoading = ref(false);
@@ -56,14 +69,19 @@ onMounted(async () => {
       profileInfo.value = account.myProfile;
       profilePk.value = profileInfo.value.memberId;
       await videoStore.fetchReplays(profilePk.value, 0, 3);
+      await profileStore.fetchMemberFollowers(profilePk.value);
+      await profileStore.fetchMemberFollowings(profilePk.value);
     }
   } else {
-    profileInfo.value = await account.fetchUserProfile(profilePk);
+    profileInfo.value = await account.fetchUserProfile(profilePk.value);
     await videoStore.fetchReplays(profilePk.value, 0, 3);
+    await profileStore.fetchMemberFollowers(profilePk.value);
+    await profileStore.fetchMemberFollowings(profilePk.value);
   }
 
   loading.value = false;
   console.log('프로필 정보:', profileInfo.value);
+  console.log('프로필 정보:', JSON.parse(localStorage.getItem('userInfo')));
 })
 
 async function handleUpdateImageUrl() {
@@ -120,36 +138,4 @@ function goToReplay(videoId) {
   background-color: #ccc;
   margin: 10px 0;
 }
-
-/* 1500px 이하: 패딩 조금 늘리고 높이 보정 */
-@media (max-width: 1500px) {
-  .main-content {
-    padding: 0 20px;
-    max-height: calc(100vh - 120px);
-  }
-  .section-divider {
-    width: 90%;
-  }
-}
-
-@media (max-width: 1024px) {
-  .main-content {
-    max-height: calc(100vh - 110px);
-  }
-}
-
-@media (max-width: 767px) {
-  .profile-wrapper {
-    padding-top: 50px;
-  }
-  .main-content {
-    padding: 0 10px;
-    max-height: calc(100vh - 300px);
-  }
-  .section-divider {
-    width: 95%;
-    margin: 5px 0;
-  }
-}
 </style>
-

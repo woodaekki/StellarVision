@@ -3,4 +3,5 @@ uvicorn>=0.22.0
 ultralytics>=8.0.20
 pillow>=11.0.0
 python-multipart
-aura-sr
+opencv-python
+opencv-contrib-python

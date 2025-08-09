@@ -5,12 +5,17 @@
         <button class="close-button" @click="close">X</button>
       </div>
       <!-- 여기서부터 유저 목록 랜더링 -->
-      <UserCell
-        v-for="user in userList"
-        :key="user.id"
-        :user="user"
-        @select="close"
-      />
+       <div v-if="userList.length > 0">
+        <UserCell
+          v-for="user in userList"
+          :key="user.id"
+          :user="user"
+          @select="close"
+        />
+       </div>
+      <div v-else class="no-user">
+        <p>아직 없어요.</p>
+      </div>
     </div>
   </div>
 </template>
@@ -21,7 +26,7 @@ import UserCell from './UserCell.vue';
 const props = defineProps({
   userList: {
     type: Array,
-    required: true
+    default: () => []
   }
 })
 
@@ -35,7 +40,8 @@ function close() {
 <style scoped>
 .modal-backdrop {
   position: fixed;
-  top: 0; left: 0;
+  inset: 0;
+  z-index: 100;
   width: 100vw; height: 100vh;
   background: rgba(0, 0, 0, 0.5);
   display: flex;
@@ -56,5 +62,10 @@ function close() {
 .close-button {
   color: white;
   background-color: black;
+}
+
+.no-user {
+  color: black;
+  text-align: center;
 }
 </style>

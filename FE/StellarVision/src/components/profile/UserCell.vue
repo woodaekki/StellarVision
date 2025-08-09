@@ -1,6 +1,12 @@
 <template>
   <div class="user-cell" @click="goToUser">
-    <span>{{ user.nickname }}</span>
+    <img
+      :src="user.profileImageUrl"
+      :alt="user.name"
+      class="profile-image"
+      loading="lazy"
+    />
+    <span class="user-name">{{ user.name }}</span>
   </div>
 </template>
 
@@ -20,7 +26,7 @@ const router = useRouter()
 
 function goToUser() {
   emit('select')
-  router.push(`/profile/${props.user.id}`)
+  router.push(`/profile/${props.user.memberId}`)
 }
 </script>
 
@@ -39,5 +45,16 @@ function goToUser() {
 .user-cell:hover {
   background-color: black;
   color: white;
+}
+
+.profile-image {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center;
+  background: #eee;
+  border: 1px solid #e5e7eb;
+  flex-shrink: 0;
 }
 </style>
