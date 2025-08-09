@@ -1,26 +1,37 @@
 <template>
+  <div class="header-wrapper">
+    <h1 class="title">Special Space Day</h1>
+    <hr class="text-line" />
+  </div>
+
   <div class="container">
-    <h1 class="title">올해의 천체 일정</h1>
+    <div v-if="loading" class="loading">데이터 불러오는 중...</div>
 
-    <div v-if="loading">데이터 불러오는 중...</div>
-
-    <vc-calendar v-else :attributes="highlightAttributes" is-expanded>
-      <template #day-content="{ day }">
-        <div class="day-cell">
-          <div class="day-number">{{ day.day }}</div>
-          <div
-            v-for="event in eventsByDate[formatDate(day.date)] || []"
-            :key="event.seq"
-            class="event"
-          >
-            {{ event.astroEvent }}
+    <div v-else class="calendar-wrapper">
+      <vc-calendar
+        :attributes="highlightAttributes"
+        :masks="{ title: 'YYYY년 MMMM' }"
+        class="expanded-calendar"
+      >
+        <template #day-content="{ day }">
+          <div class="day-cell">
+            <div class="day-number">{{ day.day }}</div>
+            <div class="event-list">
+              <div
+                v-for="event in eventsByDate[formatDate(day.date)] || []"
+                :key="event.seq"
+                class="event"
+                :title="event.astroEvent"
+              >
+                <div class="event-text">{{ event.astroEvent }}</div>
+              </div>
+            </div>
           </div>
-        </div>
-      </template>
-    </vc-calendar>
+        </template>
+      </vc-calendar>
+    </div>
   </div>
 </template>
-
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
@@ -31,7 +42,6 @@ const astroEvents = ref([])
 
 const formatDate = (date) => date.toISOString().split('T')[0]
 
-// 날짜별 이벤트 정리
 const eventsByDate = computed(() => {
   const map = {}
   astroEvents.value.forEach((event) => {
@@ -45,13 +55,11 @@ const eventsByDate = computed(() => {
   return map
 })
 
-// 오늘 날짜 강조
 const today = ref(new Date())
 const highlightAttributes = computed(() => [
-  { key: 'today', highlight: true, dates: today.value }
+  { key: 'today', highlight: { class: 'today-highlight' }, dates: today.value }
 ])
 
-// API에서 데이터 가져오기
 const fetchAstroEvents = async (year, months) => {
   const results = await Promise.all(
     months.map(async (month) => {
@@ -66,7 +74,7 @@ const fetchAstroEvents = async (year, months) => {
         return Array.from(doc.querySelectorAll('items > item')).map((item) => ({
           locdate: item.querySelector('locdate')?.textContent ?? '',
           seq: item.querySelector('seq')?.textContent ?? '',
-          astroEvent: item.querySelector('astroEvent')?.textContent ?? '',
+          astroEvent: item.querySelector('astroEvent')?.textContent ?? ''
         }))
       } catch (err) {
         console.error(`API 오류: ${year}-${month}`, err)
@@ -78,7 +86,13 @@ const fetchAstroEvents = async (year, months) => {
 }
 
 onMounted(async () => {
-  const years = ['2020', '2021', '2022', '2023', '2024', '2025']
+  const currentYear = new Date().getFullYear()
+  const years = [
+    String(currentYear - 2),
+    String(currentYear - 1),
+    String(currentYear),
+    String(currentYear + 1) // 미래 1년치 포함
+  ]
   const months = ['01','02','03','04','05','06','07','08','09','10','11','12']
 
   try {
@@ -92,101 +106,147 @@ onMounted(async () => {
 })
 </script>
 
-
 <style scoped>
-.container {
-  background-color: #fff;
-  min-height: 100vh;
-  padding: 16px;
-  padding-top: 58px;
+.header-wrapper {
+  width: 75vw;
+  max-width: 1100px;
+  margin: 100px auto 0;
+  padding-left: 20px;
   box-sizing: border-box;
-  font-family: Paperlogy-8ExtraBold, sans-serif;
-  color: #fff;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
 }
 
 .title {
-  font-size: 1.8rem;
-  font-weight: bold;
-  color: #fff;
-  margin-top: 20px;
-  margin-bottom: 20px;
+  margin: 0;
+  font-weight: 700;
+  font-size: 1.1rem;
+  text-align: left;
+}
+
+.text-line {
+  border-top: 2px solid rgb(229, 229, 229);
+  margin-top: 0.8rem;
+  margin-bottom: 0;
+  width: 100%;
+}
+
+.container {
+  background-color: #ffffff;
+  min-height: 100vh;
+  padding: 10px 15px;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+  margin: 0 auto;
+  width: 75vw;
+  max-width: 1100px;
+  display: flex;
+  flex-direction: column;
 }
 
 .loading {
   font-size: 1rem;
-  color: #666;
+  color: #888;
   margin: 30px 0;
 }
 
-.big-calendar {
+.calendar-wrapper {
   width: 100%;
-  max-width: 1000px;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 10px;
+  background-color: #fff;
+  padding: 8px;
   margin: 0 auto;
-  justify-items: center;
-}
-
-.day-cell {
-  background: #393939;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  width: 100%;
-  min-height: 80px;
-  padding: 8px 6px;
   box-sizing: border-box;
-  color: #f8f8f8;
-  transition: background 0.2s ease;
 }
 
-.day-cell:hover {
-  background: #424242;
+:deep(.vc-container) {
+  border: none;
+  font-family: inherit;
+  width: 100%;
+  table-layout: fixed;
+}
+
+:deep(.vc-title) {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #2c3e50;
+  padding-bottom: 6px;
+}
+
+:deep(.vc-day-content) {
+  height: 160px; 
+  padding: 6px 8px; 
+  background-color: #fafafa;
+  border: 1px solid #ddd;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+:deep(.vc-day) {
+  height: 115px !important; 
+  flex: none !important;
+}
+
+:deep(.vc-day-content.is-today) {
+  background-color: #e6f7ff;
+  border-color: #66ccff;
 }
 
 .day-number {
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 700;
   margin-bottom: 4px;
-  color: #fff;
+}
+
+.event-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 105px;
+  overflow-y: auto;
 }
 
 .event {
-  font-size: 0.7rem;
-  background-color: #a8a8a86a;
-  color: #fff;
-  padding: 1px 4px;
-  margin: 1px 0;
-  border-radius: 4px;
-  line-height: 1.2;
+  background-color: #f0f4f8;
+  color: #1e3a8a;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 3px 5px; 
+  border: 1px solid #ccd6e0;
+  border-radius: 2px;
+  white-space: normal;
   word-break: break-word;
-  overflow-wrap: anywhere;
-  max-width: 100%;
 }
 
-@media (max-width: 600px) {
-  .title {
-    font-size: 1.5rem;
-  }
+.event-text {
+  overflow-wrap: break-word;
+  word-break: break-word;
+  line-height: 1.1;
+}
 
-  .day-cell {
-    min-height: 70px;
-    padding: 4px 3px;
+@media (max-width: 768px) {
+  .header-wrapper,
+  .container {
+    width: 90vw;
+    padding-left: 10px;
+    padding-right: 10px;
   }
-
+  :deep(.vc-title) {
+    font-size: 1.1rem;
+    padding-bottom: 4px;
+  }
+  :deep(.vc-day-content) {
+    height: 140px; 
+    padding: 4px 6px;
+  }
+  :deep(.vc-day) {
+    height: 100px !important;
+  }
+  .event-list {
+    max-height: 85px;
+  }
   .event {
-    font-size: 0.65rem;
-    padding: 1px 3px;
+    font-size: 0.7rem;
+    padding: 2px 3px;
   }
 }
+
 </style>
-
-
