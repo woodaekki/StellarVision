@@ -87,7 +87,12 @@ const fetchAstroEvents = async (year, months) => {
 
 onMounted(async () => {
   const currentYear = new Date().getFullYear()
-  const years = [String(currentYear - 2), String(currentYear - 1), String(currentYear)]
+  const years = [
+    String(currentYear - 2),
+    String(currentYear - 1),
+    String(currentYear),
+    String(currentYear + 1) // 미래 1년치 포함
+  ]
   const months = ['01','02','03','04','05','06','07','08','09','10','11','12']
 
   try {
