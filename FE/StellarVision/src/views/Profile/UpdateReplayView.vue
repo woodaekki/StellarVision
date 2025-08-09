@@ -1,23 +1,16 @@
 <template>
   <div class="video-edit-page">
     <div class="edit-header">
-      <h1 class="edit-title">Video edit</h1>
+      <h1 class="edit-title">My Space Video Edit</h1>
       <button @click="goBack" class="back-button">← Back</button>
     </div>
 
-    <!-- 비디오 정보 -->
-    <div class="video-info-section" v-if="video">
-      <div class="video-details">
-        <h2>{{ video.name }}</h2>
-        <p class="video-date">{{ video.date }}</p>
-      </div>
-    </div>
-
-    <!-- 태그 관리 섹션 -->
     <div class="tags-section">
-      <h3>태그 관리</h3>
+      <div class="tags-header">
+        <h3 class="tags-title">Tags from Space</h3>
+        <img src="../../assets/pictures/stellabot/tag3.png" alt="노바 태그" class="tags-image">
+      </div>
       
-      <!-- 기존 태그 목록 -->
       <div class="existing-tags">
         <h4>현재 태그</h4>
         <div class="tags-list" v-if="tags.length > 0">
@@ -39,7 +32,6 @@
         <p v-else class="no-tags">아직 태그가 없습니다.</p>
       </div>
 
-      <!-- 태그 추가 -->
       <div class="add-tag-section">
         <h4>태그 추가</h4>
         <div class="add-tag-form">
@@ -63,12 +55,10 @@
       </div>
     </div>
 
-    <!-- 로딩 상태 -->
     <div v-if="isLoading" class="loading">
       비디오 정보를 불러오는 중...
     </div>
 
-    <!-- 에러 상태 -->
     <div v-if="error" class="error-message">
       {{ error }}
     </div>
@@ -84,7 +74,6 @@ const route = useRoute();
 const router = useRouter();
 
 const videoId = computed(() => route.params.id);
-const video = ref(null);
 const tags = ref([]);
 const newTagName = ref('');
 const isLoading = ref(true);
@@ -94,7 +83,6 @@ const error = ref('');
 
 // 비디오 정보 및 태그 불러오기
 const fetchVideoData = async () => {
-  // videoId 유효성 검사
   if (!videoId.value || videoId.value === 'undefined') {
     error.value = '비디오 ID가 유효하지 않습니다.';
     isLoading.value = false;
@@ -103,38 +91,24 @@ const fetchVideoData = async () => {
   
   try {
     error.value = '';
-    
-    // 비디오 정보 가져오기
-    const videoResponse = await commonApi.get(`/videos/${videoId.value}`);
-    
-    if (videoResponse.data.status === 'success') {
-      video.value = videoResponse.data.data;
-    } else {
-      error.value = videoResponse.data.message || '비디오 정보를 불러올 수 없습니다.';
-    }
-
-    // 태그 정보 가져오기
     await fetchTags();
-    
-  } catch (error) {
-    if (error.response) {
-      if (error.response.data && error.response.data.message) {
-        error.value = error.response.data.message;
+  } catch (err) {
+    if (err.response) {
+      if (err.response.data && err.response.data.message) {
+        error.value = err.response.data.message;
       } else {
-        error.value = `서버 오류 (${error.response.status}): ${error.response.statusText || '알 수 없는 오류'}`;
+        error.value = `서버 오류 (${err.response.status}): ${err.response.statusText || '알 수 없는 오류'}`;
       }
-    } else if (error.request) {
+    } else if (err.request) {
       error.value = '서버에 연결할 수 없습니다. 네트워크를 확인해주세요.';
     } else {
       error.value = '요청 설정 중 오류가 발생했습니다.';
     }
-    
   } finally {
     isLoading.value = false;
   }
 };
 
-// 태그 목록 가져오기
 const fetchTags = async () => {
   if (!videoId.value || videoId.value === 'undefined') {
     return;
@@ -149,12 +123,11 @@ const fetchTags = async () => {
     } else {
       tags.value = [];
     }
-  } catch (error) {
+  } catch (err) {
     tags.value = [];
   }
 };
 
-// 태그 추가
 const addTag = async () => {
   const tagName = newTagName.value.trim();
   
@@ -168,7 +141,6 @@ const addTag = async () => {
     return;
   }
 
-  // 중복 체크
   const isDuplicate = tags.value.some(tag => tag.tagName === tagName);
   
   if (isDuplicate) {
@@ -190,14 +162,13 @@ const addTag = async () => {
     } else {
       alert(response.data.message || '태그 추가에 실패했습니다.');
     }
-  } catch (error) {
+  } catch (err) {
     alert('태그 추가 중 오류가 발생했습니다.');
   } finally {
     isAdding.value = false;
   }
 };
 
-// 태그 삭제
 const removeTag = async (tagId) => {
   if (!videoId.value || videoId.value === 'undefined') {
     alert('비디오 ID가 유효하지 않습니다.');
@@ -214,30 +185,25 @@ const removeTag = async (tagId) => {
     const response = await commonApi.delete(`/videos/${videoId.value}/tags/${tagId}`);
     
     if (response.data.status === 'success') {
-      await fetchTags(); // 태그 목록 새로고침
+      await fetchTags();
       alert('태그가 성공적으로 삭제되었습니다.');
     } else {
       alert(response.data.message || '태그 삭제에 실패했습니다.');
     }
-  } catch (error) {
+  } catch (err) {
     alert('태그 삭제 중 오류가 발생했습니다.');
   } finally {
     isRemoving.value = false;
   }
 };
 
-// 뒤로가기
 const goBack = () => {
   router.back();
 };
 
-// 라우트 변경 감지
 const initializeComponent = () => {
-  // 초기화
   error.value = '';
-  video.value = null;
   tags.value = [];
-  
   fetchVideoData();
 };
 
@@ -246,151 +212,138 @@ onMounted(initializeComponent);
 
 <style scoped>
 .video-edit-page {
-  margin: 0 auto;
-  padding: 100px;
+  padding: 150px;
   background-color: #fff;
+  min-height: 100vh;
 }
 
 .edit-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
-  padding-bottom: 15px;
-  border-bottom: 2px solid #e0e0e0;
+  margin-bottom: 20px;
+  padding-bottom: 0;
+  border-bottom: none;
 }
 
 .edit-title {
-  font-size: 1.8rem;
-  font-weight: 600;
-  color: #333;
-  margin: 0;
+  margin-left: 10px;
+  text-align: left;
+  font-weight: 700;
+  font-size: medium;
 }
 
 .back-button {
   padding: 8px 16px;
-  background-color: #f5f5f5;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+  background-color: transparent;
+  border: 1px solid #ccc;
+  border-radius: 4px;
   color: #666;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
+  font-size: 0.9rem;
 }
 
 .back-button:hover {
-  background-color: #e9e9e9;
-}
-
-.video-info-section {
-  margin-bottom: 30px;
-  padding: 20px;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  background-color: #fafafa;
-}
-
-.video-details h2 {
-  margin: 0 0 8px 0;
-  font-size: 1.3rem;
-  color: #333;
-}
-
-.video-date {
-  color: #666;
-  margin: 0;
+  background-color: #f0f0f0;
+  border-color: #bbb;
 }
 
 .tags-section {
   background-color: #fff;
   border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 25px;
+  border-radius: 6px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  margin-top: 20px; 
 }
 
-.tags-section h3 {
-  margin: 0 0 25px 0;
-  font-size: 1.4rem;
-  color: #333;
+.tags-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 25px;
+  padding-bottom: 20px;
+  border-bottom: 1px dashed #d1d5da;
+}
+
+.tags-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #4a5568;
+  margin: 0;
+  margin-right: 15px;
+}
+
+.tags-image {
+  width: 100px;
+  height: auto;
 }
 
 .tags-section h4 {
-  margin: 0 0 12px 0;
-  font-size: 1.1rem;
+  font-size: 1rem;
+  font-weight: 500;
   color: #555;
+  margin-bottom: 15px;
 }
 
 .existing-tags {
-  margin-bottom: 30px;
+  margin-bottom: 20px;
 }
 
 .tags-list {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 10px;
 }
 
 .tag {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
   padding: 6px 12px;
-  background-color: #f0f0f0;
-  border: 1px solid #ddd;
   border-radius: 16px;
   font-size: 0.85rem;
-  color: #555;
-}
-
-.existing-tag {
-  background-color: #e3f2fd;
-  border-color: #bbdefb;
-  color: #1976d2;
+  background-color: #f0f4f8;
+  color: #333;
+  border: none;
 }
 
 .remove-tag-btn {
   background: none;
   border: none;
-  color: #666;
+  color: #888;
   cursor: pointer;
-  font-size: 1.2rem;
+  font-size: 1rem;
   line-height: 1;
-  padding: 0;
-  margin-left: 4px;
-  transition: color 0.2s;
+  padding: 0 0 0 6px;
 }
 
 .remove-tag-btn:hover {
-  color: #f44336;
-}
-
-.remove-tag-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  color: #d32f2f;
 }
 
 .no-tags {
   color: #999;
   font-style: italic;
-  margin: 0;
+  font-size: 0.9rem;
 }
 
 .add-tag-section {
-  border-top: 1px solid #eee;
-  padding-top: 25px;
+  padding-top: 20px;
+  border-top: 1px solid #f0f0f0;
 }
 
 .add-tag-form {
   display: flex;
   gap: 10px;
-  margin-bottom: 8px;
+  align-items: center;
 }
 
 .tag-input {
   flex: 1;
   padding: 10px 12px;
-  border: 2px solid #ddd;
-  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
   font-size: 0.9rem;
   transition: border-color 0.2s;
 }
@@ -398,19 +351,15 @@ onMounted(initializeComponent);
 .tag-input:focus {
   outline: none;
   border-color: #2196f3;
-}
-
-.tag-input:disabled {
-  background-color: #f5f5f5;
-  opacity: 0.7;
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
 }
 
 .add-tag-btn {
   padding: 10px 20px;
-  background-color: #2196f3;
+  background-color: #42a5f5;
   color: white;
   border: none;
-  border-radius: 6px;
+  border-radius: 4px;
   font-size: 0.9rem;
   cursor: pointer;
   transition: background-color 0.2s;
@@ -418,41 +367,41 @@ onMounted(initializeComponent);
 }
 
 .add-tag-btn:hover:not(:disabled) {
-  background-color: #1976d2;
-}
-
-.add-tag-btn:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
+  background-color: #1e88e5;
 }
 
 .loading {
   text-align: center;
-  padding: 40px;
+  padding: 20px;
   color: #666;
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 
 .error-message {
-  background-color: #ffebee;
-  color: #c62828;
-  padding: 16px;
-  border-radius: 8px;
-  margin: 20px 0;
-  border-left: 4px solid #f44336;
+  background-color: #fff1f0;
+  color: #d32f2f;
+  padding: 12px;
+  border-radius: 4px;
+  margin: 15px 0;
+  border-left: 3px solid #ef5350;
   font-weight: 500;
+  font-size: 0.9rem;
 }
 
-/* 반응형 디자인 */
 @media (max-width: 768px) {
   .add-tag-form {
     flex-direction: column;
+    gap: 8px;
   }
   
   .edit-header {
     flex-direction: column;
-    gap: 15px;
-    text-align: center;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .video-edit-page {
+    padding: 15px;
   }
 }
 </style>
