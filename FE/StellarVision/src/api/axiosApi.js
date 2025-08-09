@@ -5,7 +5,7 @@ const api = axios.create({
   baseURL: 'https://i13c106.p.ssafy.io/api',
   maxContentLength: Infinity,
   maxBodyLength: Infinity,
-  timeout: 30000,
+  timeout: 100000,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
