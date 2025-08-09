@@ -443,8 +443,8 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .page {
-  height: 100vh; /* 화면 높이 꽉 채우기 */
-  overflow-y: auto; /* 세로 스크롤 가능하도록 */
+  height: 100vh; 
+  overflow-y: auto; 
 }
 
 .stars-background h2 {

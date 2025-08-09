@@ -1,8 +1,9 @@
 <template>
   <div class="page" ref="pageRef">
-    <div class="stars-background">
-      <div class="header">
-        <h1>내 동영상 목록</h1>
+    <div class="gallery-container">
+      <div class="gallery-header">
+        <h2 class="gallery-title ">My Videos</h2>
+        <hr class="gallery-divider">
       </div>
 
       <div v-if="!loading && videos.length > 0" class="video-list-wrapper">
@@ -99,16 +100,48 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .page {
+  margin-top: 58px;
   background-color: #fff;
+  color: #333;
   min-height: 100vh;
-  color: white;
   font-family: sans-serif;
-  overflow-y: auto;
+}
+
+.gallery-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 40px 24px 24px;
+}
+
+.gallery-header {
+  margin-bottom: 24px;
+}
+
+.gallery-header h2 {
+  margin-left: 10px;
+  text-align: left;
+  font-weight: 700;
+  font-size: medium;
+}
+
+.gallery-title {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.gallery-divider {
+  border: 0;
+  height: 1px;
+  background-color: #e0e0e0;
+  margin: 0;
 }
 
 .video-list-wrapper {
-  text-align: center;
-  padding: 1rem;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
 }
 
 .loading-more,
@@ -116,5 +149,6 @@ onBeforeUnmount(() => {
 .empty-state {
   text-align: center;
   margin-top: 2rem;
+  grid-column: 1 / -1;
 }
 </style>
