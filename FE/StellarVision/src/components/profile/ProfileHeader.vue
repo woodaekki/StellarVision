@@ -41,12 +41,6 @@
       </div>
     </div>
 
-    <div class="profile-header-right">
-      <RouterLink :to="`/profile/${profileEmail}/edit`">
-        수정
-      </RouterLink>
-    </div>
-
     <UserListModal
       v-if="showFollowModal"
       :userList="modalList"
@@ -125,16 +119,12 @@ const uploadProfileImage = async (e) => {
       maxBodyLength: Infinity,
     });
 
-    // console.log('✅ S3 업로드 성공:', uploadRes.status, uploadRes.statusText)
-    // console.log(presignedData.s3Key)
-
     const saveRes = await axiosApi.post('/profiles/complete', {
       memberId: memberId,
       originalFilename: file.name,
       s3Key: presignedData.s3Key,
     });
 
-    // console.log('✅ DB에 프로필 이미지 정보 저장 완료:', saveRes.data)
     emit('updateProfileImageUrl');
 
   } catch (err) {
@@ -230,14 +220,5 @@ const modalList = computed(() =>
   font-size: 14px;
   color: #bbb;
   margin-top: 4px;
-}
-
-.profile-header-right a {
-  color: #fff;
-  text-decoration: none;
-}
-
-.profile-header-right a:hover {
-  text-decoration: underline;
 }
 </style>
