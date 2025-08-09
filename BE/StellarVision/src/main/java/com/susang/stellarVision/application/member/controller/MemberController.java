@@ -3,6 +3,7 @@ package com.susang.stellarVision.application.member.controller;
 import com.susang.stellarVision.application.follow.dto.FollowMemberDTO;
 import com.susang.stellarVision.application.follow.service.FollowService;
 import com.susang.stellarVision.application.member.dto.MemberAccountInfoDTO;
+import com.susang.stellarVision.application.member.dto.MemberSearchListDTO;
 import com.susang.stellarVision.application.member.dto.SignUpRequest;
 import com.susang.stellarVision.application.member.service.MemberService;
 import com.susang.stellarVision.common.dto.APIResponse;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -53,14 +55,26 @@ public class MemberController {
     }
 
     @GetMapping("/{memberId}/followers")
-    public ResponseEntity<APIResponse<List<FollowMemberDTO>>> getFollowers(@PathVariable Long memberId) {
+    public ResponseEntity<APIResponse<List<FollowMemberDTO>>> getFollowers(
+            @PathVariable Long memberId) {
         List<FollowMemberDTO> data = followService.getFollowers(memberId);
         return ResponseEntity.ok(APIResponse.success(data));
     }
 
     @GetMapping("/{memberId}/followings")
-    public ResponseEntity<APIResponse<List<FollowMemberDTO>>> getFollowings(@PathVariable Long memberId) {
+    public ResponseEntity<APIResponse<List<FollowMemberDTO>>> getFollowings(
+            @PathVariable Long memberId) {
         List<FollowMemberDTO> data = followService.getFollowings(memberId);
+        return ResponseEntity.ok(APIResponse.success(data));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<APIResponse<MemberSearchListDTO>> searchMembers(
+            @RequestParam String name,
+            @RequestParam(defaultValue = "20") int limit,
+            @RequestParam(required = false) Long cursor
+    ) {
+        MemberSearchListDTO data = memberService.searchMembers(name, cursor, limit);
         return ResponseEntity.ok(APIResponse.success(data));
     }
 }
