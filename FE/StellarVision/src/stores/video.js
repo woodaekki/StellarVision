@@ -1,6 +1,8 @@
+// video.js
 import { ref } from 'vue';
 import { defineStore } from 'pinia';
 import commonApi from '@/api/commonApi';
+import { Video } from 'lucide-vue-next';
 
 export const useVideoStore = defineStore('video', () => {
   const replays = ref([]);
