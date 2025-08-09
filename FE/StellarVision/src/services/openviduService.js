@@ -1,5 +1,5 @@
 // src/services/openviduService.js
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { OpenVidu } from 'openvidu-browser'
 import streamingService from '@/services/streamingService'
 import router from '@/router'
@@ -10,6 +10,9 @@ export default function openviduService(streamId, userName, onError = () => {}) 
   const session = OV.initSession()
   const subscribers = ref([])
   const publisher = ref(null)
+
+  const role = ref('SUBSCRIBER')
+  const isPublish = computed(() => role.value === 'PUBLISHER')
 
   // streamId -> DOM element 매핑 (원격용)
   const containerMap = new Map()
@@ -83,16 +86,18 @@ export default function openviduService(streamId, userName, onError = () => {}) 
   const connect = async () => {
     try {
       const res = await streamingService.getToken(streamId) // 백이 PUBLISHER/SUBSCRIBER 판별해서 내려준다고 가정
-      const { token, role } = res.data.data
+      const { token, role: roleFromServer } = res.data.data
 
       console.log('[OV] role =', role)
+
+      role.value = roleFromServer
 
       const { userInfo } = useAccountStore()
       const name = userInfo?.name ?? userName ?? 'Guest'
 
       await session.connect(token, { clientData: name })
 
-      if (role === 'PUBLISHER') {
+      if (isPublish.value) {  // PUBLISHER 이면 
         console.log('[OV] initPublisher...')
         publisher.value = OV.initPublisher(undefined, {
           audioSource: undefined,
@@ -133,13 +138,40 @@ export default function openviduService(streamId, userName, onError = () => {}) 
     }
   }
 
-  // 호스트만 방 자체를 종료하고 싶을 때 사용 (선택적으로 RoomView에서 노출)
   const endRoom = async () => {
     try {
-      session.disconnect()
-      await streamingService.end(streamId).catch(() => {})
-    } finally {
+      console.log('[END] try end session', { streamId, localConnected: !!session })
+
+      // 서버에 방 종료 먼저 요청 (에러를 삼키지 말자)
+      const res = await streamingService.end(streamId)
+      console.log('[END] backend response', res.status, res.data)
+
       alert('스트리밍을 종료합니다')
+    } catch (err) {
+      // axios 에러 상세 출력
+      const status = err?.response?.status
+      const data = err?.response?.data
+      console.error('[END] backend error', { status, data, err })
+
+      // 백엔드 예외별 UX
+      if (status === 403) {
+        alert('호스트만 종료할 수 있습니다.')
+      } else if (status === 404) {
+        alert('이미 종료되었거나 세션을 찾을 수 없습니다.')
+      } else if (status === 409 || data?.error?.code === 'RECORDING_IN_PROGRESS') {
+        alert('녹화 중입니다. 녹화를 먼저 중지하세요.')
+      } else {
+        alert('방 종료 중 오류가 발생했습니다.')
+      }
+    } finally {
+      // 2) 로컬 세션 정리 (서버가 이미 끊었어도 안전)
+      try {
+        console.log('[END] local disconnect start')
+        session.disconnect()
+        console.log('[END] local disconnect done')
+      } catch (e) {
+        console.warn('[END] local disconnect error', e)
+      }
       router.push({ name: 'MainView' })
     }
   }
@@ -156,6 +188,8 @@ export default function openviduService(streamId, userName, onError = () => {}) 
     endRoom,
     setPublisherEl,   // 퍼블리셔 프리뷰 대상 전달
     attachSubEl,      // 구독 비디오 DOM 전달
-    toggleRec
+    toggleRec,
+    role,
+    isPublish
   }
 }

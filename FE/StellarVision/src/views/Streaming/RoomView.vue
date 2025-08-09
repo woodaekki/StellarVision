@@ -23,8 +23,8 @@ const recordingStore = useRecordingStore()
 const showChat = ref(false)
 const micEnabled = ref(true)
 
-// 컴포저블에서 필요한 것들 모두 꺼냄
-const { session, publisher, subscribers, connect, leave, setPublisherEl, attachSubEl } = openviduService(
+// 컴포저블에서 필요한 것들 모두 꺼냄 (isPublish, role 추가)
+const { session, publisher, subscribers, connect, leave, setPublisherEl, attachSubEl, isPublish, endRoom } = openviduService(
    sessionId,
    userName,
    e => {
@@ -268,8 +268,16 @@ async function toggleRecording() {
             </button>
           </div>
 
-          <!-- 나가기 버튼 -->
-          <button @click="leave"
+          <!-- 스트리머 : 스트리밍 종료 버튼 -->
+          <button v-if="isPublish" @click="endRoom"
+            class="absolute right-3 top-3 z-10 bg-black bg-opacity-70
+            text-white rounded-full px-3 py-1 hover:bg-red-600 transition">
+            <DoorOpen/>
+          </button>
+          
+
+          <!-- 시청자: 나가기 버튼 -->
+          <button v-else @click="leave"
             class="absolute right-3 top-3 z-10 bg-black bg-opacity-70
             text-white rounded-full px-3 py-1 hover:bg-red-600 transition">
             <DoorOpen/>
