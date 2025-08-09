@@ -2,7 +2,7 @@
   <div class="page" ref="pageRef">
     <div class="gallery-container">
       <div class="gallery-header">
-        <h2 class="gallery-title ">My Videos</h2>
+        <h2 class="gallery-title ">My Space Video</h2>
         <hr class="gallery-divider">
       </div>
 
