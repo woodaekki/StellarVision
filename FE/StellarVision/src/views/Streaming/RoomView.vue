@@ -3,7 +3,7 @@ import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import openviduService from '@/services/openviduService'
 import streamingService from '@/services/streamingService'
-import { Cone, DoorOpen, ImageDown, MessageCircle, Mic, MicOff, Square, SquareStop } from 'lucide-vue-next'
+import { DoorOpen, ImageDown, MessageCircle, Mic, MicOff,  Square, SquareStop, ToggleLeft, ToggleRight } from 'lucide-vue-next'
 import ChatPanel from '@/components/comment/ChatPanel.vue'
 import { useRecordingStore } from '@/stores/recording'
 import { createAIAnalyzeService } from '@/services/AIAnalyeService'
@@ -23,8 +23,11 @@ const recordingStore = useRecordingStore()
 const showChat = ref(false)
 const micEnabled = ref(true)
 
+const aiOn = ref(false)
+const toggleAI = () => { aiOn.value = !aiOn.value }
+
 // 컴포저블에서 필요한 것들 모두 꺼냄 (isPublish, role 추가)
-const { session, publisher, subscribers, connect, leave, setPublisherEl, attachSubEl, isPublish, endRoom } = openviduService(
+const { session, publisher, subscribers, leave, setPublisherEl, attachSubEl, isPublish, endRoom } = openviduService(
    sessionId,
    userName,
    e => {
@@ -58,9 +61,12 @@ const { session, publisher, subscribers, connect, leave, setPublisherEl, attachS
         localVideo.value.setAttribute('playsinline','true')
         localVideo.value.setAttribute('autoplay','true')
         localVideo.value.play?.().catch(()=>{})
-      } catch {}
+      } catch (err) {
+        console.log(err)
     }
-  })
+  }}
+)
+
 
   // 구독자 비디오에 AI 오버레이 붙이는 래퍼
   function attachSubElWithAI(sub, el) {
@@ -129,7 +135,6 @@ async function toggleRecording() {
       const res = await streamingService.stopRecording(recordingId.value)
       isRecording.value = false
       recordingId.value = null
-      recorded.value = res.data.data.recordingUrl
       console.log('res: ', res.data.data)
       recordingStore.setRecordingInfo(res.data.data)
       alert('녹화를 중지합니다')
@@ -209,13 +214,13 @@ async function toggleRecording() {
 
 <template>
   <div>
-    <div class="flex flex-col sm:flex-row w-full max-w-[1600px] mx-auto gap-2" alt="videos">
+    <div class="flex flex-col sm:flex-row w-full h-[100svh] w-[100vw] gap-0" alt="videos">
       <!-- 동영상 -->
       <div
-        style="height: 700px; background: #000;"
         :class="['relative bg-black transition-all duration-300',
-        showChat ? 'sm:w-[70%] w-full' :'w-full']">
-
+        showChat ? 'sm:w-[70%] w-full' :'w-full']"
+        class="h-full rounded-none">
+        
         <!-- 변경: 로컬 프리뷰 + 오버레이 -->
         <div class="relative w-full h-full">
           <video
@@ -223,7 +228,7 @@ async function toggleRecording() {
             autoplay
             playsinline
             muted
-            class="w-full h-full object-contain rounded-2xl"
+            class="w-full h-full object-contain rounded-none"
           ></video>
           <!-- 로컬 오버레이 캔버스 -->
           <canvas ref="overlayLocal" class="pointer-events-none absolute inset-0"></canvas>
@@ -282,6 +287,18 @@ async function toggleRecording() {
             text-white rounded-full px-3 py-1 hover:bg-red-600 transition">
             <DoorOpen/>
           </button>
+          <!-- AI 탐지 on/off -->
+          <button
+            @click="toggleAI"
+            :aria-pressed="aiOn"
+            :title="aiOn ? 'AI 탐지 끄기' : 'AI 탐지 켜기'"
+            class="absolute right-20 top-2 z-10 bg-black bg-opacity-70 w-15 h-10 inline-flex
+                 justify-center items-center text-white rounded-full px-3 py-1 hover:bg-gray-600 transition "
+            :class="aiOn ? ' hover:text-sky-600' : 'bg-black/70 hover:bg-gray-600'">
+            <component :is="aiOn ? ToggleLeft : ToggleRight" 
+              class="w-10 h-10 "
+              :class="aiOn ? 'text-white/80' : 'text-sky-400'"/>
+          </button>
 
           <!-- 캡처 버튼 -->
           <button
@@ -299,9 +316,9 @@ async function toggleRecording() {
 
       <transition name="fade">
         <div
-          v-if="showChat"
-          class="basis-0 grow sm:w-[30%] w-full min-w[480px] max-w-[600px]
-          h-[700px] flex-shrink-0">
+          v-show="showChat"
+          class="ml-auto basis-0 grow sm:w-[30%] w-full min-w-[360px] max-w-[600px]
+          h-full h-[700px] flex-shrink-0 bg-black pl-36">
             <ChatPanel
               :session="session"
               @close="showChat = false"
