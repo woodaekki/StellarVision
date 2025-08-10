@@ -2,11 +2,7 @@ package com.susang.stellarVision.application.video.service;
 
 
 
-import com.susang.stellarVision.application.video.dto.VideoResponse;
-import com.susang.stellarVision.application.video.dto.VideoSearchRequest;
-import com.susang.stellarVision.application.video.dto.VideoTagListResponse;
-import com.susang.stellarVision.application.video.dto.VideoTagRequest;
-import com.susang.stellarVision.application.video.dto.VideoUpdateRequest;
+import com.susang.stellarVision.application.video.dto.*;
 import com.susang.stellarVision.application.video.error.VideoNotFoundException;
 import com.susang.stellarVision.application.video.error.VideoTagNotFoundException;
 import com.susang.stellarVision.application.video.error.VideoUploadFailException;
@@ -19,12 +15,14 @@ public interface VideoService {
 
     String getVideoPresignedUrl(Long videoId) throws VideoNotFoundException;
     void deleteVideo(Long videoId) throws VideoNotFoundException;
-    Page<VideoResponse> getVideosByMemberId(Long memberId, Pageable pageable);
-    Page<VideoResponse> getVideos(Pageable pageable);
-    Page<VideoResponse> searchVideos(VideoSearchRequest condition, Pageable pageable);
+    Page<VideoResponse> getVideosByMemberId(Long memberId, Pageable pageable,Long currentMemberId);
+    Page<VideoResponse> getVideos(Pageable pageable ,Long memberId);
+    Page<VideoResponse> searchVideos(VideoSearchRequest condition, Pageable pageable, Long memberId);
     void addVideoTag(Long videoId,VideoTagRequest videoTagRequest) throws VideoNotFoundException;
     VideoTagListResponse getTagsByVideoId(Long videoId) throws VideoNotFoundException;
     void deleteVideoTag(Long videoId, Long tagId) throws VideoNotFoundException , VideoTagNotFoundException;
     void updateVideoContent(Long videoId,VideoUpdateRequest videoUpdateRequest) throws VideoNotFoundException;
-    void uploadVideo(InputStream inputStream,Long cententLength, String title, Long memberId) throws VideoUploadFailException;
+    void uploadVideo(InputStream inputStream,Long contentLength, String title, Long memberId) throws VideoUploadFailException;
+    VideoLikeResponse like(Long videoId, Long memberId);
+    VideoLikeResponse unlike(Long videoId, Long memberId);
 }

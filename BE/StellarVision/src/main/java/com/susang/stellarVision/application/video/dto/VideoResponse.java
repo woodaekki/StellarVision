@@ -13,4 +13,6 @@ public class VideoResponse {
         private String thumbnailDownloadUrl;
         private Long memberId;
         private String nickname;
+        private long likeCount;
+        private boolean liked;
 }

@@ -1,19 +1,17 @@
 package com.susang.stellarVision.application.video.controller;
 
 
-import com.susang.stellarVision.application.video.dto.VideoListResponse;
-import com.susang.stellarVision.application.video.dto.VideoResponse;
-import com.susang.stellarVision.application.video.dto.VideoSearchRequest;
-import com.susang.stellarVision.application.video.dto.VideoTagListResponse;
-import com.susang.stellarVision.application.video.dto.VideoTagRequest;
+import com.susang.stellarVision.application.video.dto.*;
 import com.susang.stellarVision.application.video.service.VideoService;
 import com.susang.stellarVision.common.dto.APIResponse;
+import com.susang.stellarVision.config.security.authentication.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -54,8 +52,9 @@ public class VideoController {
 
     @GetMapping()
     public ResponseEntity<APIResponse<VideoListResponse>> getVideoList( @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
-    Pageable pageable) {
-        Page<VideoResponse> page = videoService.getVideos(pageable);
+    Pageable pageable, @AuthenticationPrincipal CustomUserDetails user) {
+        Long memberId = (user != null) ? user.getMember().getId() : null;
+        Page<VideoResponse> page = videoService.getVideos(pageable, memberId);
         VideoListResponse response = new VideoListResponse(page.getContent(),
                 page.getTotalElements());
 
@@ -66,14 +65,28 @@ public class VideoController {
 
     @GetMapping("/search")
     public ResponseEntity<APIResponse<VideoListResponse>> searchVideos(@ModelAttribute VideoSearchRequest condition,
-            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-
-        Page<VideoResponse> page = videoService.searchVideos(condition, pageable);
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable, @AuthenticationPrincipal CustomUserDetails user) {
+        Long memberId = (user != null) ? user.getMember().getId() : null;
+        Page<VideoResponse> page = videoService.searchVideos(condition, pageable, memberId);
 
         VideoListResponse response = new VideoListResponse(page.getContent(),
                 page.getTotalElements());
 
         return ResponseEntity.ok(APIResponse.success(response));
+    }
+
+    @PostMapping("/{videoId}/likes")
+    public ResponseEntity<APIResponse<VideoLikeResponse>>  like(@PathVariable Long videoId,
+                                  @AuthenticationPrincipal CustomUserDetails user) {
+        VideoLikeResponse videoLikeResponse = videoService.like(videoId, user.getMember().getId());
+        return ResponseEntity.ok(APIResponse.success("영상 좋아요 성공", videoLikeResponse));
+    }
+
+    @DeleteMapping("/{videoId}/likes")
+    public ResponseEntity<APIResponse<VideoLikeResponse>> unlike(@PathVariable Long videoId,
+                               @AuthenticationPrincipal CustomUserDetails user) {
+        VideoLikeResponse videoLikeResponse =  videoService.unlike(videoId, user.getMember().getId());
+        return ResponseEntity.ok(APIResponse.success("영상 좋아요 취소 성공", videoLikeResponse));
     }
 
 }

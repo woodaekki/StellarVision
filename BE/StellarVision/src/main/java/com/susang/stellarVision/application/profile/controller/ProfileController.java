@@ -80,12 +80,12 @@ public class ProfileController {
         return ResponseEntity.ok(APIResponse.success(response));
     }
 
-    @GetMapping("{memberId}/videos")
+    @GetMapping("/{memberId}/videos")
     public ResponseEntity<APIResponse<VideoListResponse>> getVideosByMemberId(
             @PathVariable Long memberId,
-            @PageableDefault(size = 3, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-
-        Page<VideoResponse> page = videoService.getVideosByMemberId(memberId, pageable);
+            @PageableDefault(size = 3, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable, @AuthenticationPrincipal CustomUserDetails user) {
+        Long currentMemberId = (user != null) ? user.getMember().getId() : null;
+        Page<VideoResponse> page = videoService.getVideosByMemberId(memberId, pageable, currentMemberId);
         VideoListResponse response = new VideoListResponse(page.getContent(),
                 page.getTotalElements());
 
