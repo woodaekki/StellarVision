@@ -14,7 +14,6 @@ const commonApi = axios.create({
 // 요청 인터셉터
 commonApi.interceptors.request.use(
   function (config) {
-    console.log('🚀 CommonAPI 요청 인터셉터 실행')
     console.log('📤 요청 설정:', {
       method: config.method?.toUpperCase(),
       url: config.url,
@@ -27,15 +26,15 @@ commonApi.interceptors.request.use(
     const token = localStorage.getItem('jwt');
     if (token) {
       config.headers.Authorization = 'Bearer ' + token;
-      console.log('🔑 토큰이 헤더에 추가됨')
+      console.log('토큰이 헤더에 추가됨')
     } else {
-      console.log('⚠️ 토큰이 없음')
+      console.log('토큰이 없음')
     }
 
     return config;
   },
   function (error) {
-    console.error('❌ CommonAPI 요청 인터셉터 에러:', error)
+    console.error('CommonAPI 요청 인터셉터 에러:', error)
     return Promise.reject(error);
   }
 );
@@ -43,8 +42,8 @@ commonApi.interceptors.request.use(
 // 응답 인터셉터
 commonApi.interceptors.response.use(
   function (response) {
-    console.log('✅ CommonAPI 응답 인터셉터 - 성공')
-    console.log('📥 응답 데이터:', {
+    console.log('CommonAPI 응답 인터셉터 - 성공')
+    console.log('응답 데이터:', {
       status: response.status,
       statusText: response.statusText,
       headers: response.headers,
@@ -53,8 +52,8 @@ commonApi.interceptors.response.use(
     return response;
   },
   function (error) {
-    console.error('❌ CommonAPI 응답 인터셉터 - 에러')
-    console.error('💥 에러 상세:', {
+    console.error('CommonAPI 응답 인터셉터 - 에러')
+    console.error('에러 상세:', {
       message: error.message,
       code: error.code,
       status: error.response?.status,
@@ -65,7 +64,7 @@ commonApi.interceptors.response.use(
 
     // 401 에러 처리 (인증 실패)
     if (error.response?.status === 401) {
-      console.log('🔐 401 인증 실패 - 로그아웃 처리 필요')
+      console.log('401 인증 실패 - 로그아웃 처리 필요')
       localStorage.removeItem('jwt')
       localStorage.removeItem('refreshToken')
       localStorage.removeItem('userInfo')

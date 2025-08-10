@@ -1,7 +1,12 @@
 <template>
-  <div class="video-cell" @click="$emit('select')">
+  <div class="video-cell" @click="$emit('select')" @mouseenter="loadVideoTags">
     <div class="thumbnail-container">
       <img :src="video.thumbnail" class="video-thumbnail"/>
+      
+      <!-- 호버 시 삭제 버튼 -->
+      <button v-if="showEdit" class="delete-button" @click.stop="handleDelete">
+        삭제
+      </button>
     </div>
     <div class="video-info">
       <div class="video-title">
@@ -17,7 +22,7 @@
       <p class="video-date">{{ video.date }}</p>
       
       <!-- 태그 섹션 -->
-      <div v-if="tags.length > 0" class="tags-container">
+      <div v-if="tags && tags.length > 0" class="tags-container">
         <div class="tags-list">
           <span 
             v-for="tag in tags" 
@@ -49,77 +54,71 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['select'])
+const emit = defineEmits(['select', 'delete'])
 
 const router = useRouter()
-const tags = ref([])
-const isLoadingTags = ref(false)
+const tags = ref(null) 
+const loadingTags = ref(false)
 
-// 태그 데이터를 가져오는 함수
-async function fetchTags() {
-  if (!props.video.id) {
+// 비디오 태그 로드 (호버 시)
+const loadVideoTags = async () => {
+  // 이미 태그가 로드되었거나 로딩 중이면 스킵
+  if (tags.value !== null || loadingTags.value) {
     return
   }
-  
-  isLoadingTags.value = true
+
+  loadingTags.value = true
+
   try {
     const response = await commonApi.get(`/videos/${props.video.id}/tags`)
     
-    // 성공적인 응답 발생 시 
-    if (response.data.status === 'success') {
-      if (response.data.data?.tags) {
-        if (response.data.data.tags.length > 0) {
-          tags.value = response.data.data.tags
-        } else {
-          tags.value = []
-        }
-      } else {
-        tags.value = []
-      }
+    if (response.data && response.data.status === 'success') {
+      tags.value = response.data.data.tags || []
     } else {
       tags.value = []
     }
   } catch (error) {
-    // 에러 발생 시 빈 배열로 설정 (UI가 깨지지 않도록)
+    console.error('비디오 태그 로딩 실패:', error)
     tags.value = []
   } finally {
-    isLoadingTags.value = false
+    loadingTags.value = false
   }
 }
-
-function refreshTags() {
-  fetchTags()
-}
-
-defineExpose({
-  refreshTags
-})
 
 function goToReplayEdit() {
   router.push(`/replay/${props.video.id}/edit`)
 }
 
-onMounted(() => {
-  fetchTags()
+const handleDelete = () => {
+  emit('delete', props.video);
+};
+
+function refreshTags() {
+  tags.value = null // 태그 정보 초기화
+  loadVideoTags()
+}
+
+defineExpose({
+  refreshTags
 })
 </script>
 
 <style scoped>
 .video-cell {
-  display: flex;
-  flex-direction: column;
+  position: relative;
+  background-color: #fff;
   overflow: hidden;
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e0e0e0;
-  transition: transform 0.3s ease-in-out;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .video-cell:hover {
-  transform: translateY(-3px);
+  transform: scale(1.02);
 }
 
 .thumbnail-container {
+  position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
   overflow: hidden;
@@ -129,28 +128,31 @@ onMounted(() => {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center;
 }
 
 .video-info {
-  padding: 10px 12px;
+  padding: 12px;
   background-color: #fff;
   color: #333;
 }
 
 .video-title {
-  font-size: 1rem;
-  font-weight: 500;
-  margin-bottom: 6px;
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .video-date {
-  font-size: 0.8rem;
-  color: #777;
-  margin: 0 0 8px 0;
+  margin: 0;
+  color: #666;
+  font-size: 0.75rem;
+  margin-bottom: 8px;
 }
 
 .tags-container {
@@ -164,27 +166,41 @@ onMounted(() => {
 }
 
 .tag {
-  display: inline-block;
+  background-color: #e0e7ff;
+  color: #3730a3;
   padding: 2px 8px;
-  background-color: #f0f0f0;
-  border: 1px solid #ddd;
   border-radius: 12px;
-  font-size: 0.75rem;
-  color: #555;
-  white-space: nowrap;
-  transition: background-color 0.2s;
+  font-size: 0.7rem;
+  font-weight: 500;
 }
 
-.tag:hover {
-  background-color: #e0e0e0;
+.delete-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background-color: rgba(255, 0, 0, 0.75);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 12px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 10;
+}
+
+.video-cell:hover .delete-button {
+  opacity: 1;
 }
 
 .edit-button {
-  cursor: pointer;
   background: none;
   border: none;
-  padding: 0;
-  opacity: 0.7;
+  cursor: pointer;
+  padding: 2px;
+  color: #333;
+  opacity: 0.8;
   transition: opacity 0.2s;
 }
 
@@ -193,9 +209,7 @@ onMounted(() => {
 }
 
 .edit-icon {
-  fill: #777;
-  vertical-align: middle;
-  width: 24px;
-  height: 24px;
+  width: 14px;
+  height: 14px;
 }
 </style>

@@ -1,28 +1,35 @@
 <template>
   <div class="page" ref="pageRef">
-    <div class="gallery-container">
-      <div class="gallery-header">
-        <h2 class="gallery-title ">My Space Video</h2>
-        <hr class="gallery-divider">
+    <div class="stars-background">
+      <div class="px-4 pt-12 pb-6">
+        <h2 class="text-2xl mb-2 text-center font-pretendard" style="font-family: 'Pretendard', sans-serif !important;">
+          My Space Video
+        </h2>
+        <hr class="border-t-2 border-neutral-200 w-full mt-2" />
       </div>
 
-      <div v-if="!loading && videos.length > 0" class="video-list-wrapper">
-        <VideoCell
-          v-for="video in videos"
-          :key="video.id"
-          :video="video"
-          :show-edit="isUploader"
-          @select="goToReplay(video.id)"
-        />
-        <div v-if="loadingMore" class="loading-more">로딩 중...</div>
-      </div>
+      <div class="px-4 pb-12">
+        <div v-if="!loading && videos.length > 0" class="video-grid">
+          <VideoCell
+            v-for="video in videos"
+            :key="video.id"
+            :video="video"
+            :show-edit="isUploader"
+            @select="goToReplay(video.id)"
+            @delete="handleDeleteVideo"
+          />
+        </div>
 
-      <div v-else-if="!loading" class="empty-state">
-        <p>아직 업로드한 영상이 없습니다.</p>
-      </div>
+        <div v-else-if="!loading" class="loading-text">
+          아직 업로드한 영상이 없습니다.
+        </div>
 
-      <div v-else class="loading-state">
-        <p>영상 목록을 불러오는 중...</p>
+        <div v-else class="loading-text">
+          영상 목록을 불러오는 중...
+        </div>
+
+        <div v-if="loadingMore" class="loading-text">로딩 중...</div>
+        <div v-if="!loading && hasMore" class="loading-text">스크롤하여 더 많은 영상 보기</div>
       </div>
     </div>
   </div>
@@ -33,6 +40,7 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useVideoStore } from '@/stores/video';
 import VideoCell from '@/components/video/VideoCell.vue';
+import commonApi from '@/api/commonApi';
 
 const route = useRoute();
 const router = useRouter();
@@ -88,6 +96,30 @@ const goToReplay = (videoId) => {
   router.push(`/replay/${videoId}`);
 };
 
+const handleDeleteVideo = (video) => {
+  if (!confirm('정말로 이 영상을 삭제하시겠습니까?')) return;
+  
+  performDelete(video);
+};
+
+const performDelete = async (video) => {
+  try {
+    await commonApi.delete(`/videos/${video.id}`);
+    
+    // 성공 시 로컬 상태에서 영상 제거
+    const index = videoStore.replays.findIndex(v => v.id === video.id);
+    if (index > -1) {
+      videoStore.replays.splice(index, 1);
+    }
+    
+    alert('영상이 성공적으로 삭제되었습니다.');
+    
+  } catch (error) {
+    console.error('영상 삭제 실패:', error);
+    alert('영상 삭제에 실패했습니다. 다시 시도해주세요.');
+  }
+};
+
 onMounted(() => {
   fetchVideos();
   pageRef.value?.addEventListener('scroll', handleScroll);
@@ -100,55 +132,34 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .page {
-  margin-top: 58px;
-  background-color: #fff;
-  color: #333;
-  min-height: 100vh;
-  font-family: sans-serif;
+  height: 100vh; 
+  overflow-y: auto; 
 }
 
-.gallery-container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 40px 24px 24px;
-}
-
-.gallery-header {
-  margin-bottom: 24px;
-}
-
-.gallery-header h2 {
+.stars-background h2 {
+  margin-top: 48px !important;
+  margin-bottom: 52px !important;
   margin-left: 10px;
   text-align: left;
   font-weight: 700;
   font-size: medium;
 }
 
-.gallery-title {
-  font-size: 2rem;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 8px;
-}
-
-.gallery-divider {
-  border: 0;
-  height: 1px;
-  background-color: #e0e0e0;
-  margin: 0;
-}
-
-.video-list-wrapper {
+.video-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
 }
 
-.loading-more,
-.loading-state,
-.empty-state {
+.loading-text {
   text-align: center;
-  margin-top: 2rem;
-  grid-column: 1 / -1;
+  margin-top: 1rem;
+  color: #ccc;
+}
+
+@media (max-width: 768px) {
+  .video-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 </style>
