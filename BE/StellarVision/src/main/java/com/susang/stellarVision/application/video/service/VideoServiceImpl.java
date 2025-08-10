@@ -3,17 +3,13 @@ package com.susang.stellarVision.application.video.service;
 
 import com.susang.stellarVision.application.member.exception.MemberNotFoundException;
 import com.susang.stellarVision.application.member.repository.MemberRepository;
-import com.susang.stellarVision.application.video.dto.VideoResponse;
-import com.susang.stellarVision.application.video.dto.VideoSearchRequest;
-import com.susang.stellarVision.application.video.dto.VideoTagListResponse;
-import com.susang.stellarVision.application.video.dto.VideoTagRequest;
-import com.susang.stellarVision.application.video.dto.VideoTagResponse;
-import com.susang.stellarVision.application.video.dto.VideoUpdateRequest;
+import com.susang.stellarVision.application.video.dto.*;
 import com.susang.stellarVision.application.video.error.DuplicatedVideoTagNameException;
 import com.susang.stellarVision.application.video.error.VideoTagMismatchException;
 import com.susang.stellarVision.application.video.error.VideoTagNotFoundException;
 import com.susang.stellarVision.application.video.error.VideoUploadFailException;
 import com.susang.stellarVision.application.video.repository.ThumbnailRepository;
+import com.susang.stellarVision.application.video.repository.VideoLikeRepository;
 import com.susang.stellarVision.application.video.repository.VideoTagRepository;
 import com.susang.stellarVision.common.s3.ContentTypeMapper;
 import com.susang.stellarVision.common.s3.FileExtensionUtil;
@@ -22,14 +18,15 @@ import com.susang.stellarVision.common.s3.S3FileManager;
 import com.susang.stellarVision.application.video.error.VideoNotFoundException;
 import com.susang.stellarVision.application.video.repository.VideoRepository;
 import com.susang.stellarVision.common.s3.S3KeyGenerator;
-import com.susang.stellarVision.entity.Member;
-import com.susang.stellarVision.entity.Thumbnail;
-import com.susang.stellarVision.entity.Video;
-import com.susang.stellarVision.entity.VideoTag;
+import com.susang.stellarVision.entity.*;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Set;
+
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -46,6 +43,23 @@ public class VideoServiceImpl implements VideoService {
     private final MemberRepository memberRepository;
     private final ThumbnailRepository thumbnailRepository;
     private static final String DEFAULT_THUMBNAIL_KEY = "thumbnail/thumbnail.jpg";
+    private final VideoLikeRepository videoLikeRepository;
+
+    private Page<VideoResponse> mapWithLiked(Page<Video> page, Long currentMemberId) {
+        List<Long> ids = page.stream().map(Video::getId).toList();
+        Set<Long> likedIds = (currentMemberId == null || ids.isEmpty())
+                ? Set.of()
+                : videoLikeRepository.findLikedVideoIds(currentMemberId, ids);
+
+        return page.map(v -> VideoResponse.builder().id(v.getId())
+                .originalFilename(v.getTitle()).createdAt(v.getCreatedAt())
+                .thumbnailDownloadUrl(getThumbnailUrl(v.getThumbnail() != null ? v.getThumbnail().getThumbnailS3Key() : null))
+                .memberId(v.getMember().getId())
+                .nickname(v.getMember().getName())
+                .likeCount(v.getLikeCount())
+                .liked(currentMemberId != null && likedIds.contains(v.getId()))
+                .build());
+    }
 
     private String toThumbnailKeyFromVideoKey(String videoKey) {
         // video/123/abc.mp4  ->  thumbnail/123/abc.jpg
@@ -74,50 +88,30 @@ public class VideoServiceImpl implements VideoService {
                 });
     }
 
-    @Override
-    @Transactional
-    public void deleteVideo(Long videoId) {
-        Video video = videoRepository.findById(videoId)
-                .orElseThrow(() -> new VideoNotFoundException(videoId.toString()) {
-                });
-        s3FileManager.delete(video.getVideoS3Key());
-        videoRepository.delete(video);
-    }
+
 
 
     @Override
-    public Page<VideoResponse> getVideosByMemberId(Long memberId, Pageable pageable) {
-        Page<Video> videos = videoRepository.findByMemberId(memberId, pageable);
-
-        return videos.map(video -> VideoResponse.builder().id(video.getId())
-                .originalFilename(video.getTitle()).createdAt(video.getCreatedAt())
-                .thumbnailDownloadUrl(getThumbnailUrl(video.getThumbnail().getThumbnailS3Key()))
-                .build());
+    @Transactional(readOnly = true)
+    public Page<VideoResponse> getVideosByMemberId(Long memberId, Pageable pageable, Long currentMemberId) {
+        Page<Video> page = videoRepository.findByMemberId(memberId, pageable);
+        return mapWithLiked(page, currentMemberId);
 
     }
 
     @Override
-    public Page<VideoResponse> getVideos(Pageable pageable) {
-        Page<Video> videos = videoRepository.findAll(pageable);
-        return videos.map(video -> VideoResponse.builder().id(video.getId())
-                .originalFilename(video.getTitle()).createdAt(video.getCreatedAt())
-                .thumbnailDownloadUrl(getThumbnailUrl(video.getThumbnail().getThumbnailS3Key()))
-                .memberId(video.getMember().getId())
-                .nickname(video.getMember().getName())
-                .build());
+    @Transactional(readOnly = true)
+    public Page<VideoResponse> getVideos(Pageable pageable, Long memberId) {
+        Page<Video> page = videoRepository.findAll(pageable);
+        return mapWithLiked(page, memberId);
 
     }
 
     @Override
-    public Page<VideoResponse> searchVideos(VideoSearchRequest condition, Pageable pageable) {
-        Page<Video> videos = videoRepository.search(condition, pageable);
-
-        return videos.map(video -> VideoResponse.builder().id(video.getId())
-                .originalFilename(video.getTitle()).createdAt(video.getCreatedAt())
-                .thumbnailDownloadUrl(getThumbnailUrl(video.getThumbnail().getThumbnailS3Key()))
-                .memberId(video.getMember().getId())
-                .nickname(video.getMember().getName())
-                .build());
+    @Transactional(readOnly = true)
+    public Page<VideoResponse> searchVideos(VideoSearchRequest condition, Pageable pageable, Long memberId) {
+        Page<Video> page = videoRepository.search(condition, pageable);
+        return mapWithLiked(page, memberId);
     }
 
     @Override
@@ -211,5 +205,64 @@ public class VideoServiceImpl implements VideoService {
 
     }
 
+    @Override
+    @Transactional
+    public VideoLikeResponse like(Long videoId, Long memberId) {
+        Video video = videoRepository.findById(videoId)
+                .orElseThrow(() -> new VideoNotFoundException(videoId.toString()));
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new MemberNotFoundException(memberId.toString()));
+
+        if (videoLikeRepository.existsByVideoIdAndMemberId(videoId, memberId)) {
+            long current = videoRepository.getLikeCount(videoId); // 항상 최신값
+            return VideoLikeResponse.builder().liked(true).likeCount(current).build();
+        }
+
+        try {
+            videoLikeRepository.save(VideoLike.builder().video(video)
+                    .member(member).build());
+
+            videoRepository.updateLikeCount (videoId, +1);
+            long current = videoRepository.getLikeCount(videoId);
+            return VideoLikeResponse.builder().liked(true).likeCount(current).build();
+        } catch (DataIntegrityViolationException e) {
+            long current = videoRepository.getLikeCount(videoId);
+            return VideoLikeResponse.builder().liked(true).likeCount(current).build();
+        }
+    }
+
+    @Override
+    @Transactional
+    public VideoLikeResponse unlike(Long videoId, Long memberId) {
+        videoRepository.findById(videoId)
+                .orElseThrow(() -> new VideoNotFoundException(videoId.toString()));
+
+        long deleted = videoLikeRepository.deleteByVideoIdAndMemberId(videoId, memberId);
+        if (deleted > 0) {
+            videoRepository.updateLikeCount (videoId, -1);
+        }
+        long current = videoRepository.getLikeCount(videoId);
+        return VideoLikeResponse.builder().liked(false).likeCount(current).build();
+    }
+
+
+    @Override
+    @Transactional
+    public void deleteVideo(Long videoId) {
+        Video video = videoRepository.findById(videoId)
+                .orElseThrow(() -> new VideoNotFoundException(videoId.toString()));
+
+        s3FileManager.delete(video.getVideoS3Key());
+
+        String thumbnailKey = (video.getThumbnail() != null)
+                ? video.getThumbnail().getThumbnailS3Key()
+                : null;
+        if (thumbnailKey != null && !thumbnailKey.isBlank() && !DEFAULT_THUMBNAIL_KEY.equals(thumbnailKey)) {
+            s3FileManager.delete(thumbnailKey);
+        }
+
+        videoLikeRepository.deleteAllByVideoId(videoId);
+        videoRepository.delete(video);
+    }
 
 }
