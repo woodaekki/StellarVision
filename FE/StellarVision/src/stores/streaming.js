@@ -8,7 +8,8 @@ export const useStreamingStore = defineStore('streaming', () => {
   const fetchLiveStreams = async () => {
     try {
       const res = await commonApi.get(`/streamings`);
-      liveStreams.value = res.data.data;
+      const list = Array.isArray(res.data?.data) ? res.data.data : [];
+      liveStreams.value = [...list];
       console.log('실시간 목록', liveStreams.value);
     } catch (err) {
       console.error(`실시간 스트리밍 목록을 호출할 수 없었습니다:`, err);
@@ -26,9 +27,6 @@ export const useStreamingStore = defineStore('streaming', () => {
       console.error(err.response)
     }
   };
-
-
-
 
   return {
     liveStreams, replayStreams, fetchLiveStreams, fetchReplayStreams,

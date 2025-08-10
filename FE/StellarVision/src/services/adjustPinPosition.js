@@ -6,7 +6,7 @@ export function adjustPinPosition(pins, radius, center) {
 
   pins.forEach((pin, idx) => {
    // latitude/longitude 우선, 이미 조정된 lat/lng(p.lat, p.lng)이 있으면 그걸 사용
-    const lat0 = pin.lat  ?? pin.latitude;
+   const lat0 = pin.lat  ?? pin.latitude;
    const lng0 = pin.lng  ?? pin.longitude;
    const similar = adjusted.filter(p =>
      Math.abs(p.lat - lat0) + Math.abs(p.lng - lng0) < threshold

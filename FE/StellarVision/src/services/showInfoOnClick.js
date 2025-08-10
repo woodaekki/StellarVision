@@ -17,6 +17,13 @@ export function showInfoOnClick({ engineRef, cameraRef, sceneRef }) {
 
   const activePin = ref(null)
 
+  function hideTooltip() {
+    activePin.value = null;
+    tooltip.title = '';
+    tooltip.owner = '';
+    tooltip.style.display = 'none';
+  }
+
   function updateTooltipPosition() {
     const engine = engineRef.value
     const camera = cameraRef.value
@@ -28,8 +35,9 @@ export function showInfoOnClick({ engineRef, cameraRef, sceneRef }) {
       return
     }
 
-    const pos = Vector3.Project(
-      pin.position,
+  const world = (pin.getAbsolutePosition ? pin.getAbsolutePosition() : pin.position)
+  const pos = Vector3.Project(
+      world,
       Matrix.Identity(),
       scene.getTransformMatrix(),
       camera.viewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight())
@@ -40,8 +48,14 @@ export function showInfoOnClick({ engineRef, cameraRef, sceneRef }) {
       return
     }
 
-    tooltip.style.left = `${pos.x + 10}px`
-    tooltip.style.top = `${pos.y - 40}px`
+    const rect = engine.getRenderingCanvasClientRect
+     ? engine.getRenderingCanvasClientRect()
+     : engine.getRenderingCanvas().getBoundingClientRect();
+    const cssX = (pos.x / engine.getRenderWidth())  * rect.width;
+    const cssY = (pos.y / engine.getRenderHeight()) * rect.height;
+
+    tooltip.style.left = `${cssX + 10}px`
+    tooltip.style.top  = `${cssY - 40}px`
     tooltip.style.display = 'block'
   }
 
@@ -68,5 +82,6 @@ export function showInfoOnClick({ engineRef, cameraRef, sceneRef }) {
     handlePinInteraction,
     handleWatchClick,
     updateTooltipPosition,
+    hideTooltip
   }
 }
