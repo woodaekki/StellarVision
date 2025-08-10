@@ -1,5 +1,5 @@
 <template>
-  <footer class="footer-container">
+  <footer v-if="!isMainView" class="footer-container">
     <div class="footer-content">
       <div class="footer-left">
         <div class="footer-logo">StellarVision</div>
@@ -27,7 +27,12 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
+import { useRoute } from 'vue-router';
 import { RouterLink } from 'vue-router';
+
+const route = useRoute();
+const isMainView = computed(() => route.name === 'MainView');
 </script>
 
 <style scoped>

@@ -8,12 +8,13 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue';
+import { onMounted } from 'vue';
+import { storeToRefs } from 'pinia';
 import { useStreamingStore } from '@/stores/streaming';
 import MainGlobe from '@/components/main/MainGlobe.vue';
 
 const streamingStore = useStreamingStore();
-const liveStreams = computed(() => streamingStore.liveStreams);
+const { liveStreams } = storeToRefs(streamingStore);
 
 onMounted(async () => {
   await streamingStore.fetchLiveStreams();
