@@ -76,19 +76,23 @@ public class VideoServiceImpl implements VideoService {
     public Page<VideoResponse> getVideosByMemberId(Long memberId, Pageable pageable) {
         Page<Video> videos = videoRepository.findByMemberId(memberId, pageable);
 
-        return videos.map(video -> VideoResponse.builder().id(video.getId()).id(video.getId())
+        return videos.map(video -> VideoResponse.builder().id(video.getId())
                 .originalFilename(video.getTitle()).createdAt(video.getCreatedAt())
-                .thumbnailDownloadUrl(getThumbnailUrl(video.getThumbnail().getThumbnailS3Key())).build());
+                .thumbnailDownloadUrl(getThumbnailUrl(video.getThumbnail().getThumbnailS3Key()))
+                .build());
 
     }
 
     @Override
     public Page<VideoResponse> getVideos(Pageable pageable) {
         Page<Video> videos = videoRepository.findAll(pageable);
-        return videos.map(video -> VideoResponse.builder().id(video.getId()).id(video.getId())
+        return videos.map(video -> VideoResponse.builder().id(video.getId())
                 .originalFilename(video.getTitle()).createdAt(video.getCreatedAt())
                 .thumbnailDownloadUrl(getThumbnailUrl(video.getThumbnail().getThumbnailS3Key()))
-                .memberId(video.getMember().getId()).build());
+                .memberId(video.getMember().getId())
+                .nickname(video.getMember().getName())
+                .build());
+
     }
 
     @Override
@@ -98,7 +102,9 @@ public class VideoServiceImpl implements VideoService {
         return videos.map(video -> VideoResponse.builder().id(video.getId())
                 .originalFilename(video.getTitle()).createdAt(video.getCreatedAt())
                 .thumbnailDownloadUrl(getThumbnailUrl(video.getThumbnail().getThumbnailS3Key()))
-                .memberId(video.getMember().getId()).build());
+                .memberId(video.getMember().getId())
+                .nickname(video.getMember().getName())
+                .build());
     }
 
     @Override

@@ -12,4 +12,5 @@ public class VideoResponse {
         private LocalDateTime createdAt;
         private String thumbnailDownloadUrl;
         private Long memberId;
+        private String nickname;
 }
