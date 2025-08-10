@@ -1,5 +1,6 @@
 package com.susang.stellarVision.application.member.service;
 
+import com.susang.stellarVision.application.member.dto.AuthProvider;
 import com.susang.stellarVision.application.member.dto.MemberSearchInfoDTO;
 import com.susang.stellarVision.application.member.dto.MemberSearchListDTO;
 import com.susang.stellarVision.application.member.dto.MemberSearchListDTO.PageInfo;
@@ -61,13 +62,14 @@ public class MemberServiceImpl implements MemberService {
             memberRepository.save(member);
             return member.getId();
         } catch (DataIntegrityViolationException ex) {
-            Throwable root = ex.getRootCause();
-            if (root instanceof org.hibernate.exception.ConstraintViolationException
-                    && root.getMessage()
-                    .contains("UK_MEMBER_EMAIL")) {
-                throw new MemberAlreadyExistException(request.getEmail());
+            Throwable cause = ex.getCause();
+            if (cause instanceof org.hibernate.exception.ConstraintViolationException cve) {
+                String constraintName = cve.getConstraintName();
+                if("UK_MEMBER_EMAIL".equals(constraintName)) {
+                    throw new MemberAlreadyExistException(request.getEmail());
+                }
             }
-            throw new RuntimeException(ex);
+            throw new RuntimeException(ex.getMessage());
         }
     }
 
@@ -105,5 +107,55 @@ public class MemberServiceImpl implements MemberService {
                 result,
                 new PageInfo(nextCursor, hasNext, pageSize)
         );
+    }
+
+    @Override
+    @Transactional
+    public Member upsertFromGoogle(String googleSub, String email, String name) {
+        if (googleSub == null || googleSub.isBlank()) {
+            throw new IllegalArgumentException("Google Sub Email is null or blank");
+        }
+
+        Optional<Member> byProviderAndProviderId = memberRepository.findByProviderAndProviderId(
+                AuthProvider.GOOGLE, googleSub);
+        if (byProviderAndProviderId.isPresent()) {
+            return byProviderAndProviderId.get();
+        }
+
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("Email is null or blank");
+        }
+
+        Profile profile = Profile.builder()
+                .build();
+
+        Member createdMember = Member.builder()
+                .email(email)
+                .password(null)
+                .name(name)
+                .birth(null)
+                .latestLogin(null)
+                .followerCount(0L)
+                .followingCount(0L)
+                .isDeleted(false)
+                .provider(AuthProvider.GOOGLE)
+                .providerId(googleSub)
+                .profile(profile)
+                .build();
+
+        try {
+            memberRepository.save(createdMember);
+        } catch (DataIntegrityViolationException ex) {
+            Throwable cause = ex.getCause();
+            if(cause instanceof org.hibernate.exception.ConstraintViolationException cve) {
+                String constraintName = cve.getConstraintName();
+                if("UK_MEMBER_EMAIL".equals(constraintName)) {
+                    throw new MemberAlreadyExistException(email);
+                }
+            }
+            throw new RuntimeException(ex.getMessage());
+        }
+
+        return createdMember;
     }
 }
