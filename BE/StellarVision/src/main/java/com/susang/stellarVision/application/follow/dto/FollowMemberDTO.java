@@ -12,6 +12,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class FollowMemberDTO {
     private Long memberId;
+    private String email;
     private Long followerId;
     private String name;
     private String profileImageUrl;
