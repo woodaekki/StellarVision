@@ -1,16 +1,16 @@
 <template>
-  <div class="video-box group" @click="$emit('select')" @mouseenter="loadVideoTags">
+  <div class="video-cell" @click="$emit('select')" @mouseenter="loadVideoTags">
     <div class="thumbnail-container">
-      <img :src="video.thumbnail" class="video-thumbnail" />
+      <img :src="video.thumbnail" class="video-thumbnail"/>
+      
+      <!-- 호버 시 삭제 버튼 -->
       <button v-if="showEdit" class="delete-button" @click.stop="handleDelete">
         삭제
       </button>
     </div>
-    
-    <!-- 갤러리 스타일의 비디오 정보 -->
-    <div class="video-text">
-      <div class="video-title-row">
-        <p class="video-name">{{ video.name }}</p>
+    <div class="video-info">
+      <div class="video-title">
+        {{ video.name }}
         <button
           v-if="showEdit"
           class="edit-button"
@@ -21,17 +21,17 @@
       </div>
       <p class="video-date">{{ video.date }}</p>
       
-      <div v-if="tags && tags.length" class="video-tags">
-        <span
-          v-for="tag in tags"
-          :key="tag.tagId"
-          class="tag-chip"
-        >
-          {{ tag.tagName }}
-        </span>
-      </div>
-      <div v-else-if="loadingTags" class="video-tags">
-        <span class="tag-loading-text">태그 로딩중...</span>
+      <!-- 태그 섹션 -->
+      <div v-if="tags && tags.length > 0" class="tags-container">
+        <div class="tags-list">
+          <span 
+            v-for="tag in tags" 
+            :key="tag.tagId"
+            class="tag"
+          >
+            {{ tag.tagName }}
+          </span>
+        </div>
       </div>
     </div>
   </div>
@@ -60,8 +60,9 @@ const router = useRouter()
 const tags = ref(null) 
 const loadingTags = ref(false)
 
-
+// 비디오 태그 로드 (호버 시)
 const loadVideoTags = async () => {
+  // 이미 태그가 로드되었거나 로딩 중이면 스킵
   if (tags.value !== null || loadingTags.value) {
     return
   }
@@ -93,7 +94,7 @@ const handleDelete = () => {
 };
 
 function refreshTags() {
-  tags.value = null 
+  tags.value = null // 태그 정보 초기화
   loadVideoTags()
 }
 
@@ -103,28 +104,23 @@ defineExpose({
 </script>
 
 <style scoped>
-.video-box {
+.video-cell {
   position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  background-color: #1a1a1a;
+  background-color: #fff;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.video-box:hover {
-  transform: scale(1.03);
-  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+.video-cell:hover {
+  transform: scale(1.02);
 }
 
 .thumbnail-container {
   position: relative;
   width: 100%;
-  height: 100%;
+  aspect-ratio: 16 / 9;
   overflow: hidden;
 }
 
@@ -134,33 +130,19 @@ defineExpose({
   object-fit: cover;
 }
 
-.video-text {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  background: rgba(0, 0, 0, 0.7);
-  padding: 8px 10px;
-  font-size: 0.75rem;
-  color: #eee;
-  transform: translateY(100%);
-  transition: transform 0.3s ease-in-out;
+.video-info {
+  padding: 12px;
+  background-color: #fff;
+  color: #333;
 }
 
-.video-box:hover .video-text {
-  transform: translateY(0);
-}
-
-.video-title-row {
+.video-title {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2px;
-}
-
-.video-name {
-  margin: 0;
-  font-weight: 500;
-  flex: 1;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 4px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -168,30 +150,28 @@ defineExpose({
 
 .video-date {
   margin: 0;
-  color: #ccc;
-  font-size: 0.7rem;
+  color: #666;
+  font-size: 0.75rem;
+  margin-bottom: 8px;
 }
 
-.video-tags {
-  margin-top: 4px;
+.tags-container {
+  margin-top: 8px;
+}
+
+.tags-list {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
 }
 
-.tag-chip {
-  background-color: rgba(59, 130, 246, 0.8);
-  color: white;
-  padding: 2px 6px;
+.tag {
+  background-color: #e0e7ff;
+  color: #3730a3;
+  padding: 2px 8px;
   border-radius: 12px;
-  font-size: 0.65rem;
+  font-size: 0.7rem;
   font-weight: 500;
-}
-
-.tag-loading-text {
-  color: #3b82f6;
-  font-size: 0.65rem;
-  font-style: italic;
 }
 
 .delete-button {
@@ -210,7 +190,7 @@ defineExpose({
   z-index: 10;
 }
 
-.video-box:hover .delete-button {
+.video-cell:hover .delete-button {
   opacity: 1;
 }
 
@@ -219,7 +199,7 @@ defineExpose({
   border: none;
   cursor: pointer;
   padding: 2px;
-  color: #eee;
+  color: #333;
   opacity: 0.8;
   transition: opacity 0.2s;
 }

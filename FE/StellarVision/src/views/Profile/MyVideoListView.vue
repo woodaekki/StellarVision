@@ -32,21 +32,6 @@
         <div v-if="!loading && hasMore" class="loading-text">스크롤하여 더 많은 영상 보기</div>
       </div>
     </div>
-
-    <!-- 삭제 확인 모달 -->
-    <div v-if="showDeleteModal" class="modal-overlay" @click="closeDeleteModal">
-      <div class="modal-content" @click.stop>
-        <h3>영상 삭제</h3>
-        <p>정말로 이 영상을 삭제하시겠습니까?</p>
-        <p class="video-name">{{ videoToDelete?.name }}</p>
-        <div class="modal-actions">
-          <button @click="closeDeleteModal" class="cancel-btn">취소</button>
-          <button @click="confirmDelete" class="delete-btn" :disabled="deleting">
-            {{ deleting ? '삭제 중...' : '삭제' }}
-          </button>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -66,9 +51,6 @@ const loadingMore = ref(false);
 const hasMore = ref(true);
 const page = ref(0);
 const pageRef = ref(null);
-const showDeleteModal = ref(false);
-const videoToDelete = ref(null);
-const deleting = ref(false);
 
 const profilePk = window.history.state?.profilePk || route.params.profilePk;
 const isUploader = JSON.parse(localStorage.getItem('userInfo'))?.email === route.params.id;
@@ -115,38 +97,26 @@ const goToReplay = (videoId) => {
 };
 
 const handleDeleteVideo = (video) => {
-  videoToDelete.value = video;
-  showDeleteModal.value = true;
-};
-
-const closeDeleteModal = () => {
-  showDeleteModal.value = false;
-  videoToDelete.value = null;
-};
-
-const confirmDelete = async () => {
-  if (!videoToDelete.value || deleting.value) return;
-
-  deleting.value = true;
+  if (!confirm('정말로 이 영상을 삭제하시겠습니까?')) return;
   
+  performDelete(video);
+};
+
+const performDelete = async (video) => {
   try {
-    // commonApi를 사용하여 삭제 API 호출
-    await commonApi.delete(`/videos/${videoToDelete.value.id}`);
+    await commonApi.delete(`/videos/${video.id}`);
     
-    // 성공 시 영상 제거
-    const index = videoStore.replays.findIndex(v => v.id === videoToDelete.value.id);
+    // 성공 시 로컬 상태에서 영상 제거
+    const index = videoStore.replays.findIndex(v => v.id === video.id);
     if (index > -1) {
       videoStore.replays.splice(index, 1);
     }
     
     alert('영상이 성공적으로 삭제되었습니다.');
-    closeDeleteModal();
     
   } catch (error) {
     console.error('영상 삭제 실패:', error);
     alert('영상 삭제에 실패했습니다. 다시 시도해주세요.');
-  } finally {
-    deleting.value = false;
   }
 };
 
@@ -185,86 +155,6 @@ onBeforeUnmount(() => {
   text-align: center;
   margin-top: 1rem;
   color: #ccc;
-}
-
-/* 모달 스타일 */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background: white;
-  padding: 24px;
-  border-radius: 8px;
-  max-width: 400px;
-  width: 90%;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.modal-content h3 {
-  margin: 0 0 16px 0;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #333;
-}
-
-.modal-content p {
-  margin: 0 0 8px 0;
-  color: #666;
-}
-
-.video-name {
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 24px !important;
-}
-
-.modal-actions {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-}
-
-.cancel-btn,
-.delete-btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: background-color 0.2s;
-}
-
-.cancel-btn {
-  background-color: #f5f5f5;
-  color: #666;
-}
-
-.cancel-btn:hover {
-  background-color: #e0e0e0;
-}
-
-.delete-btn {
-  background-color: #dc3545;
-  color: white;
-}
-
-.delete-btn:hover:not(:disabled) {
-  background-color: #c82333;
-}
-
-.delete-btn:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
 }
 
 @media (max-width: 768px) {
