@@ -47,13 +47,26 @@ public class VideoServiceImpl implements VideoService {
     private final ThumbnailRepository thumbnailRepository;
     private static final String DEFAULT_THUMBNAIL_KEY = "thumbnail/thumbnail.jpg";
 
-    private String getThumbnailUrl(String thumbnailS3Key) {
-        if (thumbnailS3Key == null || thumbnailS3Key.isBlank()) {
-            return s3FileManager.getPresignedDownloadUrl(DEFAULT_THUMBNAIL_KEY);
-        }
-        return s3FileManager.getPresignedDownloadUrl(thumbnailS3Key);
+    private String toThumbnailKeyFromVideoKey(String videoKey) {
+        // video/123/abc.mp4  ->  thumbnail/123/abc.jpg
+        String noExt = videoKey.substring(0, videoKey.lastIndexOf('.')); // video/123/abc
+        return noExt.replaceFirst("^video/", "thumbnail/") + ".jpg";
     }
 
+    private String getThumbnailUrl(String thumbnailS3Key) {
+        String key = (thumbnailS3Key == null || thumbnailS3Key.isBlank())
+                ? DEFAULT_THUMBNAIL_KEY
+                : thumbnailS3Key;
+
+        try {
+            if (!s3FileManager.exists(key)) {
+                key = DEFAULT_THUMBNAIL_KEY;
+            }
+            return s3FileManager.getPresignedDownloadUrl(key);
+        } catch (Exception e) {
+            return s3FileManager.getPresignedDownloadUrl(DEFAULT_THUMBNAIL_KEY);
+        }
+    }
     public String getVideoPresignedUrl(Long videoId) {
         return videoRepository.findById(videoId)
                 .map(video -> s3FileManager.getPresignedDownloadUrl(video.getVideoS3Key()))
@@ -183,8 +196,13 @@ public class VideoServiceImpl implements VideoService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new MemberNotFoundException(memberId.toString()));
 
-        Thumbnail thumbnail = Thumbnail.builder().build();
+        String thumbnailKey = toThumbnailKeyFromVideoKey(s3Key);
+
+        Thumbnail thumbnail = Thumbnail.builder()
+                .thumbnailS3Key(thumbnailKey)
+                .build();
         thumbnailRepository.save(thumbnail);
+
 
         Video video = Video.builder().videoS3Key(s3Key).title(title).member(member)
                 .thumbnail(thumbnail).build();
