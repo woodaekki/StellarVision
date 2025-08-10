@@ -23,7 +23,7 @@ public class Video extends BaseEntity {
 
     @Column(name = "like_count")
     @ColumnDefault("0")
-    private Long likeCount;
+    private Long likeCount = 0L;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
@@ -38,7 +38,7 @@ public class Video extends BaseEntity {
             Thumbnail thumbnail) {
         this.videoS3Key = videoS3Key;
         this.title = title;
-        this.likeCount = likeCount;
+        this.likeCount = (likeCount == null ? 0L : likeCount);
         this.member = member;
         this.thumbnail = thumbnail;
     }
