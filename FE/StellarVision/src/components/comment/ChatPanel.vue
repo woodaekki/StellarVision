@@ -2,15 +2,17 @@
 <script setup>
 import openviduService from '@/services/openviduService'
 import { useAccountStore } from '@/stores/account'
-import { Minimize, Minimize2 } from 'lucide-vue-next'
+import { Minimize, Minimize2, Users } from 'lucide-vue-next'
 import { Session } from 'openvidu-browser'
-import { onBeforeMount, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeMount, onBeforeUnmount, onMounted, ref } from 'vue'
+import bgTex from '@/assets/pictures/stellabot/chatPanel.png'
 
 
 const {userInfo} = useAccountStore()
 const props = defineProps({
   session : {type:Object, required:true},
 })
+const myName = computed(() => userInfo?.name || '')
 
 const emit = defineEmits(['close'])
 
@@ -72,43 +74,83 @@ async function sendMessage() {
 </script>
 
 <template>
-  <div class="chat-panel relative h-full flex flex-col">
-    <!-- 닫기 버튼 -->
-     <button
-      @click="emit('close')"
-      class="absolute right-2 top-2 text-xl font-bold z-10 text-white"
-     >
-    <Minimize2/>
-     </button>
-    <header class="chat-header">채팅</header>
-    <ul class="chat-messages flex-1 overflow-y-auto p-2">
-      <li v-for="(msg, i) in messages" :key="i">
-        <strong>{{ msg.user }}:</strong> {{ msg.text }}
+  <aside 
+    :style="{ 
+      backgroundImage: `url(${bgTex})`,
+      backgroundSize: '520px',        // 크기 (예: 가로 280px)
+      backgroundRepeat: 'no-repeat',       // 한 장만
+      backgroundPosition: 'center' // 위치
+
+
+ }"
+    class="chat-panel h-full w-full flex flex-col bg-zinc-900/70 backdrop-blur-md ring-1
+    ring-white/10 text-zinc-100 rounded-none sm:rounded-l-2xl overflow-hidden" >
+    <header class="chat-header flex items-center gap-1 text-xs text-zinc-400">
+      <div class="flex items-center gap-2 text-sm font-semibold">
+        <span>채팅</span>
+        <span class="flex items-center gap-1 text-xs text-zinc-400">
+          <Users class="w-3.5 h-3.5" /> {{ props.session?.remoteConnections?.size ?? 0 }}
+        </span>
+      </div>
+      <!-- 닫기 버튼 -->
+      <button
+        @click="emit('close')"
+        class="absolute right-2 top-2 text-xl font-bold z-10 text-white">
+          <Minimize2/>
+      </button>
+    </header>
+
+    <!-- 메시지 리스트 -->
+    <ul class="chat-messages flex-1 overflow-y-auto p-3 space-y-2 min-h-0">
+      <li v-for="(msg, i) in messages" :key="i"
+          class="flex"
+          :class="msg.user === myName ? 'justify-end' : 'justify-start'">
+        <div
+          :class="[
+            'max-w-[80%] px-3 py-2 rounded-2xl leading-snug text-[13px] shadow',
+            msg.user === myName
+              ? 'bg-sky-600 text-white rounded-tr-sm'
+              : 'bg-white/10 text-white/90 ring-1 ring-white/10 rounded-tl-sm'
+          ]"
+        >
+          <p v-if="msg.user !== myName" class="text-[11px] text-zinc-300 mb-0.5">{{ msg.user }}</p>
+          <p class="whitespace-pre-wrap break-words">{{ msg.text }}</p>
+        </div>
       </li>
     </ul>
-    <form class="chat-form flex" @submit.prevent="sendMessage">
-      <input
-        v-model="newMessage"
-        type="text"
-        placeholder="메시지 입력..."
-        autocomplete="off"
-        class="flex-1 px-2 py-1"
-      />
-      <button type="submit" class="px-3 py-1 bg-gray-700
-        text-white rounded-r-md">전송</button>
+
+    <!-- 입력영역 -->
+    <form class="caht-form flex w-full shrink-0 p-2 border-t border-white/10 bg-zinc-900/60" @submit.prevent="sendMessage">
+      <div class="flex w-full items-end gap-2">
+        <input
+          v-model="newMessage"
+          type="text"
+          placeholder="메시지 입력…"
+          autocomplete="off"
+          class="flex-1 rounded-xl px-3 py-2 text-[13px] leading-snug
+                 bg-white/5 ring-1 ring-white/10 placeholder:text-zinc-400
+                 focus:outline-none focus:ring-2 focus:ring-sky-500/60"
+        />
+        <button type="submit"
+                class="shrink-0 inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-[13px]
+                       bg-sky-600 hover:bg-sky-500 disabled:opacity-50 transition"
+                :disabled="!newMessage.trim()">
+          <Send class="w-4 h-4" /> 전송
+        </button>
+      </div>
     </form>
-  </div>
+  </aside>
+
+
 </template>
 
 
 <style scoped>
+
 .chat-panel {
-  min-width: 240px;
-  max-width: 400px;
+
   height: 100%;
-  background: rgba(154, 153, 153, 0.9);
-  border-radius: 12px;
-  overflow: hidden;
+  overflow: hidden; /* 패널 바깥으로 새는 요소 차단 */
 }
 .chat-header {
   padding: 0.5rem;
@@ -119,7 +161,11 @@ async function sendMessage() {
 }
 
 .chat-messages li {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.5rem
 }
+
+ul::-webkit-scrollbar { width: 8px; }
+ul::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 8px; }
+ul::-webkit-scrollbar-track { background: transparent; }
 
 </style>
