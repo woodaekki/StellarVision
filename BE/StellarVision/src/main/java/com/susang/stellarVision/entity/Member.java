@@ -1,5 +1,6 @@
 package com.susang.stellarVision.entity;
 
+import com.susang.stellarVision.application.member.dto.AuthProvider;
 import jakarta.persistence.Entity;
 import lombok.Builder;
 import lombok.Getter;
@@ -36,17 +37,16 @@ public class Member extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Setter
-    @Column(nullable = false, unique = true, length = 20)
+    @Column(nullable = false, unique = true, length = 225)
     private String email;
 
-    @Column(nullable = false, length = 60)
+    @Column(length = 60)
     private String password;
 
-    @Column(nullable = false, length = 10)
+    @Column(nullable = false, length = 60)
     private String name;
 
-    @Column(nullable = false)
+    @Column(name = "birth")
     private LocalDate birth;
 
     @Column(name = "latest_login")
@@ -58,9 +58,15 @@ public class Member extends BaseEntity {
     @Column(name = "following_count", nullable = false)
     private Long followingCount;
 
-    @Setter
     @Column(name = "is_deleted", nullable = false)
     private Boolean isDeleted;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "provider")
+    private AuthProvider provider;
+
+    @Column(name = "provider_id")
+    private String providerId;
 
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "profile_id")
@@ -69,7 +75,8 @@ public class Member extends BaseEntity {
     @Builder
     public Member(String email, String password, String name, LocalDate birth,
             LocalDateTime latestLogin, Long followerCount,
-            Long followingCount, Boolean isDeleted, Profile profile) {
+            Long followingCount, Boolean isDeleted, AuthProvider provider, String providerId,
+            Profile profile) {
         this.email = email;
         this.password = password;
         this.name = name;
@@ -78,6 +85,8 @@ public class Member extends BaseEntity {
         this.followerCount = followerCount;
         this.followingCount = followingCount;
         this.isDeleted = isDeleted;
+        this.provider = provider;
+        this.providerId = providerId;
         this.profile = profile;
     }
 
@@ -99,5 +108,10 @@ public class Member extends BaseEntity {
 
     public void increaseFollowingCount() {
         this.followingCount++;
+    }
+
+    public void linkProvider(AuthProvider provider, String providerUserId) {
+        this.provider = provider;
+        this.providerId = providerUserId;
     }
 }

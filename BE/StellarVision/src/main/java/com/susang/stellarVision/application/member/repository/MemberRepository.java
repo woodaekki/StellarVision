@@ -1,5 +1,6 @@
 package com.susang.stellarVision.application.member.repository;
 
+import com.susang.stellarVision.application.member.dto.AuthProvider;
 import com.susang.stellarVision.entity.Member;
 import java.util.List;
 import java.util.Optional;
@@ -15,6 +16,8 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     Optional<Member> findByEmail(String email);
 
     boolean existsByEmail(String email);
+
+    Optional<Member> findByProviderAndProviderId(AuthProvider provider, String providerId);
 
     @Query("""
             SELECT m
