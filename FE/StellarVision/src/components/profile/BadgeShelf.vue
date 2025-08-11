@@ -91,7 +91,6 @@ async function handleSave(selectedIds) {
 .badge-shelf-row {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr)); /* 한 줄 3개는 모달에서, 여기선 자유 */
-  gap: 1px;
 }
 .badge-empty {
   display: inline-block;
