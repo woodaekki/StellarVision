@@ -53,7 +53,7 @@ const fetchPhotos = async () => {
   loading.value = true
   try {
     const { data } = await axiosApi.get(`profiles/${memberId.value}/photos`, {
-      params: { page: 0, size: 3 },
+      params: { page: 0, size: 4 },
     })
     if (data.data && data.data.photos) {
       photos.value = data.data.photos.map((p) => ({
@@ -112,7 +112,7 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 5px;
+  padding: 0 35px;
   margin-bottom: 5px;
   padding-bottom: 5px;
 }
@@ -127,7 +127,7 @@ onMounted(async () => {
   color: #000;
   cursor: pointer;
   background: transparent;
-  border: 1px solid #000;
+  border: 1px solid #4a4a4a;
   padding: 5px 12px;
   border-radius: 4px;
 }

@@ -11,9 +11,9 @@ import { computed } from 'vue';
 import badgeProfileIconData from '@/data/badgeProfileIconData.json';
 
 const props = defineProps({
-  badge: { 
-    type: Object, 
-    required: true 
+  badge: {
+    type: Object,
+    required: true
 }
 });
 

@@ -82,7 +82,7 @@ const goToReplayRoom = (videoId) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 5px;
+  padding: 0 35px;
   margin-bottom: 5px;
   padding-bottom: 5px;
 }
@@ -97,7 +97,7 @@ const goToReplayRoom = (videoId) => {
   color: #000;
   cursor: pointer;
   background: transparent;
-  border: 1px solid #000;
+  border: 1px solid #4a4a4a;
   padding: 5px 12px;
   border-radius: 4px;
 }
@@ -105,7 +105,7 @@ const goToReplayRoom = (videoId) => {
 .content-frames {
   display: flex;
   gap: 15px;
-  justify-content: flex-start; /* 왼쪽 정렬로 변경 */
+  justify-content: flex-start;
   flex-wrap: wrap;
   padding-top: 5px;
 }
