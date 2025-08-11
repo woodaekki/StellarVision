@@ -3,15 +3,24 @@ import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import openviduService from '@/services/openviduService'
 import streamingService from '@/services/streamingService'
-import { DoorOpen, ImageDown, MessageCircle, Mic, MicOff,  Square, SquareStop, ToggleLeft, ToggleRight } from 'lucide-vue-next'
+import { DoorOpen, Camera, Download, MessageCircle, Mic, MicOff,  Square, SquareStop, ToggleLeft, ToggleRight } from 'lucide-vue-next'
 import ChatPanel from '@/components/comment/ChatPanel.vue'
 import { useRecordingStore } from '@/stores/recording'
 import { createAIAnalyzeService } from '@/services/AIAnalyeService'
 import { useAITagStore } from '@/stores/aiTags'
+import { createUpscaleService } from '@/services/upscaleService'
+import { latLngToPosition } from '@/services/latLngToPosition'
+import { computed } from 'vue'
+
 
 // ai 분석 결과를 담을 store
 const aiTagStore = useAITagStore();
+const upscaleService = createUpscaleService();
 
+// 업스케일링 URL과 파일명
+const upscaledUrl = ref(null)
+const isDownloading = ref(false)
+const isUpscaling = ref(false)
 
 const route = useRoute()
 const router = useRouter()
@@ -31,6 +40,17 @@ const micEnabled = ref(true)
 const aiOn = ref(false)
 const toggleAI = () => { aiOn.value = !aiOn.value }
 
+const hasUpscaled = computed(() => !!upscaledUrl.value)
+
+// 캡쳐와 다운로드를 구분하는 함수
+async function onCaptureOrDownload() {
+  if (hasUpscaled.value) {
+    await downloadUpscaled()
+  } else {
+    await captureAndUpscale()
+  }
+}
+
 // 컴포저블에서 필요한 것들 모두 꺼냄 (isPublish, role 추가)
 const { session, publisher, subscribers, leave, setPublisherEl, attachSubEl, isPublish, endRoom } = openviduService(
    sessionId,
@@ -46,6 +66,138 @@ const { session, publisher, subscribers, leave, setPublisherEl, attachSubEl, isP
   const localVideo = ref(null)
   // 로컬 오버레이 캔버스
   const overlayLocal = ref(null)
+
+   
+
+  // 현재 프레임을 캡쳐해 JPEG Blob으로 반환
+  async function captureVideoFrame(videoEl, type = 'image/jpeg', quality = 0.92) {
+    if (!videoEl || !videoEl.videoWidth || !videoEl.videoHeight) {
+      throw new Error('비디오 준비가 안 됨(loadedmetadata 이후 시도)')
+    }
+    const canvas = document.createElement('canvas')
+    canvas.width = videoEl.videoWidth
+    canvas.height = videoEl.videoHeight
+    const ctx = canvas.getContext('2d', { willReadFrequently: false })
+    ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height)
+  
+    return new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (!blob) return reject(new Error('캡쳐 실패'))
+        resolve(blob)
+      }, type, quality)
+    })
+  }
+
+  function pickTargetVideoEl() {
+    // 1) 퍼블리셔면 로컬 비디오
+    if (isPublish.value && localVideo.value) return localVideo.value
+
+    // 2) 구독자면 첫 번째 구독 비디오 DOM을 선택
+    const first = subscribers.value?.[0]
+    if (first) {
+      const el = document.querySelector(
+        `video[data-stream-id="${first.stream.streamId}"]`
+      )
+      if (el) return el
+    }
+
+    // 3) fallback - 없으면 로컬 비디오라도 반환
+    return localVideo.value
+  }
+
+  function setUpscaledResult(urlFromServer) {
+    upscaledUrl.value = urlFromServer
+  }
+
+  function buildFilenameFromUrl(url, fallback = 'upscaled.jpg') {
+    try {
+      const u = new URL(url)
+      const name = u.pathname.split('/').pop()
+      if (!name || !name.includes('.')) return fallback
+      return name
+    } catch {
+      return fallback
+    }
+  }
+
+  async function downloadUpscaled() {
+    if (!upscaledUrl.value) return
+    const filename = buildFilenameFromUrl(upscaledUrl.value, `upscaled_${Date.now()}.jpg`)
+
+    if (isDownloading.value) return
+    isDownloading.value = true
+    try {
+      // 1) blob으로 받아서 ObjectURL로 강제 다운로드 (가장 호환성 좋음)
+      const res = await fetch(upscaledUrl.value, {
+        // 필요시 인증 쿠키가 있다면:
+        // credentials: 'include',
+        // CORS가 필요하면 서버에서 허용해야 함(아래 주의사항 참고)
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const blob = await res.blob()
+      const objUrl = URL.createObjectURL(blob)
+
+      const a = document.createElement('a')
+      a.href = objUrl
+      a.download = filename // 저장 파일명 지정
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(objUrl)
+    } catch (err) {
+      console.warn('blob 다운로드 실패, 새 탭으로 오픈 시도', err)
+      // 2) 최후: 새 탭으로 열어서 사용자가 저장하도록 유도
+      const a = document.createElement('a')
+      a.href = upscaledUrl.value
+      a.target = '_blank'
+      a.rel = 'noopener'
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+    } finally {
+      isDownloading.value = false
+    }
+  }
+
+
+
+  async function captureAndUpscale() {
+    if (isUpscaling.value) return
+    try {
+      isUpscaling.value = true
+      // 기존 URL revoke
+      if (upscaledUrl.value?.startsWith('blob:')) {
+        URL.revokeObjectURL(upscaledUrl.value)
+        upscaledUrl.value = null
+      }
+
+      const target = pickTargetVideoEl()
+      if (!target) {
+        alert('캡쳐할 비디오가 없습니다.')
+        return
+      }
+
+      // 1) 현재 프레임 캡쳐
+      const captured = await captureVideoFrame(target, 'image/jpeg', 0.92)
+
+      // 2) 업스케일 서버에 전송 → blob 응답
+      const upscaledBlob = await upscaleService.upscaleImage(captured, 'capture.jpg')
+
+      // 3) Object URL로 미리보기/다운로드 제공
+      const url = URL.createObjectURL(upscaledBlob)
+      upscaledUrl.value = url;
+
+      // 3-1) 새 탭으로 열기(미리보기)
+      window.open(url, '_blank', 'noopener')
+    } catch (e) {
+      console.error('업스케일 실패', e)
+      alert('업스케일 중 오류가 발생했습니다: ' + (e?.message ?? 'unknown'))
+    } finally {
+      isUpscaling.value = false
+    }
+  }
+
+
 
   // 로컬용 AI 분석기
   const localAnalyzer = createAIAnalyzeService({
@@ -269,6 +421,11 @@ const { session, publisher, subscribers, leave, setPublisherEl, attachSubEl, isP
     localAnalyzer.destroy()
     subAnalyzers.forEach(({ svc, canvas }) => { svc.destroy(); canvas.remove() })
     subAnalyzers.clear()
+
+    if (upscaledUrl.value?.startsWith('blob:')) {
+      URL.revokeObjectURL(upscaledUrl.value)
+      upscaledUrl.value = null
+    }
   })
 </script>
 
@@ -362,16 +519,27 @@ const { session, publisher, subscribers, leave, setPublisherEl, attachSubEl, isP
           </button>
 
           <!-- 캡처 버튼 -->
-          <button
+          <!-- <button
+            @click="captureAndUpscale"
+            :disabled="isUpscaling"
             class="absolute left-3 bottom-6 hover:bg-gray-600 transition shadow rounded-full text-white p-4">
             <ImageDown/>
-          </button>
+          </button> -->
 
           <!-- 채팅 버튼 -->
           <button
             class="absolute right-3 bottom-6 hover:bg-gray-600 transition shadow rounded-full text-yellow p-4"
             @click="showChat = !showChat">
             <MessageCircle/>
+          </button>
+
+          <!-- 캡쳐/다운로드 토글 버튼(하나) -->
+          <button
+            @click="onCaptureOrDownload"
+            :title="hasUpscaled ? '업스케일된 이미지 다운로드' : '현재 프레임 캡쳐 & 업스케일'"
+            :disabled="isUpscaling || isDownloading"
+            class="absolute left-3 bottom-6 z-20 hover:bg-gray-600 transition shadow rounded-full text-white p-4 disabled:opacity-50 disabled:cursor-not-allowed">
+            <component :is="hasUpscaled ? Download : Camera"/>
           </button>
       </div>
 
