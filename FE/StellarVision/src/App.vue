@@ -1,11 +1,11 @@
 <template>
-  <div class="app-layout" :class="[{ 'sidebar-open': isSidebarOpen }, {'room' :isRoomView}]">
+  <div class="app-layout" :class="[{ 'sidebar-open': isSidebarOpen, 'content-push': shouldMoveMainContent }, {'room' : isRoomView}]">
     <MainSidebar
       ref="sidebarRef"
       v-if="!isRoomView"
     />
     <div class="main-content">
-       <MainHeader
+      <MainHeader
         v-if="!isRoomView"
         :is-main-view="isMainView"
       />
@@ -13,13 +13,13 @@
         <RouterView />
       </main>
       <MainFooter
-      v-if="!isRoomView" />
+        v-if="!isRoomView" />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import MainHeader from '@/components/common/MainHeader.vue'
 import MainSidebar from '@/components/common/MainSidebar.vue'
@@ -30,27 +30,28 @@ const route = useRoute()
 
 const isRoomView = computed(() => route.name === 'RoomView')
 const isMainView = computed(() => route.name === 'MainView')
-
-/*
-const isSidebarOpen = computed(() => {
-  return isStreamingView.value ? true : (sidebarRef.value?.isOpen ?? false)
-})
-*/
-// 사이드바 고정 풀었습니다.
-const isSidebarOpen = computed(() => {
-  return sidebarRef.value?.isOpen ?? false
-})
+const isLandingView = computed(() => route.name === 'LandingView')
+const isTodaysPhotoView = computed(() => route.name === 'TodaysPhoto')
+const isProfileHeaderView = computed(() => route.name === 'ProfileHeader')
+// const isMyGalleryView = computed(() => route.name === 'MyGalleryView')
+// const isMyVideoView = computed(() => route.name === 'MyVideoView')
 
 
-/**
-onMounted(() => {
-  watch(() => sidebarRef.value?.isOpen, (val) => {
-    if (!isStreamingView.value) {
-      console.log('사이드바 토글:', val)
-    }
-  })
+const isSidebarOpen = computed(() => sidebarRef.value?.isOpen ?? false)
+
+// MainView, LandingView, ProfileView 에서는 사이드바 열려도 옆으로 밀리지 않도록 제어
+const shouldMoveMainContent = computed(() => {
+  // 디버깅용 콘솔 출력
+  console.log('Current route name:', route.name)
+  console.log('isSidebarOpen:', isSidebarOpen.value)
+
+
+  // 사이드바가 열려있고, 특정 페이지가 아닐 때만 콘텐츠를 밀어냄
+  const result = isSidebarOpen.value && !isMainView.value && !isLandingView.value && !isTodaysPhotoView.value && !isProfileHeaderView.value
+  console.log('shouldMoveMainContent result:', result)
+  return result
 })
-**/
+
 </script>
 
 <style lang="scss">
@@ -69,7 +70,7 @@ main {
 
 .sidebar {
   z-index: 100;
-  top:60px
+  top:60px;
 }
 
 .app-layout.room .main-content { padding-top: 0; }
@@ -102,12 +103,10 @@ main {
     transition: margin-left 0.3s ease;
   }
 
-  &.sidebar-open .main-content {
+  &.content-push .main-content {
     margin-left: 240px; // 사이드바 폭 만큼 밀기
   }
 }
-
-
 
 // 사이드바를 열었을때 중앙정렬이 되지 않는 화면이 많아 우선 주석 처리해두었습니다.
 // .app-layout {

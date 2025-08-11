@@ -38,7 +38,7 @@ const isRoomView = computed(() => route.name === 'RoomView')
 
 // 라우트 이름에 따라 헤더 스타일을 동적으로 변경
 const headerClasses = computed(() => {
-  if (route.name === 'LoginView' || route.name === 'SignupView' || route.name === 'MainView') {
+  if (route.name === 'MainView') {
     return 'bg-transparent text-[#cfd8dc]';
   } else {
     return 'bg-black text-white';
