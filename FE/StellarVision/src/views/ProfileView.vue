@@ -11,11 +11,11 @@
     :profile-email="profileEmail"
     @updateProfileImageUrl="handleUpdateImageUrl"/>
     <main class="main-content">
-      <div v-if="profileInfo.galleryPublic" class="content-section">
+      <div class="content-section">
         <MyGalleryView />
       </div>
-      <hr class="section-divider" v-if="profileInfo.galleryPublic && profileInfo.videoPublic">
-      <div v-if="profileInfo.videoPublic" class="content-section">
+      <hr class="section-divider">
+      <div class="content-section">
         <MyVideoView
           :profilePk="profilePk"
           :recentVideos="recentVideos"
@@ -98,7 +98,7 @@ function goToReplay(videoId) {
 
 <style scoped>
 .profile-wrapper {
-  padding-top: 58px;
+  padding-top: auto;
   background-color: #ffffff;
   background-size: cover;
   min-height: 100vh;
