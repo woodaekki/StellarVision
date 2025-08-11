@@ -24,11 +24,18 @@
           <div
             v-for="(item, index) in photos"
             :key="item.id"
-            class="photo-box group"
+            class="photo-box"
+            :class="{ 'fade-in': item.isNew }"
             @click="viewPhoto(item.id)"
             @mouseenter="loadPhotoTags(item.id)"
+            @animationend="onAnimationEnd(item.id)"
           >
-            <img :src="item.url" class="photo-img" />
+            <img
+              :src="item.url"
+              class="photo-img"
+              :class="{ 'loaded': item.isLoaded }"
+              @load="onImageLoad(item.id)"
+            />
             <div class="photo-text">
               <p>{{ item.name }}</p>
               <p class="photo-date">{{ item.date }}</p>
@@ -49,9 +56,15 @@
           </div>
         </div>
 
-        <div v-if="loading" class="loading-text">사진 불러오는 중...</div>
+        <div v-if="loading" class="loading-spinner">
+          <div class="spinner"></div>
+          <div class="loading-text">사진 불러오는 중...</div>
+        </div>
         <div v-if="!photos.length && !loading && !hasMore" class="loading-text">아직 사진이 없습니다.</div>
         <div v-if="!loading && hasMore" class="loading-text">스크롤하여 더 많은 사진 보기</div>
+
+        <!-- Intersection Observer 감지 요소 -->
+        <div ref="observerTarget" class="observer-target"></div>
       </div>
     </div>
   </div>
@@ -67,6 +80,7 @@ const accountStore = useAccountStore()
 
 const pageRef = ref(null)
 const galleryInput = ref(null)
+const observerTarget = ref(null)
 
 const photos = ref([])
 const loading = ref(false)
@@ -77,6 +91,21 @@ const loadingTags = ref({})
 
 const memberId = computed(() => accountStore.myProfile?.memberId)
 const canUpload = computed(() => accountStore.isLogin)
+
+const onAnimationEnd = (photoId) => {
+  const photo = photos.value.find(p => p.id === photoId)
+  if (photo) {
+    photo.isNew = false
+  }
+}
+
+// 이미지 로드 시 호출 (블러 제거)
+const onImageLoad = (photoId) => {
+  const photo = photos.value.find(p => p.id === photoId)
+  if (photo) {
+    photo.isLoaded = true
+  }
+}
 
 // 사진 불러오기
 const fetchPhotos = async () => {
@@ -98,7 +127,9 @@ const fetchPhotos = async () => {
       url: p.downloadUrl,
       name: p.originalFilename,
       date: p.createdAt.split('T')[0],
-      tags: null, // 초기에는 태그 정보 없음
+      tags: null,
+      isNew: page.value > 0, // 첫 로드 아닌 경우만 fade-in
+      isLoaded: false // 로드 전 블러 상태
     }))
 
     photos.value = [...photos.value, ...newPhotos]
@@ -108,51 +139,27 @@ const fetchPhotos = async () => {
     console.error('사진 불러오기 실패:', e)
   } finally {
     loading.value = false
-    isScrolling.value = false
+    setTimeout(() => {
+      isScrolling.value = false
+    }, 500)
   }
 }
 
-// 사진 태그 조회 (호버 시)
+// 태그 조회
 const loadPhotoTags = async (photoId) => {
-  // 이미 태그가 로드되었거나 로딩 중이면 스킵
   const photo = photos.value.find(p => p.id === photoId)
-  
-  if (!photo) {
-    return
-  }
-
-  if (photo.tags !== null) {
-    return
-  }
-
-  if (loadingTags.value[photoId]) {
-    return
-  }
+  if (!photo || photo.tags !== null || loadingTags.value[photoId]) return
 
   loadingTags.value[photoId] = true
 
   try {
-    const apiUrl = `/photos/${photoId}/tags`
-    const response = await axiosApi.get(apiUrl)
+    const response = await axiosApi.get(`/photos/${photoId}/tags`)
     const { data } = response
-
-    if (data && data.status === 'success') {
-      // 해당 사진의 태그 정보 업데이트
-      const photoIndex = photos.value.findIndex(p => p.id === photoId)
-
-      if (photoIndex !== -1) {
-        const tagsToSet = data.data.tags || []
-        photos.value[photoIndex].tags = tagsToSet
-      }
-    } else {
-      // 실패 시 빈 배열로 설정하여 재요청 방지
-      const photoIndex = photos.value.findIndex(p => p.id === photoId)
-      if (photoIndex !== -1) {
-        photos.value[photoIndex].tags = []
-      }
+    const photoIndex = photos.value.findIndex(p => p.id === photoId)
+    if (photoIndex !== -1) {
+      photos.value[photoIndex].tags = data?.data?.tags || []
     }
   } catch (e) {
-    // 에러 발생 시 빈 배열로 설정하여 재요청 방지
     const photoIndex = photos.value.findIndex(p => p.id === photoId)
     if (photoIndex !== -1) {
       photos.value[photoIndex].tags = []
@@ -162,27 +169,23 @@ const loadPhotoTags = async (photoId) => {
   }
 }
 
-// 업로드 트리거
+// 업로드
 const triggerGalleryUpload = async () => {
   if (!canUpload.value) {
     alert('업로드 권한이 없습니다. 로그인 후 다시 시도해주세요.')
     return
   }
-
   if (!memberId.value) {
     await accountStore.fetchMyProfile()
   }
-
   if (!memberId.value) {
     alert('프로필 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.')
     return
   }
-
   galleryInput.value.value = ''
   galleryInput.value.click()
 }
 
-// 업로드 처리
 const uploadGalleryImage = async (e) => {
   const file = e.target.files[0]
   if (!file || !memberId.value) return
@@ -193,35 +196,25 @@ const uploadGalleryImage = async (e) => {
       originalFilename: file.name,
       contentType: file.type,
     })
-
     const presignedData = presignedResponse.data
-
     if (!presignedData.uploadUrl || !presignedData.s3Key) {
       console.error('presignedUrl 또는 s3Key가 없습니다', presignedResponse)
       return
     }
-
     await axios.put(presignedData.uploadUrl, file, {
-      headers: {
-        'Content-Type': file.type,
-      },
+      headers: { 'Content-Type': file.type },
       maxContentLength: Infinity,
       maxBodyLength: Infinity,
     })
-
-    // 업로드 완료 후 서버로부터 응답 대기
-    const completeResponse = await axiosApi.post('/photos/complete', {
+    await axiosApi.post('/photos/complete', {
       memberId: memberId.value,
       originalFilename: file.name,
       s3Key: presignedData.s3Key,
     })
-
-    // 업로드 완료 후 사진 목록 초기화 및 새로고침
     page.value = 0
     photos.value = []
     hasMore.value = true
     await fetchPhotos()
-
     alert('사진 업로드가 완료되었습니다.')
   } catch (err) {
     console.error('업로드 실패:', err)
@@ -229,12 +222,11 @@ const uploadGalleryImage = async (e) => {
   }
 }
 
-// 단건 조회 후 새 창 열기
+// 보기
 const viewPhoto = async (photoId) => {
   try {
     const { data } = await axiosApi.get(`/photos/${photoId}`)
     const photoUrl = data.data.downloadUrl
-
     if (photoUrl) {
       window.open(photoUrl, '_blank')
     }
@@ -244,19 +236,16 @@ const viewPhoto = async (photoId) => {
   }
 }
 
-// 사진 삭제
+// 삭제
 const deletePhoto = async (photoId) => {
   if (!canUpload.value) {
     alert('삭제 권한이 없습니다. 로그인 후 다시 시도해주세요.')
     return
   }
   if (!confirm('정말로 이 사진을 삭제하시겠습니까?')) return
-
   try {
     await axiosApi.delete(`/photos/${photoId}`)
-
     photos.value = photos.value.filter(p => p.id !== photoId)
-
     alert('사진이 성공적으로 삭제되었습니다.')
   } catch (e) {
     console.error(`사진(ID: ${photoId}) 삭제 실패:`, e)
@@ -264,16 +253,26 @@ const deletePhoto = async (photoId) => {
   }
 }
 
-// 스크롤 이벤트 핸들러
-const handleScroll = () => {
-  const el = pageRef.value
-  if (!el || loading.value || !hasMore.value) return
+// 무한 스크롤
+let observer = null
+const setupInfiniteScroll = () => {
+  if (!observerTarget.value) return
+  observer = new IntersectionObserver(
+    (entries) => {
+      const target = entries[0]
+      if (target.isIntersecting && !loading.value && hasMore.value) {
+        fetchPhotos()
+      }
+    },
+    { rootMargin: '100px', threshold: 0.1 }
+  )
+  observer.observe(observerTarget.value)
+}
 
-  const scrollBottom = el.scrollTop + el.clientHeight
-  const threshold = el.scrollHeight - 50
-
-  if (scrollBottom >= threshold) {
-    fetchPhotos()
+const cleanupInfiniteScroll = () => {
+  if (observer) {
+    observer.disconnect()
+    observer = null
   }
 }
 
@@ -282,27 +281,22 @@ onMounted(async () => {
   if (memberId.value) {
     await fetchPhotos()
   }
-  if (pageRef.value) {
-    pageRef.value.addEventListener('scroll', handleScroll)
-  }
+  setupInfiniteScroll()
 })
 
 onBeforeUnmount(() => {
-  if (pageRef.value) {
-    pageRef.value.removeEventListener('scroll', handleScroll)
-  }
+  cleanupInfiniteScroll()
 })
 </script>
 
 <style scoped>
 .page {
-  height: 100vh; 
-  overflow-y: auto; 
+  min-height: 100vh;
 }
 
 .stars-background h2 {
-  margin-top: 48px !important;
-  margin-bottom: 52px !important;
+  margin-top: 20px !important;
+  margin-bottom: 40px !important;
   margin-left: 10px;
   text-align: left;
   font-weight: 700;
@@ -329,6 +323,31 @@ onBeforeUnmount(() => {
   box-shadow: 0 2px 8px rgba(255, 255, 255, 0.05);
 }
 
+/* fade + scale 애니메이션 */
+.fade-in {
+  opacity: 0;
+  transform: scale(0.98);
+  animation: fadeInScale 0.4s ease-out forwards;
+}
+
+@keyframes fadeInScale {
+  0% { opacity: 0; transform: scale(0.98); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* 이미지 블러 → 선명 효과 */
+.photo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  flex-grow: 1;
+  filter: blur(8px);
+  transition: filter 0.4s ease;
+}
+.photo-img.loaded {
+  filter: blur(0);
+}
+
 .upload-box {
   justify-content: center;
   align-items: center;
@@ -351,7 +370,6 @@ onBeforeUnmount(() => {
   line-height: 1;
 }
 
-/* 업로드 버튼 텍스트 제거 */
 input[type="file"] {
   display: none !important;
 }
@@ -359,13 +377,6 @@ input[type="file"] {
 .photo-box:hover {
   transform: scale(1.03);
   box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
-}
-
-.photo-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  flex-grow: 1;
 }
 
 .photo-text {
@@ -426,10 +437,37 @@ input[type="file"] {
   opacity: 1;
 }
 
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 2rem 0;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-top: 3px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 .loading-text {
   text-align: center;
   margin-top: 1rem;
   color: #ccc;
+}
+
+.observer-target {
+  height: 1px;
+  width: 100%;
 }
 
 @media (max-width: 768px) {

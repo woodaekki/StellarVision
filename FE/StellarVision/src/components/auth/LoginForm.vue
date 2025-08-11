@@ -88,7 +88,6 @@ const onLogin = async() => {
   font-size: 32px;
   font-weight: bold;
   text-align: center;
-  margin-top: 0;
   margin-bottom: 40px;
 }
 

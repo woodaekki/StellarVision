@@ -76,7 +76,7 @@ onMounted(async () => {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 2rem;
+  padding: 4.5rem;
   color: #333;
   height: calc(100vh - 58px);
 }

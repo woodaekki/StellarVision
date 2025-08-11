@@ -220,19 +220,16 @@ const onSignUp = async () => {
 </script>
 
 <style scoped>
-/* 모바일 우선 (2/3 크기) */
 .form-container {
   width: 100%;
   max-width: 341px;
   margin: 0 auto;
-  padding: 42px 10px;
 }
 
 .form-title {
   font-size: 20px;
   font-weight: bold;
   text-align: center;
-  margin-top: 30px;
   margin-bottom: 26px;
 }
 
@@ -327,7 +324,6 @@ const onSignUp = async () => {
   font-size: 9px;
 }
 
-/* 데스크탑 (768px 이상) */
 @media (min-width: 768px) {
   .form-container {
     max-width: 512px;
@@ -336,7 +332,7 @@ const onSignUp = async () => {
 
   .form-title {
     font-size: 30px;
-    margin-top: 45px;
+    margin-top: 15x;
     margin-bottom: 40px;
   }
 
