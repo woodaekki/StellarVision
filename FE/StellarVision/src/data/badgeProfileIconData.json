@@ -131,5 +131,82 @@
     "abbreviation": "Cep",
     "id": 20,
     "icon": "🤴"
+  },
+  {
+    "id": 31,
+    "name": "Cygnus",
+    "koreanName": "백조자리",
+    "abbreviation": "Cyg",
+    "icon": "🦢"
+  },
+  {
+    "id": 5,
+    "name": "Aquila",
+    "koreanName": "독수리자리",
+    "abbreviation": "Aql",
+    "icon": "🦅"
+  },
+  {
+    "id": 32,
+    "name": "Delphinus",
+    "koreanName": "돌고래자리",
+    "abbreviation": "Del",
+    "icon": "🐬"
+  },
+  {
+    "id": 40,
+    "name": "Hercules",
+    "koreanName": "허큘리스자리",
+    "abbreviation": "Her",
+    "icon": "💪"
+  },
+  {
+    "id": 52,
+    "name": "Lyra",
+    "koreanName": "거문고자리",
+    "abbreviation": "Lyr",
+    "icon": "🎶"
+  },
+  {
+    "id": 71,
+    "name": "Sagitta",
+    "koreanName": "화살자리",
+    "abbreviation": "Sge",
+    "icon": "🏹"
+  },
+  {
+    "id": 88,
+    "name": "Vulpecula",
+    "koreanName": "여우자리",
+    "abbreviation": "Vul",
+    "icon": "🦊"
+  },
+  {
+    "id": 34,
+    "name": "Draco",
+    "koreanName": "용자리",
+    "abbreviation": "Dra",
+    "icon": "🐉"
+  },
+  {
+    "id": 59,
+    "name": "Ophiuchus",
+    "koreanName": "뱀주인자리",
+    "abbreviation": "Oph",
+    "icon": "⚕️"
+  },
+  {
+    "id": 75,
+    "name": "Scutum",
+    "koreanName": "방패자리",
+    "abbreviation": "Sct",
+    "icon": "🛡️"
+  },
+  {
+    "id": 76,
+    "name": "Serpens",
+    "koreanName": "뱀자리",
+    "abbreviation": "Ser",
+    "icon": "🐍"
   }
 ]
