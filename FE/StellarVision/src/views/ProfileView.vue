@@ -73,8 +73,8 @@ onMounted(async () => {
   }
 
   loading.value = false;
-  console.log('프로필 정보:', profileInfo.value);
-  console.log('프로필 정보:', JSON.parse(localStorage.getItem('userInfo')));
+  console.log('지금 보는 페이지의 프로필 정보:', profileInfo.value);
+  console.log('내 정보:', JSON.parse(localStorage.getItem('userInfo')));
 })
 
 async function handleUpdateImageUrl() {
