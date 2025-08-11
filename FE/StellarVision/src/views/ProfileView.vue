@@ -3,14 +3,16 @@
     <p>Loading profile...</p>
   </div>
   <div v-else class="profile-wrapper">
-    <ProfileHeader
-    v-if="!profileUpdateLoading"
-    :profile-info="profileInfo"
-    :profile-followings="profileFollowings"
-    :profile-followers="profileFollowers"
-    :profile-email="profileEmail"
-    @updateProfileImageUrl="handleUpdateImageUrl"/>
     <main class="main-content">
+      <div class="content-section">
+         <ProfileHeader
+            v-if="!profileUpdateLoading"
+            :profile-info="profileInfo"
+            :profile-followings="profileFollowings"
+            :profile-followers="profileFollowers"
+            :profile-email="profileEmail"
+            @updateProfileImageUrl="handleUpdateImageUrl"/>
+      </div>
       <div class="content-section">
         <MyGalleryView />
       </div>
@@ -114,7 +116,7 @@ function goToReplay(videoId) {
   align-items: center;
   width: 100%;
   margin: 0 auto;
-  padding: 0 10px;
+  padding: 0 0;
   box-sizing: border-box;
 }
 

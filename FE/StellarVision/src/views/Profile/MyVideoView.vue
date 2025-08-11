@@ -105,17 +105,17 @@ const goToReplayRoom = (videoId) => {
 .content-frames {
   display: flex;
   gap: 15px;
-  justify-content: center;
+  justify-content: flex-start; /* 왼쪽 정렬로 변경 */
   flex-wrap: wrap;
   padding-top: 5px;
 }
 
 .content-frame,
 .empty-frame {
-  flex-basis: calc(33.33% - 10px);
-  width: calc(33.33% - 10px);
-  max-width: 300px;
-  aspect-ratio: 1.4;
+  flex-basis: calc(25% - 12px);
+  width: calc(25% - 12px);
+  max-width: 280px;
+  aspect-ratio: 1.3;
   cursor: pointer;
   display: flex;
   flex-direction: column;

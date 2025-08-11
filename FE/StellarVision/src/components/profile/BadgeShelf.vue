@@ -39,13 +39,13 @@ import BadgeProfileIcon from './BadgeProfileIcon.vue';
 import BadgeSelectModal from './BadgeSelectModal.vue';
 
 const props = defineProps({
-  memberId: { 
-    type: Number, 
-    required: true 
+  memberId: {
+    type: Number,
+    required: true
 },
-  editMode: { 
-    type: Boolean, 
-    default: false 
+  editMode: {
+    type: Boolean,
+    default: false
 }
 });
 
@@ -91,7 +91,7 @@ async function handleSave(selectedIds) {
 .badge-shelf-row {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr)); /* 한 줄 3개는 모달에서, 여기선 자유 */
-  gap: 6px;
+  gap: 1px;
 }
 .badge-empty {
   display: inline-block;

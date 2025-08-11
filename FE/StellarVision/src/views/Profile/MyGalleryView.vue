@@ -135,16 +135,16 @@ onMounted(async () => {
 .content-frames {
   display: flex;
   gap: 15px;
-  justify-content: center;
+  justify-content: flex-start;
   flex-wrap: wrap;
   padding-top: 5px;
 }
 
 .content-frame,
 .empty-frame {
-  width: calc(33.33% - 10px);
-  max-width: 300px;
-  aspect-ratio: 1.4;
+  width: calc(25% - 12px);
+  max-width: 280px;
+  aspect-ratio: 1.3;
   cursor: pointer;
   display: flex;
   flex-direction: column;
