@@ -14,6 +14,7 @@ import com.susang.stellarVision.application.photo.dto.PhotoUploadResponse;
 import com.susang.stellarVision.application.photo.service.PhotoService;
 import com.susang.stellarVision.application.profile.dto.ProfileResponse;
 import com.susang.stellarVision.application.profile.dto.ProfileVisibilityUpdateRequest;
+import com.susang.stellarVision.application.profile.dto.UpdateDescriptionrequest;
 import com.susang.stellarVision.application.profile.service.ProfileService;
 import com.susang.stellarVision.application.video.dto.VideoListResponse;
 import com.susang.stellarVision.application.video.dto.VideoResponse;
@@ -157,6 +158,12 @@ public class ProfileController {
         SelectedCollectionListResponse selectedCollectionListResponse = collectionService.getBadges(
                 memberId);
         return ResponseEntity.ok(APIResponse.success("뱃지 조회 성공", selectedCollectionListResponse));
+    }
+
+    @PatchMapping("/me/description")
+    public ResponseEntity<APIResponse<String>> updateMyDescription(@AuthenticationPrincipal CustomUserDetails details,@RequestBody UpdateDescriptionrequest updateDescriptionrequest) {
+        profileService.updateDescription(details,updateDescriptionrequest);
+        return ResponseEntity.ok(APIResponse.success("프로필 소개글 수정 성공", null));
     }
 
 

@@ -4,6 +4,7 @@ import com.susang.stellarVision.application.member.exception.MemberNotFoundExcep
 import com.susang.stellarVision.application.photo.error.S3DeletionFailedException;
 import com.susang.stellarVision.application.profile.dto.ProfileResponse;
 import com.susang.stellarVision.application.profile.dto.ProfileVisibilityUpdateRequest;
+import com.susang.stellarVision.application.profile.dto.UpdateDescriptionrequest;
 import com.susang.stellarVision.config.security.authentication.CustomUserDetails;
 
 
@@ -25,4 +26,7 @@ public interface ProfileService {
     String getProfileImageUrl(String s3Key);
 
     void deleteProfileImage(CustomUserDetails userDetails);
+
+    void updateDescription(CustomUserDetails userDetails, UpdateDescriptionrequest updateDescriptionrequest);
+
 }

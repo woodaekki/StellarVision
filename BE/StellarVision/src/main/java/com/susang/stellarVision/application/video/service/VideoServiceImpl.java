@@ -239,8 +239,8 @@ public class VideoServiceImpl implements VideoService {
                 .orElseThrow(() -> new MemberNotFoundException(memberId.toString()));
 
         if (videoLikeRepository.existsByVideoIdAndMemberId(videoId, memberId)) {
-            long current = videoRepository.getLikeCount(videoId); // 항상 최신값
-            return VideoLikeResponse.builder().liked(true).likeCount(current).build();
+            long current = videoRepository.getLikeCount(videoId);
+            return VideoLikeResponse.builder().videoId(videoId).liked(true).likeCount(current).build();
         }
 
         try {
@@ -249,10 +249,10 @@ public class VideoServiceImpl implements VideoService {
 
             videoRepository.updateLikeCount (videoId, +1);
             long current = videoRepository.getLikeCount(videoId);
-            return VideoLikeResponse.builder().liked(true).likeCount(current).build();
+            return VideoLikeResponse.builder().videoId(videoId).liked(true).likeCount(current).build();
         } catch (DataIntegrityViolationException e) {
             long current = videoRepository.getLikeCount(videoId);
-            return VideoLikeResponse.builder().liked(true).likeCount(current).build();
+            return VideoLikeResponse.builder().videoId(videoId).liked(true).likeCount(current).build();
         }
     }
 
@@ -267,7 +267,7 @@ public class VideoServiceImpl implements VideoService {
             videoRepository.updateLikeCount (videoId, -1);
         }
         long current = videoRepository.getLikeCount(videoId);
-        return VideoLikeResponse.builder().liked(false).likeCount(current).build();
+        return VideoLikeResponse.builder().videoId(videoId).liked(false).likeCount(current).build();
     }
 
 
