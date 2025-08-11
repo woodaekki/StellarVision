@@ -2,7 +2,7 @@
   <div class="video-cell" @click="$emit('select')" @mouseenter="loadVideoTags">
     <div class="thumbnail-container">
       <img :src="video.thumbnail" class="video-thumbnail"/>
-      
+
       <!-- 호버 시 삭제 버튼 -->
       <button v-if="showEdit" class="delete-button" @click.stop="handleDelete">
         삭제
@@ -20,12 +20,12 @@
         </button>
       </div>
       <p class="video-date">{{ video.date }}</p>
-      
+
       <!-- 태그 섹션 -->
       <div v-if="tags && tags.length > 0" class="tags-container">
         <div class="tags-list">
-          <span 
-            v-for="tag in tags" 
+          <span
+            v-for="tag in tags"
             :key="tag.tagId"
             class="tag"
           >
@@ -57,7 +57,7 @@ const props = defineProps({
 const emit = defineEmits(['select', 'delete'])
 
 const router = useRouter()
-const tags = ref(null) 
+const tags = ref(null)
 const loadingTags = ref(false)
 
 // 비디오 태그 로드 (호버 시)
@@ -71,7 +71,7 @@ const loadVideoTags = async () => {
 
   try {
     const response = await commonApi.get(`/videos/${props.video.id}/tags`)
-    
+
     if (response.data && response.data.status === 'success') {
       tags.value = response.data.data.tags || []
     } else {
