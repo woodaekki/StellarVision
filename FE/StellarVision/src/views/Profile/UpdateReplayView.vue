@@ -10,17 +10,17 @@
         <h3 class="tags-title">Tags from Space</h3>
         <img src="../../assets/pictures/stellabot/tag3.png" alt="노바 태그" class="tags-image">
       </div>
-      
+
       <div class="existing-tags">
         <h4>현재 태그</h4>
         <div class="tags-list" v-if="tags.length > 0">
-          <span 
-            v-for="tag in tags" 
+          <span
+            v-for="tag in tags"
             :key="tag.tagId"
             class="tag existing-tag"
           >
             {{ tag.tagName }}
-            <button 
+            <button
               @click="removeTag(tag.tagId)"
               class="remove-tag-btn"
               :disabled="isRemoving"
@@ -35,16 +35,16 @@
       <div class="add-tag-section">
         <h4>태그 추가</h4>
         <div class="add-tag-form">
-          <input 
+          <input
             v-model="newTagName"
-            type="text" 
+            type="text"
             placeholder="새 태그 입력..."
             class="tag-input"
             @keyup.enter="addTag"
             :disabled="isAdding"
             maxlength="20"
           />
-          <button 
+          <button
             @click="addTag"
             class="add-tag-btn"
             :disabled="isAdding || !newTagName.trim()"
@@ -88,7 +88,7 @@ const fetchVideoData = async () => {
     isLoading.value = false;
     return;
   }
-  
+
   try {
     error.value = '';
     await fetchTags();
@@ -113,10 +113,10 @@ const fetchTags = async () => {
   if (!videoId.value || videoId.value === 'undefined') {
     return;
   }
-  
+
   try {
     const response = await commonApi.get(`/videos/${videoId.value}/tags`);
-    
+
     if (response.data.status === 'success') {
       const tagsData = response.data.data?.tags || [];
       tags.value = tagsData;
@@ -130,7 +130,7 @@ const fetchTags = async () => {
 
 const addTag = async () => {
   const tagName = newTagName.value.trim();
-  
+
   if (!tagName) {
     alert('태그명을 입력해주세요.');
     return;
@@ -142,7 +142,7 @@ const addTag = async () => {
   }
 
   const isDuplicate = tags.value.some(tag => tag.tagName === tagName);
-  
+
   if (isDuplicate) {
     alert('이미 존재하는 태그입니다.');
     return;
@@ -157,7 +157,7 @@ const addTag = async () => {
 
     if (response.data.status === 'success') {
       newTagName.value = '';
-      await fetchTags(); 
+      await fetchTags();
       alert('태그가 성공적으로 추가되었습니다.');
     } else {
       alert(response.data.message || '태그 추가에 실패했습니다.');
@@ -183,7 +183,7 @@ const removeTag = async (tagId) => {
 
   try {
     const response = await commonApi.delete(`/videos/${videoId.value}/tags/${tagId}`);
-    
+
     if (response.data.status === 'success') {
       await fetchTags();
       alert('태그가 성공적으로 삭제되었습니다.');
@@ -212,7 +212,7 @@ onMounted(initializeComponent);
 
 <style scoped>
 .video-edit-page {
-  padding: 150px;
+  padding: 50px 280px;
   background-color: #fff;
   min-height: 100vh;
 }
@@ -255,7 +255,7 @@ onMounted(initializeComponent);
   border-radius: 6px;
   padding: 20px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  margin-top: 20px; 
+  margin-top: 20px;
 }
 
 .tags-header {
@@ -393,7 +393,7 @@ onMounted(initializeComponent);
     flex-direction: column;
     gap: 8px;
   }
-  
+
   .edit-header {
     flex-direction: column;
     align-items: flex-start;
