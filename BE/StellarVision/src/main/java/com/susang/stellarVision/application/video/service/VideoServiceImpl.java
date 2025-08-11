@@ -174,7 +174,7 @@ public class VideoServiceImpl implements VideoService {
 
     @Override
     @Transactional
-    public void uploadVideo(InputStream inputStream, Long contentLength, String title,
+    public Long uploadVideo(InputStream inputStream, Long contentLength, String title,
             Long memberId) {
         String originalFilename = title + ".mp4";
         String extension = FileExtensionUtil.extractExtension(originalFilename);
@@ -201,8 +201,7 @@ public class VideoServiceImpl implements VideoService {
         Video video = Video.builder().videoS3Key(s3Key).title(title).member(member)
                 .thumbnail(thumbnail).build();
         videoRepository.save(video);
-
-
+        return video.getId();
     }
 
     @Override

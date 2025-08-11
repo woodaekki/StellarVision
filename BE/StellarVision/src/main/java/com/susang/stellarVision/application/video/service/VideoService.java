@@ -22,7 +22,7 @@ public interface VideoService {
     VideoTagListResponse getTagsByVideoId(Long videoId) throws VideoNotFoundException;
     void deleteVideoTag(Long videoId, Long tagId) throws VideoNotFoundException , VideoTagNotFoundException;
     void updateVideoContent(Long videoId,VideoUpdateRequest videoUpdateRequest) throws VideoNotFoundException;
-    void uploadVideo(InputStream inputStream,Long contentLength, String title, Long memberId) throws VideoUploadFailException;
+    Long uploadVideo(InputStream inputStream,Long contentLength, String title, Long memberId) throws VideoUploadFailException;
     VideoLikeResponse like(Long videoId, Long memberId);
     VideoLikeResponse unlike(Long videoId, Long memberId);
 }
