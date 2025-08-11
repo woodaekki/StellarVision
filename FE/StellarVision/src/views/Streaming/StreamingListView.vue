@@ -2,7 +2,7 @@
 <template>
   <section class="w-full px-4 md:px-8 bg-zinc-50">
     <!-- 상단 툴바 -->
-   <header class="w-full sticky top-15 z-10 py-4 backdrop-blur border-b border-white/5">
+   <header class="w-full sticky top-15 bg-zinc-50 z-10 py-4  border-b border-white/5">
       <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <!-- 탭 -->
         <nav class="flex items-center gap-6">
