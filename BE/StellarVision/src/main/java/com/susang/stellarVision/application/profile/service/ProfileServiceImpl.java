@@ -5,11 +5,14 @@ import com.susang.stellarVision.application.member.repository.MemberRepository;
 import com.susang.stellarVision.application.photo.error.S3DeletionFailedException;
 import com.susang.stellarVision.application.profile.dto.ProfileResponse;
 import com.susang.stellarVision.application.profile.dto.ProfileVisibilityUpdateRequest;
+import com.susang.stellarVision.application.profile.dto.UpdateDescriptionrequest;
+import com.susang.stellarVision.application.profile.error.DescriptionTooLongException;
 import com.susang.stellarVision.common.s3.S3FileManager;
 import com.susang.stellarVision.config.security.authentication.CustomUserDetails;
 import com.susang.stellarVision.entity.Member;
 import com.susang.stellarVision.entity.Profile;
 import java.io.IOException;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,11 +44,10 @@ public class ProfileServiceImpl implements ProfileService {
 
         String oldS3Key = profile.getProfileS3Key();
 
-        // 중복 요청 무시
-        if (s3Key.equals(oldS3Key)) {
+        if (Objects.equals(oldS3Key, s3Key)) {
             return;
         }
-        if (oldS3Key != null) {
+        if (oldS3Key != null && !oldS3Key.equals(DEFAULT_PROFILE_IMAGE_KEY)) {
             try {
                 s3FileManager.delete(oldS3Key);
             } catch (RuntimeException e) {
@@ -64,7 +66,7 @@ public class ProfileServiceImpl implements ProfileService {
 
         Profile profile = member.getProfile();
         String s3Key = profile.getProfileS3Key();
-        if(s3Key == null) {
+        if (s3Key == null) {
             return s3FileManager.getPresignedDownloadUrl(DEFAULT_PROFILE_IMAGE_KEY);
         }
         return s3FileManager.getPresignedDownloadUrl(s3Key);
@@ -122,22 +124,52 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Transactional
-    public void deleteProfileImage (CustomUserDetails details) {
-        Member member = details.getMember();
+    public void deleteProfileImage(CustomUserDetails details) {
+        if (details == null || details.getMember() == null) {
+            throw new MemberNotFoundException("");
+        }
+        Long memberId = details.getMember().getId();
+
+        Member member = memberRepository.findByIdWithProfile(memberId)
+                .orElseThrow(() -> new MemberNotFoundException(memberId.toString()));
 
         Profile profile = member.getProfile();
-        if(profile.getProfileS3Key() == null) {
-            return;
-        }
-        try {
-            s3FileManager.delete(profile.getProfileS3Key());
-        } catch (RuntimeException e) {
-            throw new S3DeletionFailedException("S3 삭제 실패");
-        }
+        String s3Key = profile.getProfileS3Key();
 
+        if (s3Key != null && !DEFAULT_PROFILE_IMAGE_KEY.equals(s3Key)) {
+            try {
+                s3FileManager.delete(s3Key);
+            } catch (RuntimeException e) {
+                throw new S3DeletionFailedException("S3 삭제 실패");
+            }
+        }
         profile.updateProfileS3Key(null);
 
     }
 
+    @Override
+    @Transactional
+    public void updateDescription(CustomUserDetails details,
+            UpdateDescriptionrequest updateDescriptionrequest) {
+        Long memberId = details.getMember().getId();
+
+        Member member = memberRepository.findByIdWithProfile(memberId)
+                .orElseThrow(() -> new MemberNotFoundException(memberId.toString()));
+
+        Profile profile = member.getProfile();
+
+        String desc = updateDescriptionrequest.getDescription();
+        if (desc != null) {
+            desc = desc.trim();
+            if (desc.isEmpty()) {
+                desc = null;
+            }
+            if (desc != null && desc.length() > 255) {
+                throw new DescriptionTooLongException(profile.getId().toString());
+            }
+        }
+
+        profile.updateDescription(desc);
+    }
 
 }
