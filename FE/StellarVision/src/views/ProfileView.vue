@@ -98,7 +98,6 @@ function goToReplay(videoId) {
 
 <style scoped>
 .profile-wrapper {
-  padding-top: auto;
   background-color: #ffffff;
   background-size: cover;
   min-height: 100vh;
@@ -109,7 +108,7 @@ function goToReplay(videoId) {
 }
 
 .main-content {
-  flex: 0 0 auto;
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -117,8 +116,6 @@ function goToReplay(videoId) {
   margin: 0 auto;
   padding: 0 10px;
   box-sizing: border-box;
-  overflow-y: auto;
-  max-height: calc(100vh - 130px);
 }
 
 .content-section {
