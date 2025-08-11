@@ -73,7 +73,7 @@ public class ProfileController {
     @GetMapping("/{memberId}/photos")
     public ResponseEntity<APIResponse<PhotoListResponse>> getPhotosByMemberId(
             @PathVariable Long memberId,
-            @PageableDefault(size = 3, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+            @PageableDefault(size = 4, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
         Page<PhotoResponse> page = photoService.getPhotosByMemberId(memberId, pageable);
         PhotoListResponse response = new PhotoListResponse(page.getContent(),
@@ -84,7 +84,7 @@ public class ProfileController {
     @GetMapping("/{memberId}/videos")
     public ResponseEntity<APIResponse<VideoListResponse>> getVideosByMemberId(
             @PathVariable Long memberId,
-            @PageableDefault(size = 3, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable, @AuthenticationPrincipal CustomUserDetails user) {
+            @PageableDefault(size = 4, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable, @AuthenticationPrincipal CustomUserDetails user) {
         Long currentMemberId = (user != null) ? user.getMember().getId() : null;
         Page<VideoResponse> page = videoService.getVideosByMemberId(memberId, pageable, currentMemberId);
         VideoListResponse response = new VideoListResponse(page.getContent(),
