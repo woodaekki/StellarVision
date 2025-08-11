@@ -280,7 +280,7 @@ const { session, publisher, subscribers, leave, setPublisherEl, attachSubEl, isP
         :class="['relative bg-black transition-all duration-300',
         showChat ? 'sm:w-[70%] w-full' :'w-full']"
         class="h-full rounded-none">
-        
+
         <!-- 변경: 로컬 프리뷰 + 오버레이 -->
         <div class="relative w-full h-full">
           <video
@@ -339,7 +339,7 @@ const { session, publisher, subscribers, leave, setPublisherEl, attachSubEl, isP
             text-white rounded-full px-3 py-1 hover:bg-red-600 transition">
             <DoorOpen/>
           </button>
-          
+
 
           <!-- 시청자: 나가기 버튼 -->
           <button v-else @click="leave"
@@ -347,6 +347,7 @@ const { session, publisher, subscribers, leave, setPublisherEl, attachSubEl, isP
             text-white rounded-full px-3 py-1 hover:bg-red-600 transition">
             <DoorOpen/>
           </button>
+
           <!-- AI 탐지 on/off -->
           <button
             @click="toggleAI"
@@ -355,7 +356,7 @@ const { session, publisher, subscribers, leave, setPublisherEl, attachSubEl, isP
             class="absolute right-20 top-2 z-10 bg-black bg-opacity-70 w-15 h-10 inline-flex
                  justify-center items-center text-white rounded-full px-3 py-1 hover:bg-gray-600 transition "
             :class="aiOn ? ' hover:text-sky-600' : 'bg-black/70 hover:bg-gray-600'">
-            <component :is="aiOn ? ToggleLeft : ToggleRight" 
+            <component :is="aiOn ? ToggleLeft : ToggleRight"
               class="w-10 h-10 "
               :class="aiOn ? 'text-white/80' : 'text-sky-400'"/>
           </button>

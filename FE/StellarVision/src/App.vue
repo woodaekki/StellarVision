@@ -29,7 +29,7 @@ const route = useRoute()
 const isRoomView = computed(() => route.name === 'RoomView')
 
 
-/* 
+/*
 const isSidebarOpen = computed(() => {
   return isStreamingView.value ? true : (sidebarRef.value?.isOpen ?? false)
 })
@@ -40,7 +40,7 @@ const isSidebarOpen = computed(() => {
 })
 
 
-/** 
+/**
 onMounted(() => {
   watch(() => sidebarRef.value?.isOpen, (val) => {
     if (!isStreamingView.value) {
@@ -71,7 +71,7 @@ main {
 }
 
 .app-layout.room .main-content { padding-top: 0; }
-.app-layout.room .sidebar { display: none; } 
+.app-layout.room .sidebar { display: none; }
 
 .app-layout {
   display: flex;
@@ -135,7 +135,7 @@ main {
 //     display: flex;
 //     flex-direction: column;
 //     height: 100vh;
-    
+
 //   }
 
 //   &.sidebar-open .main-content {

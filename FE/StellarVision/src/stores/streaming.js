@@ -27,8 +27,27 @@ export const useStreamingStore = defineStore('streaming', () => {
       console.error(err.response)
     }
   };
+  // 좋아요
+  const likeVideo = async (videoId) =>{
+    try {
+      const { data } = await commonApi.post(`/videos/${videoId}/likes`)
+      console.log(data?.data)
+      return data?.data
+    } catch(err){
+      console.error('좋아요 호출 실패', err)
+    }
+  };
+  // 좋아요 취소
+  const unlikeVideo = async (videoId) => {
+    try{
+      const { data } = await commonApi.delete(`/videos/${videoId}/likes`)
+      return data?.data
+    } catch(err) {
+      console.error('좋아요 취소 호출 실패', err)
+    }
+  };
 
   return {
-    liveStreams, replayStreams, fetchLiveStreams, fetchReplayStreams,
+    liveStreams, replayStreams, fetchLiveStreams, fetchReplayStreams, likeVideo, unlikeVideo
   };
 });
