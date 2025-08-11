@@ -5,8 +5,10 @@
       v-if="!isRoomView"
     />
     <div class="main-content">
-      <MainHeader
-      v-if="!isRoomView"/>
+       <MainHeader
+        v-if="!isRoomView"
+        :is-main-view="isMainView"
+      />
       <main>
         <RouterView />
       </main>
@@ -27,7 +29,7 @@ const sidebarRef = ref(null)
 const route = useRoute()
 
 const isRoomView = computed(() => route.name === 'RoomView')
-
+const isMainView = computed(() => route.name === 'MainView')
 
 /*
 const isSidebarOpen = computed(() => {
