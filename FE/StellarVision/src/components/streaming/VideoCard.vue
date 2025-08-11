@@ -2,7 +2,7 @@
 <template>
   <!--  -->
   <article
-    class ="group relative w-full max-w-[36rem]  rounded-2xl 
+    class ="group relative w-full max-w-[36rem]  rounded-2xl
      hover:ring-white/20 hover:-translate-y-0.5  cursor-pointer"
     @click="onThumbnailClick"
     :aria-label="title"
@@ -14,12 +14,12 @@
     <!-- 썸네일 -->
      <!-- 비디오 종횡비로 구성 -->
     <div class="relative aspect-video overflow-hidden rounded-xl bg-white
-             shadow-md ring-1 ring-black/5 transition-transform duration-200 ease-out
+             shadow-md ring-1 ring-black/5 transition-transform duration-500 ease-out
              group-hover:-translate-y-0.5 group-hover:shadow-lg group-active:translate-y-0">
       <img
         :src="thumbnail"
-        class="h-full w-full object-cover [filter:drop-shadow(0_4px_8px_rgba(0,0,0,0.15))]"   
-        loading="lazy"             
+        class="h-full w-full object-cover [filter:drop-shadow(0_4px_8px_rgba(0,0,0,0.15))]"
+        loading="lazy"
         alt="썸네일"
       />
       <!-- 우측 상단에 라이브 아이콘 -->
@@ -29,11 +29,11 @@
       </span>
 
       <!-- 태그 표시 -->
-      <div v-if="type === 'vod' && tags.length > 0" 
+      <div v-if="type === 'vod' && tags.length > 0"
         class="absolute left-2.5 bottom-2.5 right-2.5 flex flex-wrap gap-1.5">
         <!-- 일단 태그 3개 정도만, 과하면 별로일듯 -->
         <span
-          v-for="tag in tags.slice(0, 3)"   
+          v-for="tag in tags.slice(0, 3)"
           :key="tag.tagId"
           class="px-2 py-0.5 rounded-full text-[11px] font-medium
            text-white/95 bg-black/35 backdrop-blur-[2px] ring-1 ring-white/20"
@@ -43,7 +43,7 @@
       </div>
 
       <!-- hover 시 은은한 라이트 주기 -> 입체감 조성해줌 -->
-      <div class="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition bg-gradient-to-t 
+      <div class="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition bg-gradient-to-t
         from-black/30 via-transparent to-transparent "></div>
     </div>
 
@@ -120,7 +120,7 @@ const loadingTags = ref(false)
 
 const loadVideoTags = async () => {
   if (loadingTags.value || tags.value.length > 0) return
-  loadingTags.value = true 
+  loadingTags.value = true
   try {
     const res = await commonApi.get(`/videos/${props.video.id}/tags`)
     console.log('tage data', res.data)

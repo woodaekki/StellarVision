@@ -36,7 +36,7 @@
     <div class="py-6 pt-16 ">
       <!-- 임의로 로딩 넣음 추후 변경 예정 -->
       <div v-if="loading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
-        <div 
+        <div
           v-for="n in 8"
           :key="n"
           class="animate-pulse rounded-2xl bg-zinc-900/60 ring-1 ring-white/10">
@@ -49,9 +49,9 @@
       </div>
 
       <!-- 빈 상태 (나중에 이미지로 교체 예정) -->
-      <div v-else-if="filteredVideos.length === 0" 
+      <div v-else-if="filteredVideos.length === 0"
         class="relative grid place-items-center text-center py-16 min-h-[48vh] rounded-xl overflow-hidden">
-        <div 
+        <div
           :style="{
              backgroundImage: `url(${bgImage})`,
             backgroundSize: '520px',        // 크기 (예: 가로 280px)
@@ -65,7 +65,7 @@
           </div>
 
       </div>
-        
+
       <!-- 비디오 그리드 -->
       <div v-else class="grid grid-cols-1 rounded-md sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-6">
         <VideoCard
