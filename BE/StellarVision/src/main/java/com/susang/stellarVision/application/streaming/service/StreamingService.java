@@ -25,6 +25,6 @@ public interface StreamingService {
     String startRecording(String sessionId, Member member)
             throws OpenViduJavaClientException, OpenViduHttpException;
 
-    RecordingInfoDTO stopRecording(String recordingId, Member member)
+    RecordingInfoDTO stopRecording(String recordingId, Member member, List<String> tags)
             throws OpenViduJavaClientException, OpenViduHttpException;
 }
