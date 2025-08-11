@@ -1,6 +1,7 @@
 package com.susang.stellarVision.application.video.service;
 
 
+import com.susang.stellarVision.application.collection.repository.CollectionRepository;
 import com.susang.stellarVision.application.member.exception.MemberNotFoundException;
 import com.susang.stellarVision.application.member.repository.MemberRepository;
 import com.susang.stellarVision.application.video.dto.*;
@@ -44,6 +45,7 @@ public class VideoServiceImpl implements VideoService {
     private final ThumbnailRepository thumbnailRepository;
     private static final String DEFAULT_THUMBNAIL_KEY = "thumbnail/thumbnail.jpg";
     private final VideoLikeRepository videoLikeRepository;
+    private final CollectionRepository collectionRepository;
 
     private Page<VideoResponse> mapWithLiked(Page<Video> page, Long currentMemberId) {
         List<Long> ids = page.stream().map(Video::getId).toList();
@@ -128,6 +130,30 @@ public class VideoServiceImpl implements VideoService {
         VideoTag tag = VideoTag.builder().tagName(request.getTagName()).video(video).build();
 
         videoTagRepository.save(tag);
+    }
+    @Override
+    @Transactional
+    public void addAiVideoTags(Long videoId, List<String> tags) {
+        Video video = videoRepository.findById(videoId)
+                .orElseThrow(() -> new VideoNotFoundException(videoId.toString()));
+        List<Collection> allCollections = collectionRepository.findAll();
+        for (String tag : tags) {
+            String koreanName = allCollections.stream()
+                    .filter(c -> c.getAbbreviation().equals(tag))
+                    .map(Collection::getKoreanName)
+                    .findFirst()
+                    .orElse(null);
+
+            String tagName = (koreanName != null) ? koreanName : tag;
+
+            VideoTag videoTag = VideoTag.builder()
+                    .tagName(tagName)
+                    .video(video)
+                    .build();
+
+            videoTagRepository.save(videoTag);
+        }
+
     }
 
     @Override
