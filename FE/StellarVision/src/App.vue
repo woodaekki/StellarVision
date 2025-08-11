@@ -33,22 +33,13 @@ const isMainView = computed(() => route.name === 'MainView')
 const isLandingView = computed(() => route.name === 'LandingView')
 const isTodaysPhotoView = computed(() => route.name === 'TodaysPhoto')
 const isProfileHeaderView = computed(() => route.name === 'ProfileHeader')
-// const isMyGalleryView = computed(() => route.name === 'MyGalleryView')
-// const isMyVideoView = computed(() => route.name === 'MyVideoView')
-
 
 const isSidebarOpen = computed(() => sidebarRef.value?.isOpen ?? false)
 
 // MainView, LandingView, ProfileView 에서는 사이드바 열려도 옆으로 밀리지 않도록 제어
 const shouldMoveMainContent = computed(() => {
-  // 디버깅용 콘솔 출력
-  console.log('Current route name:', route.name)
-  console.log('isSidebarOpen:', isSidebarOpen.value)
-
-
   // 사이드바가 열려있고, 특정 페이지가 아닐 때만 콘텐츠를 밀어냄
   const result = isSidebarOpen.value && !isMainView.value && !isLandingView.value && !isTodaysPhotoView.value && !isProfileHeaderView.value
-  console.log('shouldMoveMainContent result:', result)
   return result
 })
 

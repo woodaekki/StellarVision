@@ -1,0 +1,212 @@
+[
+  {
+    "name": "Aries",
+    "koreanName": "양자리",
+    "abbreviation": "Ari",
+    "id": 7,
+    "icon": "♈️"
+  },
+  {
+    "name": "Taurus",
+    "koreanName": "황소자리",
+    "abbreviation": "Tau",
+    "id": 78,
+    "icon": "♉️"
+  },
+  {
+    "name": "Gemini",
+    "koreanName": "쌍둥이자리",
+    "abbreviation": "Gem",
+    "id": 38,
+    "icon": "♊️"
+  },
+  {
+    "name": "Cancer",
+    "koreanName": "게자리",
+    "abbreviation": "Cnc",
+    "id": 12,
+    "icon": "♋️"
+  },
+  {
+    "name": "Leo",
+    "koreanName": "사자자리",
+    "abbreviation": "Leo",
+    "id": 46,
+    "icon": "♌️"
+  },
+  {
+    "name": "Virgo",
+    "koreanName": "처녀자리",
+    "abbreviation": "Vir",
+    "id": 86,
+    "icon": "♍️"
+  },
+  {
+    "name": "Libra",
+    "koreanName": "천칭자리",
+    "abbreviation": "Lib",
+    "id": 49,
+    "icon": "♎️"
+  },
+  {
+    "name": "Scorpio",
+    "koreanName": "전갈자리",
+    "abbreviation": "Sco",
+    "id": 73,
+    "icon": "♏️"
+  },
+  {
+    "name": "Sagittarius",
+    "koreanName": "사수자리",
+    "abbreviation": "Sgr",
+    "id": 72,
+    "icon": "♐️"
+  },
+  {
+    "name": "Capricorn",
+    "koreanName": "염소자리",
+    "abbreviation": "Cap",
+    "id": 16,
+    "icon": "♑️"
+  },
+  {
+    "name": "Aquarius",
+    "koreanName": "물병자리",
+    "abbreviation": "Aqr",
+    "id": 4,
+    "icon": "♒️"
+  },
+  {
+    "name": "Pisces",
+    "koreanName": "물고기자리",
+    "abbreviation": "Psc",
+    "id": 66,
+    "icon": "♓️"
+  },
+  {
+    "name": "Cetus",
+    "koreanName": "고래자리",
+    "abbreviation": "Cet",
+    "id": 21,
+    "icon": "🐋"
+  },
+  {
+    "name": "Auriga",
+    "koreanName": "마차부자리",
+    "abbreviation": "Aur",
+    "id": 8,
+    "icon": "🐐"
+  },
+  {
+    "name": "Bootes",
+    "koreanName": "목동자리",
+    "abbreviation": "Boo",
+    "id": 9,
+    "icon": "🧑‍🌾"
+  },
+  {
+    "name": "Caelum",
+    "koreanName": "조각칼자리",
+    "abbreviation": "Cae",
+    "id": 10,
+    "icon": "🛠️"
+  },
+  {
+    "name": "Cassiopeia",
+    "koreanName": "카시오페이아자리",
+    "abbreviation": "Cas",
+    "id": 18,
+    "icon": "👸"
+  },
+  {
+    "name": "Centaurus",
+    "koreanName": "센타우루스자리",
+    "abbreviation": "Cen",
+    "id": 19,
+    "icon": "🐎"
+  },
+  {
+    "name": "Cepheus",
+    "koreanName": "세페우스자리",
+    "abbreviation": "Cep",
+    "id": 20,
+    "icon": "🤴"
+  },
+  {
+    "id": 31,
+    "name": "Cygnus",
+    "koreanName": "백조자리",
+    "abbreviation": "Cyg",
+    "icon": "🦢"
+  },
+  {
+    "id": 5,
+    "name": "Aquila",
+    "koreanName": "독수리자리",
+    "abbreviation": "Aql",
+    "icon": "🦅"
+  },
+  {
+    "id": 32,
+    "name": "Delphinus",
+    "koreanName": "돌고래자리",
+    "abbreviation": "Del",
+    "icon": "🐬"
+  },
+  {
+    "id": 40,
+    "name": "Hercules",
+    "koreanName": "허큘리스자리",
+    "abbreviation": "Her",
+    "icon": "💪"
+  },
+  {
+    "id": 52,
+    "name": "Lyra",
+    "koreanName": "거문고자리",
+    "abbreviation": "Lyr",
+    "icon": "🎶"
+  },
+  {
+    "id": 71,
+    "name": "Sagitta",
+    "koreanName": "화살자리",
+    "abbreviation": "Sge",
+    "icon": "🏹"
+  },
+  {
+    "id": 88,
+    "name": "Vulpecula",
+    "koreanName": "여우자리",
+    "abbreviation": "Vul",
+    "icon": "🦊"
+  },
+  {
+    "id": 34,
+    "name": "Draco",
+    "koreanName": "용자리",
+    "abbreviation": "Dra",
+    "icon": "🐉"
+  },
+  {
+    "id": 59,
+    "name": "Ophiuchus",
+    "koreanName": "뱀주인자리",
+    "abbreviation": "Oph",
+    "icon": "⚕️"
+  },
+  {
+    "id": 75,
+    "name": "Scutum",
+    "koreanName": "방패자리",
+    "abbreviation": "Sct",
+    "icon": "🛡️"
+  },
+  {
+    "id": 76,
+    "name": "Serpens",
+    "koreanName": "뱀자리",
+    "abbreviation": "Ser",
+    "icon": "🐍"
+  }
+]

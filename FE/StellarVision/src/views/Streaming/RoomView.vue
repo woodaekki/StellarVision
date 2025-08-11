@@ -7,6 +7,11 @@ import { DoorOpen, ImageDown, MessageCircle, Mic, MicOff,  Square, SquareStop, T
 import ChatPanel from '@/components/comment/ChatPanel.vue'
 import { useRecordingStore } from '@/stores/recording'
 import { createAIAnalyzeService } from '@/services/AIAnalyeService'
+import { useAITagStore } from '@/stores/aiTags'
+
+// ai 분석 결과를 담을 store
+const aiTagStore = useAITagStore();
+
 
 const route = useRoute()
 const router = useRouter()
@@ -113,49 +118,53 @@ const { session, publisher, subscribers, leave, setPublisherEl, attachSubEl, isP
     })
   })
 
-// 녹화 시작/중단 api 요청
-async function toggleRecording() {
-  try {
-    isRecordingButtonDisabled.value = true
-
-    if (!isRecording.value) {
+  // 녹화 시작/중단 api 요청
+  async function toggleRecording() {
+    try {
       isRecordingButtonDisabled.value = true
-      const res = await streamingService.startRecording(sessionId)
-      recordingId.value = res.data.data
-      console.log(res.data)
-      console.log('record', recordingId)
-      isRecording.value = true
 
-      alert('녹화를 시작합니다!')
-    } else {
-      if (!recordingId.value) {
-        alert('녹화ID가 없습니다. 새로고침 후 시도하세요.')
-        return
+      if (!isRecording.value) {
+        isRecordingButtonDisabled.value = true
+        const res = await streamingService.startRecording(sessionId)
+        recordingId.value = res.data.data
+        console.log(res.data)
+        console.log('record', recordingId)
+        isRecording.value = true
+
+        alert('녹화를 시작합니다!')
+      } else {
+        if (!recordingId.value) {
+          alert('녹화ID가 없습니다. 새로고침 후 시도하세요.')
+          return
+        }
+        // 태그들을 가져온다.
+        const tags = aiTagStore.list(sessionId)
+        console.log("인식된 태그들: ", tags);
+        const res = await streamingService.stopRecording(recordingId.value, tags)
+        isRecording.value = false
+        recordingId.value = null
+        console.log('res: ', res.data.data)
+        recordingStore.setRecordingInfo(res.data.data)
+        aiTagStore.clear(sessionId)
+        alert('녹화를 중지합니다')
       }
-      const res = await streamingService.stopRecording(recordingId.value)
-      isRecording.value = false
-      recordingId.value = null
-      console.log('res: ', res.data.data)
-      recordingStore.setRecordingInfo(res.data.data)
-      alert('녹화를 중지합니다')
-    }
-  } catch (e) {
+    } catch (e) {
 
-    if (e.response?.data?.error?.details === '409') {
-      isRecording.value = true
-      alert('이미 녹화가 진행 중입니다.')
-    }
+      if (e.response?.data?.error?.details === '409') {
+        isRecording.value = true
+        alert('이미 녹화가 진행 중입니다.')
+      }
 
-    alert(
-      '녹화 오류: ' +
-      (e.response?.data?.message || e.message) +
-      (e.response?.data?.error?.details ? ` (code: ${e.response.data.error.code}, details: ${e.response.data.error.details})` : '')
-    )
-    console.error('녹화 토글 실패', e.response?.data || e)
-  } finally {
-    isRecordingButtonDisabled.value = false
+      alert(
+        '녹화 오류: ' +
+        (e.response?.data?.message || e.message) +
+        (e.response?.data?.error?.details ? ` (code: ${e.response.data.error.code}, details: ${e.response.data.error.details})` : '')
+      )
+      console.error('녹화 토글 실패', e.response?.data || e)
+    } finally {
+      isRecordingButtonDisabled.value = false
+    }
   }
-}
 
 
   // 마이크 on/off 토글
@@ -169,20 +178,74 @@ async function toggleRecording() {
   let intervalId = null
   let inFlight = false
 
+  // 기존 runOnceAll() 전체 교체
   async function runOnceAll() {
+    // 토글 꺼져 있으면 실행 안 함
+    if (!aiOn.value) return
     if (inFlight) return
     inFlight = true
     try {
-      // 로컬 1회 분석
-      await localAnalyzer.once()
-      // 구독자 전부 1회 분석
-      for (const { svc } of subAnalyzers.values()) {
-        await svc.once()
+      // 로컬 응답 로깅
+      const localRes = await localAnalyzer.once()
+      prettyLog('[AI][local]', localRes)
+      if (isPublish.value) {    // 퍼블리셔일 때만 태그 누적
+        aiTagStore.addFromPredictions(sessionId, localRes)
+      }
+
+      // 구독자별 응답 로깅
+      for (const [streamId, { svc }] of subAnalyzers.entries()) {
+        const subRes = await svc.once()
+        prettyLog(`[AI][sub:${streamId}]`, subRes)
       }
     } catch (e) {
-      console.debug('[AI test] once error', e)
+      console.debug('[AI] once error', e)
     } finally {
       inFlight = false
+    }
+  }
+
+  // ✅ ADD: AI 응답 보기 좋게 콘솔에 출력
+  function prettyLog(prefix, data) {
+    try {
+      const preds = data?.predictions ?? []
+      console.group(prefix)
+      console.log('총 개수:', preds.length)
+      for (const p of preds) {
+        const { class: klass, confidence, bbox } = p
+        console.log(
+          `• ${klass}  conf=${Number(confidence).toFixed(3)}  bbox=[${bbox?.map(n => Number(n).toFixed(2)).join(', ')}]`
+        )
+      }
+      if (!preds.length) console.log('(빈 결과)')
+      console.groupEnd()
+    } catch (e) {
+      console.log(prefix, data)
+    }
+  }
+
+  // ✅ ADD: 토글에 따라 실행/정지
+  watch(aiOn, (on) => {
+    if (on) {
+      runOnceAll() // 즉시 1회
+      if (!intervalId) intervalId = window.setInterval(runOnceAll, TEN_MIN)
+    } else {
+      if (intervalId) { clearInterval(intervalId); intervalId = null }
+      clearAllOverlays() // 선택: 화면에서 박스 지우기
+    }
+  })
+
+  // ✅ ADD: 캔버스 클리어 함수
+  function clearAllOverlays() {
+    // 로컬
+    const c = overlayLocal.value
+    if (c) {
+      const ctx = c.getContext('2d')
+      if (ctx) ctx.clearRect(0, 0, c.width, c.height)
+    }
+    // 구독자
+    for (const { canvas } of subAnalyzers.values()) {
+      const ctx = canvas.getContext('2d')
+      if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height)
     }
   }
 
@@ -199,9 +262,6 @@ async function toggleRecording() {
     }
     if (v?.readyState >= 1 && v.videoWidth) attachLocal()
     else v?.addEventListener('loadedmetadata', attachLocal, { once: true })
-
-    runOnceAll()
-    intervalId = window.setInterval(runOnceAll, TEN_MIN)
   })
 
   onUnmounted(() => {
@@ -220,7 +280,7 @@ async function toggleRecording() {
         :class="['relative bg-black transition-all duration-300',
         showChat ? 'sm:w-[70%] w-full' :'w-full']"
         class="h-full rounded-none">
-        
+
         <!-- 변경: 로컬 프리뷰 + 오버레이 -->
         <div class="relative w-full h-full">
           <video
@@ -279,7 +339,7 @@ async function toggleRecording() {
             text-white rounded-full px-3 py-1 hover:bg-red-600 transition">
             <DoorOpen/>
           </button>
-          
+
 
           <!-- 시청자: 나가기 버튼 -->
           <button v-else @click="leave"
@@ -287,6 +347,7 @@ async function toggleRecording() {
             text-white rounded-full px-3 py-1 hover:bg-red-600 transition">
             <DoorOpen/>
           </button>
+
           <!-- AI 탐지 on/off -->
           <button
             @click="toggleAI"
@@ -295,7 +356,7 @@ async function toggleRecording() {
             class="absolute right-20 top-2 z-10 bg-black bg-opacity-70 w-15 h-10 inline-flex
                  justify-center items-center text-white rounded-full px-3 py-1 hover:bg-gray-600 transition "
             :class="aiOn ? ' hover:text-sky-600' : 'bg-black/70 hover:bg-gray-600'">
-            <component :is="aiOn ? ToggleLeft : ToggleRight" 
+            <component :is="aiOn ? ToggleLeft : ToggleRight"
               class="w-10 h-10 "
               :class="aiOn ? 'text-white/80' : 'text-sky-400'"/>
           </button>

@@ -29,8 +29,8 @@ export default {
   },
 
   // 4) 녹화 중지
-  stopRecording(recordingId) {
-    return streamingApi.post(`/streamings/recordings/${recordingId}//stop`)
+  stopRecording(recordingId, tags) {
+    return streamingApi.post(`/streamings/recordings/${recordingId}/stop`, tags)
   },
 
   // 5) 스트리밍 종료하기

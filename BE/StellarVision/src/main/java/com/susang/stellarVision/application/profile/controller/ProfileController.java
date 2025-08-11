@@ -99,7 +99,7 @@ public class ProfileController {
         return ResponseEntity.ok(APIResponse.success(downloadUrl));
     }
 
-    @DeleteMapping("/{memberId}/image")
+    @DeleteMapping("/image")
     public ResponseEntity<APIResponse<String>> deleteProfileImage(@AuthenticationPrincipal CustomUserDetails userDetails) {
         profileService.deleteProfileImage(userDetails);
         return ResponseEntity.ok(APIResponse.success("프로필 이미지 삭제 성공",null));

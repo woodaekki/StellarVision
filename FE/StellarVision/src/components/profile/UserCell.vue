@@ -26,7 +26,10 @@ const router = useRouter()
 
 function goToUser() {
   emit('select')
-  router.push(`/profile/${props.user.memberId}`)
+  router.push({
+    path: `/profile/${props.user.email}`,
+    state: { profilePk: props.user.memberId }
+  })
 }
 </script>
 

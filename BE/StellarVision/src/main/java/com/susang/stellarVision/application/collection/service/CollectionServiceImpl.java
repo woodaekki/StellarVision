@@ -17,6 +17,7 @@ import com.susang.stellarVision.entity.Member;
 import com.susang.stellarVision.entity.MemberCollection;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -82,7 +83,10 @@ public class CollectionServiceImpl implements CollectionService {
             SelectCollectionRequest selectCollectionRequest) {
         Long memberId = userDetails.getMember().getId();
 
-        Set<Integer> collectedIds = memberCollectionRepository.findCollectionIdsByMemberId(memberId);
+        Set<Long> collectedIds = memberCollectionRepository.findCollectionIdsByMemberId(memberId)
+                .stream()
+                .map(Integer::longValue)
+                .collect(Collectors.toSet());
 
         List<Long> selectedIds = selectCollectionRequest.getIds()
                 .stream()
