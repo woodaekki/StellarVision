@@ -14,7 +14,7 @@
         />
        </div>
       <div v-else class="no-user">
-        <p>아직 없어요.</p>
+        <p>여기에 아무도 없어요.</p>
       </div>
     </div>
   </div>
