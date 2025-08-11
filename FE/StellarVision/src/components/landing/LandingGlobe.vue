@@ -64,7 +64,7 @@ onMounted(async () => {
   const scene = await createScene();
   engine.runRenderLoop(() => {
     if (camera) {
-      camera.alpha += 0.001; // 여기서 지구본 회전 속도 조정
+      camera.alpha += 0.001;
     }
     scene.render();
   });
@@ -106,7 +106,6 @@ async function createScene() {
     intensity: 0.25,
   });
 
-  // 빛나는 효과 추가
   const fogAura = MeshBuilder.CreateSphere("fogAura", { diameter: 72, segments: 96 }, scene);
   const fogMaterial = new StandardMaterial("fogMat", scene);
   fogMaterial.emissiveColor = new Color3(0.2, 0.8, 1.0);
@@ -119,7 +118,6 @@ async function createScene() {
   fogAura.isPickable = false;
   fogAura.visibility = 1;
 
-  // 빛나는 효과
   const pipeline = new DefaultRenderingPipeline(
     "defaultPipeline",
     true,
@@ -132,13 +130,11 @@ async function createScene() {
   pipeline.bloomKernel = 16;
 
 
-  // 3D 모델링을 로딩, scene에 추가
   const container = await LoadAssetContainerAsync("/models/globe.glb", undefined, scene);
   container.addAllToScene();
 
   container.meshes.forEach(mesh => {
     if (mesh.material) {
-      // 모델링의 매터리얼 호출
       const originalMaterial = mesh.material.clone(`${mesh.material.name}_${mesh.name}_clone`);
       mesh.material = originalMaterial;
 
@@ -146,7 +142,6 @@ async function createScene() {
         return;
       }
 
-      // 와이어프레이밍 선따오기
       const wireframeMesh = mesh.clone(`${mesh.name}_wireframe`);
 
       const wireMat = new StandardMaterial(`wireMat_${mesh.name}`, scene);
@@ -165,13 +160,12 @@ async function createScene() {
 
 
 
-  // 지구본 기준으로 카메라 초기 위치를 고정
   const globeMesh = container.meshes.find((m) => m.name === "globe");
   if (globeMesh) {
     const boundingInfo = globeMesh.getHierarchyBoundingVectors();
     const center = boundingInfo.min.add(boundingInfo.max).scale(0.5);
 
-    const newCenter = new Vector3(center.x, center.y - 10, center.z);
+    const newCenter = new Vector3(center.x, center.y, center.z);
 
     fogAura.position = center;
     camera.setTarget(center);
@@ -187,7 +181,7 @@ async function createScene() {
   position: absolute;
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   color: #fff;
-  top: 60px;
+  top: 25px;
   left: 0;
   width: 100vw;
   height: calc(100vh - 60px);
@@ -215,6 +209,7 @@ canvas {
   pointer-events: auto;
   outline: none;
   border: none;
+  aspect-ratio: 1 / 1;
 }
 
 canvas:focus {
@@ -241,7 +236,7 @@ canvas:focus {
 .text-below {
   color: #f2f2f2;
   font-weight: 700;
-  font-size: 38px;
+  font-size: 34px;
 }
 
 .text-below {
@@ -260,9 +255,9 @@ canvas:focus {
 
 .start-button {
   position: absolute;
-  bottom: 35px;
+  bottom: 55px;
   z-index: 3;
-  padding: 0.55rem 1.1rem;
+  padding: 0.5rem 1rem;
   color: #fff;
   border-radius: 6px;
   font-weight: bold;
@@ -270,10 +265,10 @@ canvas:focus {
   text-decoration: none;
   pointer-events: auto;
   max-width: max-content;
-  font-size: 1rem;
+  font-size: .0.95rem;
   background-color: transparent;
   border: 1px solid #f2f2f2;
-  transition: background-color 0.3s ease, color 0.3s ease; /* 부드러운 전환 효과 */
+  transition: background-color 0.3s ease, color 0.3s ease;
 
   &:hover {
     background-color: #f2f2f2;

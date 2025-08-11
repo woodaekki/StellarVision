@@ -65,7 +65,7 @@ onMounted(async () => {
 
 .main-container {
   width: 100vw;
-  height: 100vh;
+  height: calc(100vh - 58px);
   display: flex;
   flex-direction: column;
 }

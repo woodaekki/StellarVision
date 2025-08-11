@@ -11,6 +11,5 @@ import LoginForm from '@/components/auth/LoginForm.vue';
 <style scoped>
 .login-page {
     background-image: #fff;
-    padding-top: 58px;
 }
 </style>
