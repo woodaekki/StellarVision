@@ -49,7 +49,7 @@
 
     <!-- 여기부터 본문입니다 -->
     <div class="mt-3 px-1">
-      <h3 class="text-[24px] font-semibold text-black line-clamp-1">
+      <h3 class="text-[24px] font-semibold text-black line-clamp-1 ">
         {{ title }}
       </h3>
       <p class="mt-0.5 text-[20px] text-zinc-600 line-clamp-1">
@@ -57,6 +57,19 @@
       </p>
         <!-- <div class="text-base text-zinc-400 mb-2 truncate">{{ video.tags }}</div> 태그는 나중에 -->
       <div v-if="type === 'vod'" class="mt-0.5 text-xs text-zinc-700">{{ date }}</div>
+
+      <!-- 좋아요 버튼 -->
+      <button v-if="type === 'vod'"
+        @click.stop.prevent="onLikeClick"
+        class="absolute right-2
+         bottom-5 z-3 flex-items-center gap-2 rounded-full
+        hover:bg-zinc-100/80 px-3 py-1 transition focus:outline-none focus:ring-0
+         disabled:opacity-50 disabled:pointer-events-none">
+        <Star :class="liked ? 'fill-yellow-200 text-yellow-400' : 'fill-none text-white-800'"/>
+        <span class="text-sm font-medium text-zinc-800 select-none">
+           {{ likeCount }}
+        </span>
+      </button>
     </div>
     <!-- 테두리 글래스 효과 -->
      <!-- <div class="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-white/10"></div> -->
@@ -65,12 +78,17 @@
 
 
 <script setup>
-import {  computed, onMounted, ref } from 'vue';
+import {  computed, onMounted, ref, watch } from 'vue';
 import defaultLogo from '@/assets/pictures/wallpaper/11.jpg'
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime'
 import 'dayjs/locale/ko'
 import commonApi from '@/api/commonApi';
+import { Star } from 'lucide-vue-next';
+import { useStreamingStore } from '@/stores/streaming';
+
+const store = useStreamingStore()
+const processing = ref(false)  // 중복 방지
 
 dayjs.extend(relativeTime) // 플러그인 적용 (시간설정)
 dayjs.locale('ko') // 한국어로 적용
@@ -137,6 +155,47 @@ const loadVideoTags = async () => {
   }
 }
 
+const liked = ref(!!props.video.liked)
+const likeCount = ref(props.video.likeCount ?? 0)
+
+// 비디오 동기화
+watch(() => props.video, (v) => {
+    liked.value = !!v.liked
+    likeCount.value = v.likeCount ?? 0
+  }, { deep: false }
+)
+
+const onLikeClick = async () => {
+  if (processing.value) return
+  processing.value = true
+
+  const prevLiked = liked.value
+  const prevCount = likeCount.value
+
+  liked.value = !prevLiked
+  likeCount.value = prevCount ? Math.max(prevCount -1, 0) : prevCount + 1
+
+  try {
+    //서버 요청 (이전 클릭을 기준으로 다시 클릭할 시 보내는 요청을 다르게 한다)
+    const res = prevLiked
+    ? await store.unlikeVideo(props.video.id)
+    : await store.likeVideo(props.video.id)
+
+    if (res) {
+      liked.value = !!res.liked
+      likeCount.value = res.likeCount ?? likeCount.value
+    }
+  } catch(err) {
+    liked.value = prevLiked // 에러시 이전 기록으로 복구
+    likeCount.value = prevCount
+    console.error('좋아요 토글 실패', err)
+  } finally {
+    processing.value = false
+  }
+}
+
+
+
 onMounted(()=>{
   if(props.type === 'vod') loadVideoTags()
 })
@@ -156,6 +215,6 @@ loading = lazy : 이미지 로딩 시점을 늦춰 페이지 로딩 속도를 �
 **tailwind**
 aspect-video : video 종횡비 구성 조절
 line-clamp-1 : 텍스트를 특정 줄 수로 제한한다(현재는 한줄로 제한)
-
+opacity : 불투명 정도
 
 -->
