@@ -177,7 +177,7 @@ public class StreamingServiceImpl implements StreamingService {
 
     @Override
     @Transactional
-    public RecordingInfoDTO stopRecording(String recordingId, Member member)
+    public RecordingInfoDTO stopRecording(String recordingId, Member member, List<String> tags)
             throws OpenViduJavaClientException, OpenViduHttpException {
         StreamingRoom streamingRoom = streamingRepository.findByRecordingId(recordingId)
                 .orElseThrow(() -> new RecordingNotFoundException(recordingId));
@@ -195,7 +195,7 @@ public class StreamingServiceImpl implements StreamingService {
                 LocalDateTime.ofInstant(created, ZoneOffset.UTC));
 
         pipelineService.downloadAndUploadAsync(recording.getUrl(), recording.getName(),
-                member.getId());
+                member.getId(), tags);
 
         return new RecordingInfoDTO(
                 recordingId,

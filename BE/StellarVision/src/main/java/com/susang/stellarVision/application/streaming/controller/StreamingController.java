@@ -1,5 +1,6 @@
 package com.susang.stellarVision.application.streaming.controller;
 
+import com.susang.stellarVision.application.streaming.dto.AnalyzeTagsRequest;
 import com.susang.stellarVision.application.streaming.dto.ConnectionTokenDTO;
 import com.susang.stellarVision.application.streaming.dto.CreateStreamingSessionRequest;
 import com.susang.stellarVision.application.streaming.dto.RecordingInfoDTO;
@@ -105,11 +106,13 @@ public class StreamingController {
     @PostMapping("/recordings/{recordingId}/stop")
     public ResponseEntity<APIResponse<RecordingInfoDTO>> endStreamingRecording(
             @PathVariable String recordingId,
+            @RequestBody AnalyzeTagsRequest request,
             @AuthenticationPrincipal CustomUserDetails customUserDetails
     ) {
         try {
             Member member = customUserDetails.getMember();
-            RecordingInfoDTO recordingInfoDTO = streamingService.stopRecording(recordingId, member);
+            List<String> tags = request.getTags();
+            RecordingInfoDTO recordingInfoDTO = streamingService.stopRecording(recordingId, member, tags);
             return ResponseEntity.ok(APIResponse.success("녹화저장에 성공했습니다.", recordingInfoDTO));
         } catch (OpenViduJavaClientException | OpenViduHttpException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
