@@ -12,6 +12,8 @@ import 'v-calendar/style.css'
 
 // 알림창 라이브러리
 import { ToastService } from 'primevue'
+import Primevue from 'primevue/config'
+
 
 const app = createApp(App)
 
@@ -20,6 +22,7 @@ app.use(VCalendar, {
 })
 
 app.use(ToastService)
+app.use(Primevue)
 
 app.use(createPinia())
 app.use(router)

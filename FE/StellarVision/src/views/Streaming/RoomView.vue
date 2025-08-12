@@ -12,6 +12,12 @@ import { createUpscaleService } from '@/services/upscaleService'
 import { latLngToPosition } from '@/services/latLngToPosition'
 import { computed } from 'vue'
 
+import { useToast } from 'primevue/usetoast'
+import Toast from 'primevue/toast'
+import ProgressBar from 'primevue/progressbar'
+import Button from 'primevue/button'
+import welcomImg from '@/assets/pictures/stellabot/logo.png'
+
 
 // ai 분석 결과를 담을 store
 const aiTagStore = useAITagStore();
@@ -29,6 +35,14 @@ const sessionId = route.params.id
 const userName = route.query.userName || 'Host'
 const roomTitle = route.query.title
 
+// 알림창 전용 객체
+const toast = useToast()
+const visible = ref(false);
+const progress = ref(0);
+const interval = ref();
+const WELCOME_TOAST_KEY = `roomview_welcome_shown:${sessionId}`  // 세션별로 첫 입장 시
+
+// 녹화 전용 객체
 const isRecording = ref(false)
 const recordingId = ref(null)
 const isRecordingButtonDisabled = ref(false)
@@ -123,7 +137,8 @@ const { session, publisher, subscribers, leave, setPublisherEl, attachSubEl, isP
   async function downloadUpscaled() {
     if (!upscaledUrl.value) return
     const filename = buildFilenameFromUrl(upscaledUrl.value, `upscaled_${Date.now()}.jpg`)
-
+    // 알림창 추가
+    startDownloadToast('업스케일된 이미지 저장 중...')
     if (isDownloading.value) return
     isDownloading.value = true
     try {
@@ -144,6 +159,9 @@ const { session, publisher, subscribers, leave, setPublisherEl, attachSubEl, isP
       a.click()
       a.remove()
       URL.revokeObjectURL(objUrl)
+
+      // 상태 초기화 -> 다시 캡쳐 할 수 있게 08.11 23:18
+      resetUpscaled()
     } catch (err) {
       console.warn('blob 다운로드 실패, 새 탭으로 오픈 시도', err)
       // 2) 최후: 새 탭으로 열어서 사용자가 저장하도록 유도
@@ -154,6 +172,11 @@ const { session, publisher, subscribers, leave, setPublisherEl, attachSubEl, isP
       document.body.appendChild(a)
       a.click()
       a.remove()
+      // 실패 시 알람 추가
+      if(interval.value) {clearInterval(interval.value); interval.value=null}
+      toast.add({severity:'error', summary:'다운로드 실패', detail: err?.message ?? 'unknown', life:3000})
+      toast.removeGroup('download')
+      visible.value = false
     } finally {
       isDownloading.value = false
     }
@@ -197,6 +220,12 @@ const { session, publisher, subscribers, leave, setPublisherEl, attachSubEl, isP
     }
   }
 
+  // 다운로드 후 초기화 로직  08-11 23:16분
+  function resetUpscaled() {
+  const url = upscaledUrl.value
+  if (url?.startsWith('blob:')) URL.revokeObjectURL(url)
+  upscaledUrl.value = null           // => hasUpscaled=false, 아이콘이 Camera로 변경되게끔 유도
+}
 
 
   // 로컬용 AI 분석기
@@ -401,6 +430,41 @@ const { session, publisher, subscribers, leave, setPublisherEl, attachSubEl, isP
     }
   }
 
+  // 다운로드 알림 띄우기
+  function startDownloadToast(summary = '이미지 저장 중입니다...'){
+    toast.add({
+      severity: 'custom',
+      summary,
+      group: 'download',
+      styleClass: 'backdrop-blur-lg rounded-2xl'
+    })
+    visible.value = true
+    progress.value = 0
+    // 임의로 진행하는 가짜 진행 바입니다 대충 5초? 정도 걸리게 해놨음. 더 천천히 하길 원한다면 +=7을 조절하면 됨
+    if (interval.value) clearInterval(interval.value)
+    interval.value = setInterval(()=>{
+      if (progress.value <= 100) {
+        progress.value +=7
+      }
+      if (progress.value >=100) {
+        progress.value = 100
+        clearInterval(interval.value)
+      }
+      }, 300)
+  }
+
+
+// 환영 알림창
+function showWelcomeToast() {
+  toast.add({
+    severity: 'custom',
+    summary: '환영합니다!',
+    group: 'welcome',                  // 템플릿에서 이 group 받음
+    styleClass: 'backdrop-blur-md rounded-2xl'  // 배경 블러 등
+  })
+  sessionStorage.setItem(WELCOME_TOAST_KEY, '1')
+}
+
   onMounted(() => {
     // 퍼블리셔라면 프리뷰가 이 엘리먼트에 붙는다
     setPublisherEl(localVideo.value)
@@ -414,6 +478,12 @@ const { session, publisher, subscribers, leave, setPublisherEl, attachSubEl, isP
     }
     if (v?.readyState >= 1 && v.videoWidth) attachLocal()
     else v?.addEventListener('loadedmetadata', attachLocal, { once: true })
+
+    // 진입 시 한 번만 노출
+    if (!sessionStorage.getItem(WELCOME_TOAST_KEY)) {
+      // 약간의 지연을 줘서 첫 렌더 후 노출 (선택)
+      setTimeout(showWelcomeToast(), 150)
+    }
   })
 
   onUnmounted(() => {
@@ -425,6 +495,11 @@ const { session, publisher, subscribers, leave, setPublisherEl, attachSubEl, isP
     if (upscaledUrl.value?.startsWith('blob:')) {
       URL.revokeObjectURL(upscaledUrl.value)
       upscaledUrl.value = null
+    }
+
+    // 알림창 해소
+    if (interval.value) {
+      clearInterval(interval.value);
     }
   })
 </script>
@@ -509,14 +584,14 @@ const { session, publisher, subscribers, leave, setPublisherEl, attachSubEl, isP
           <button
             @click="toggleAI"
             :aria-pressed="aiOn"
-            :title="aiOn ? 'AI 탐지 끄기' : 'AI 탐지 켜기'"
+            :title="aiOn ? 'AI 탐지 켜기' : 'AI 탐지 끄기'"
             class="absolute right-20 top-2 z-10 bg-black bg-opacity-70 w-15 h-10 inline-flex
                  justify-center items-center text-white rounded-full px-3 py-1 hover:bg-gray-600 transition "
-            :class="aiOn ? ' hover:text-sky-600' : 'bg-black/70 hover:bg-gray-600'">
+            :class="aiOn ? 'bg-black/70 hover:bg-gray-600' : 'hover:text-sky-600'">
             <component :is="aiOn ? ToggleLeft : ToggleRight"
               class="w-10 h-10 "
-              :class="aiOn ? 'text-white/80' : 'text-sky-400'"/>
-          </button>
+              :class="aiOn ? 'text-sky-400' : 'text-white/80'"/>
+          </button> 
 
           <!-- 캡처 버튼 -->
           <!-- <button
@@ -556,6 +631,62 @@ const { session, publisher, subscribers, leave, setPublisherEl, attachSubEl, isP
         </div>
       </transition>
     </div>
+    <Toast position="top-center" group="download" @close="visible = false">
+      <template #container="{ message, closeCallback }">
+        <section class="flex flex-col p-4 gap-4 w-full bg-primary/70 rounded-xl">
+          <div class="flex items-center gap-4">
+            <i class="pi pi-cloud-download text-white text-2xl"></i>
+            <span class="font-bold text-base text-white">{{ message.summary }}</span>
+          </div>
+          <div class="flex flex-col gap-2">
+            <ProgressBar :value="progress" :showValue="false" :style="{ height: '4px' }" class="!bg-primary/80" />
+            <label class="text-sm font-bold text-white">{{ progress }}% 진행 중</label>
+          </div>
+          <div class="flex gap-3 justify-end text-white">
+            <Button size="small" label="닫기" @click="closeCallback" />
+          </div>  
+        </section>
+      </template>
+    </Toast>
+
+    <!-- 환영 토스트: 중앙 정렬 -->
+    <Toast position="center" group="welcome">
+      <template #container="{ closeCallback }">
+        <!-- 카드 박스 -->
+        <section
+          class="w-[min(92vw,520px)] max-w-[520px] mx-auto
+                 bg-black/80 text-white rounded-2xl shadow-2xl
+                 p-6 sm:p-8 flex flex-col items-center gap-4">
+
+          <!-- 이미지 영역 (원하는 이미지 URL로 교체) -->
+          <img
+            :src=welcomImg
+            alt="Welcome"
+            class="w-24 h-24 object-contain"
+            onerror="this.style.display='none'"
+          />
+
+          <!-- 환영 문구 -->
+          <h3 class="text-2xl font-bold text-center">관측 준비 완료!</h3>
+          <p class="text-center text-white/90">
+            {{ userName }}님, 방 <span class="font-semibold">“{{ roomTitle || '스트리밍' }}”</span> 에 오신 걸 환영해요. <br/>
+            캡처 버튼을 누르고 잠시 기다린 후   
+            <span class="inline-flex items-center gap-1 whitespace-nowrap align-middle">
+            <Download class="w-5 h-5 inline-block" />
+            <span>를 누르면 멋있는 사진을 간직할 수 있어요!</span>
+          </span>
+          </p>
+          <!-- 액션 -->
+          <div class="mt-2 flex gap-3">
+            <button
+              class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 transition"
+              @click="closeCallback">
+              시작하기
+            </button>
+          </div>
+        </section>
+      </template>
+    </Toast>
   </div>
 </template>
 
@@ -563,3 +694,69 @@ const { session, publisher, subscribers, leave, setPublisherEl, attachSubEl, isP
 .fade-enter-active, .fade-leave-active { transition: opacity .2s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 </style>
+
+
+
+<!-- 
+<template>
+    <div class="card flex justify-center">
+        <Toast position="top-center" group="headless" @close="visible = false">
+            <template #container="{ message, closeCallback }">
+                <section class="flex flex-col p-4 gap-4 w-full bg-primary/70 rounded-xl">
+                    <div class="flex items-center gap-5">
+                        <i class="pi pi-cloud-upload text-white dark:text-black text-2xl"></i>
+                        <span class="font-bold text-base text-white dark:text-black">{{ message.summary }}</span>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <ProgressBar :value="progress" :showValue="false" :style="{ height: '4px' }" pt:value:class="!bg-primary-50 dark:!bg-primary-900" class="!bg-primary/80"></ProgressBar>
+                        <label class="text-sm font-bold text-white dark:text-black">{{ progress }}% uploaded</label>
+                    </div>
+                    <div class="flex gap-4 mb-4 justify-end">
+                        <Button label="Another Upload?" size="small" @click="closeCallback"></Button>
+                        <Button label="Cancel" size="small" @click="closeCallback"></Button>
+                    </div>
+                </section>
+            </template>
+        </Toast>
+        <Button @click="show" label="View" />
+    </div>
+</template>
+
+<script setup>
+import { useToast } from "primevue/usetoast";
+import { ref, onUnmounted } from 'vue';
+const toast = useToast();
+const visible = ref(false);
+const progress = ref(0);
+const interval = ref();
+
+onUnmounted(() => {
+    if (interval.value) {
+        clearInterval(interval.value);
+    }
+})
+
+const show = () => {
+    if (!visible.value) {
+        toast.add({ severity: 'custom', summary: 'Uploading your files.', group: 'headless', styleClass: 'backdrop-blur-lg rounded-2xl' });
+        visible.value = true;
+        progress.value = 0;
+
+        if (interval.value) {
+            clearInterval(interval.value);
+        }
+
+        interval.value = setInterval(() => {
+            if (progress.value <= 100) {
+                progress.value = progress.value + 20;
+            }
+
+            if (progress.value >= 100) {
+                progress.value = 100;
+                clearInterval(interval.value);
+            }
+        }, 1000);
+    }
+};
+</script>
+ -->
