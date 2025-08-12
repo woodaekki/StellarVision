@@ -8,17 +8,6 @@
           StellarVision은 우주 탐험에 대한 이러이러한 서비스를 제공합니다.
         </p>
       </div>
-      <div class="footer-right">
-        <div class="footer-section">
-          <h4>서비스</h4>
-          <ul>
-            <li><RouterLink to="/streaming">스트리밍목록</RouterLink></li>
-            <li> <RouterLink to="/profile/:id">프로필</RouterLink></li>
-            <li><RouterLink to="/badge">도감</RouterLink></li>
-            <li> <RouterLink to="/calender">캘린더</RouterLink></li>
-          </ul>
-        </div>
-      </div>
     </div>
     <div class="footer-bottom">
       <p>&copy; 2025 StellarVision. All Rights Reserved.</p>
@@ -29,7 +18,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
-import { RouterLink } from 'vue-router';
 
 const route = useRoute();
 const isMainView = computed(() => route.name === 'MainView');

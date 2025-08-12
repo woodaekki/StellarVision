@@ -69,6 +69,7 @@ const goToReplayRoom = (videoId) => {
   display: flex;
   justify-content: center;
   width: 100%;
+  margin-bottom: 20px;
 }
 
 .profile-section {

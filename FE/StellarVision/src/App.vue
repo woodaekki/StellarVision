@@ -1,7 +1,6 @@
 <template>
   <div class="app-layout">
-
-    <div class="main-content">cccccccccccccccccccccccccccccccccccccccccccccc
+    <div class="main-content">
       <MainHeader
         v-if="!isRoomView"
         :is-main-view="isMainView"
@@ -10,7 +9,7 @@
         <RouterView />
       </main>
       <MainFooter
-        v-if="!isRoomView" />
+        v-if="!isRoomView && !isLoginView && !isSignupView" />
     </div>
   </div>
 </template>
@@ -25,8 +24,8 @@ const route = useRoute()
 
 const isRoomView = computed(() => route.name === 'RoomView')
 const isMainView = computed(() => route.name === 'MainView')
-
-
+const isLoginView = computed(() => route.name === 'LoginView')
+const isSignupView = computed(() => route.name === 'SignupView')
 </script>
 
 <style lang="scss">
@@ -37,6 +36,10 @@ body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
+}
+
+.main-content {
+  margin-top: 58px;
 }
 
 main {

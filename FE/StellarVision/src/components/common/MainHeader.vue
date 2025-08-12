@@ -4,9 +4,16 @@
       <div class="flex items-center gap-2">
         <img :src="logo" alt="로고" width="30px" height="42px" />
         <RouterLink to="/" class="no-underline relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-[#f2f2f2] after:w-0 after:transition-all after:duration-300 hover:after:w-full font-bold font-pretendard">StellaVision</RouterLink>
-        <RouterLink to="/pre" class="no-underline relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-[#f2f2f2] after:w-0 after:transition-all after:duration-300 hover:after:w-full font-pretendard"><Video class="video-icon"/></RouterLink>
       </div>
-      <nav class="flex items-center gap-4">
+      <nav class="flex items-center gap-2">
+        <div class="icon-container gap-2">
+          <RouterLink to="/pre" class="live-button-container no-underline relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-[#f2f2f2] after:w-0 after:transition-all after:duration-300 hover:after:w-full font-Poppins">
+            <Video class="live-icon" :stroke-width="1" />
+          </RouterLink>
+          <RouterLink to="/calender" class="live-button-container no-underline relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-[#f2f2f2] after:w-0 after:transition-all after:duration-300 hover:after:w-full font-Poppins">
+            <img :src="calender" alt="천문일정" class="calender-icon" width="28px" height="28px">
+          </RouterLink>
+        </div>
         <template v-if="isLogin">
           <RouterLink :to="`/profile/${userInfo?.email}`" class="no-underline relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-[#f2f2f2] after:w-0 after:transition-all after:duration-300 hover:after:w-full font-pretendard">
             {{ userInfo?.name }}님
@@ -24,9 +31,10 @@
 
 <script setup>
 import { Video } from 'lucide-vue-next';
-import { RouterLink, useRoute } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router';
 import { computed } from 'vue'
 import logo from "@/assets/pictures/stellabot/logo.png"
+import calender from "@/assets/pictures/stellabot/calender.png"
 import { useAccountStore } from "@/stores/account.js"
 
 const route = useRoute()
@@ -39,9 +47,9 @@ const isRoomView = computed(() => route.name === 'RoomView')
 // 라우트 이름에 따라 헤더 색상을 변경
 const headerClasses = computed(() => {
   if (route.name === 'MainView') {
-    return 'bg-transparent text-[#cfd8dc]';
+    return 'bg-transparent text-slate-50';
   } else {
-    return 'bg-black text-white';
+    return 'bg-black text-slate-50';
   }
 });
 
@@ -51,7 +59,26 @@ const handleLogout = () => {
 </script>
 
 <style>
-.video-icon {
-  color:#FF0000 ;
+.icon-container {
+  display: flex;
 }
+
+.live-icon {
+  width: 28px;
+  height: 28px
+}
+
+.live-button-container {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  font-weight: bold;
+  transition: color 0.3s ease;
+}
+
+.calender-icon {
+  width: 20px;
+  height: 20px
+}
+
 </style>
