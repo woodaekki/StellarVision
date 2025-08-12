@@ -2,7 +2,7 @@
 <template>
   <!--  -->
   <article
-    class ="group relative w-full max-w-[36rem]  rounded-2xl
+    class ="group relative rounded-xl overflow-hidden
      hover:ring-white/20 hover:-translate-y-0.5  cursor-pointer"
     @click="onThumbnailClick"
     :aria-label="title"
@@ -49,14 +49,15 @@
 
     <!-- 여기부터 본문입니다 -->
     <div class="mt-3 px-1">
-      <h3 class="text-[24px] font-semibold text-black line-clamp-1 ">
+      <h3 class="text-[24px] font-semibold text-white
+       line-clamp-1 ">
         {{ title }}
       </h3>
-      <p class="mt-0.5 text-[20px] text-zinc-600 line-clamp-1">
+      <p class="mt-0.5 text-[20px] text-zinc-100 line-clamp-1">
         {{ user }}
       </p>
         <!-- <div class="text-base text-zinc-400 mb-2 truncate">{{ video.tags }}</div> 태그는 나중에 -->
-      <div v-if="type === 'vod'" class="mt-0.5 text-xs text-zinc-700">{{ date }}</div>
+      <div v-if="type === 'vod'" class="mt-0.5 text-xs text-white">{{ date }}</div>
 
       <!-- 좋아요 버튼 -->
       <button v-if="type === 'vod'"
@@ -66,7 +67,7 @@
         hover:bg-zinc-100/80 px-3 py-1 transition focus:outline-none focus:ring-0
          disabled:opacity-50 disabled:pointer-events-none">
         <Star :class="liked ? 'fill-yellow-200 text-yellow-400' : 'fill-none text-white-800'"/>
-        <span class="text-sm font-medium text-zinc-800 select-none">
+        <span class="text-sm font-medium text-zinc-200 select-none">
            {{ likeCount }}
         </span>
       </button>
@@ -144,7 +145,7 @@ const loadVideoTags = async () => {
     console.log('tage data', res.data)
     if (res.data?.status === 'success'){
       tags.value = res.data.data.tags || []
-      console.log('✅ 로드된 태그:', tags.value) // ★ 로드된 태그 출력
+      console.log('로드된 태그:', tags.value) // ★ 로드된 태그 출력
 
     }
     } catch (err) {
@@ -216,5 +217,7 @@ loading = lazy : 이미지 로딩 시점을 늦춰 페이지 로딩 속도를 �
 aspect-video : video 종횡비 구성 조절
 line-clamp-1 : 텍스트를 특정 줄 수로 제한한다(현재는 한줄로 제한)
 opacity : 불투명 정도
+cursor-pointer : 마우스를 갖다대면 커서 모양이 바뀐다.
+overflow-hidden : 넘치는 부분을
 
 -->
