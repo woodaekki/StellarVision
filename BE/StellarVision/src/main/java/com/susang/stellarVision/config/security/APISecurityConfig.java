@@ -68,7 +68,7 @@ public class APISecurityConfig {
             AuthenticationSuccessHandler authenticationSuccessHandler,
             AuthenticationFailureHandler authenticationFailureHandler
             ) throws Exception {
-        http.securityMatcher("/oauth2/**", "/login/oauth2/**")
+        http.securityMatcher("/api/oauth2/**", "/api/login/oauth2/**")
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
 //                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
