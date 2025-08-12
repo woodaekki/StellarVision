@@ -84,7 +84,7 @@ html, body {
 .video-container {
   position: relative;
   width: 100%;
-  height: calc(100vh - 58px);
+  height: 100vh;
   overflow: hidden;
 }
 
