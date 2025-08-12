@@ -23,6 +23,30 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.main-wrapper {
+  position: fixed; /* 이게 있어야 메인 페이지에 스크롤이 안 생깁니다 */
+  inset: 0;
+  width: 100vw;
+  height: 100svh;
+  max-width: 100vw;
+  max-height: 100svh;
+  overflow: hidden;
+  box-sizing: border-box;
+}
 
+.video-container {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.background-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 </style>
-

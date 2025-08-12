@@ -13,10 +13,33 @@
 
     </div>
   </div>
+
+  <div class="toast-wrap">
+    <transition-group name="toast">
+      <div v-for="t in toasts" :key="t.key" class="toast ship">
+        <div class="ship-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22">
+            <path d="M12 2c3.5 0 6 2.5 6 6 0 3-1.9 6.5-4.6 9.2l-.9.9-1.9-1.9-1.9 1.9-.9-.9C7.9 14.5 6 11 6 8c0-3.5 2.5-6 6-6z" fill="url(#g)"/>
+            <path d="M9.5 20.5c-.4.4-1.6.9-2.7 1 0-1.1.6-2.3 1-2.7l1.7-1.7 1.7 1.7-1.7 1.7z" fill="#ffb74d"/>
+            <defs>
+              <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+                <stop offset="0%" stop-color="#8ea2ff"/>
+                <stop offset="100%" stop-color="#b388ff"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div class="ship-body">
+          <div class="ship-sub">새로운 스트리밍방이 열렸습니다</div>
+          <div class="ship-title">{{ t.title }}</div>
+        </div>
+      </div>
+    </transition-group>
+  </div>
 </template>
 
 <script setup>
-import { ref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
+import { ref, watch, nextTick, onMounted, onBeforeUnmount, computed } from 'vue';
 import { renderPins, setupPinClickHandler } from '../../services/globeMarker.js';
 import createGlobeScene from '../../services/createMainScene.js';
 import { showInfoOnClick } from '../../services/showInfoOnClick.js';
@@ -36,6 +59,7 @@ const camera = ref(null);
 const globeCenter = ref(null);
 const globeRadius = ref(null);
 const isHoveringGlobe = ref(false);
+const isSceneReady = computed(() => !!scene.value && !!globeCenter.value && !!globeRadius.value);
 
 // Tooltip 로직 (말풍선)
 const {
@@ -82,7 +106,7 @@ onMounted(async () => {
   setupPinClickHandler(scene.value, handlePinInteraction, hideTooltip);
 
   engine.value.runRenderLoop(() => {
-    if (camera.value && !isHoveringGlobe.value) {
+    if (camera.value && !isHoveringGlobe.value && !scene.value?.metadata?.isFlying) {
       camera.value.alpha += 0.001;
     }
     scene.value.render();
@@ -91,7 +115,8 @@ onMounted(async () => {
 
   window.addEventListener('resize', onResize);
 
-  if (props.liveStreams?.length) {
+  if (isSceneReady.value && (props.liveStreams?.length ?? 0) > 0) {
+    await nextTick();
     await renderPins({
       scene: scene.value,
       globeCenter: globeCenter.value,
@@ -101,20 +126,62 @@ onMounted(async () => {
   }
 });
 
-// 실시간 스트리밍 정보 가져옴
+// 신규 스트리밍 안내 및 최신 id 추적
+const lastMaxId = ref(null);
+const toasts = ref([]);
+
+function pushToast(title, ttl = 3000) {
+  const key = Date.now() + Math.random();
+  toasts.value.push({ key, title });
+  setTimeout(() => {
+    toasts.value = toasts.value.filter(t => t.key !== key);
+  }, ttl);
+}
+
+// 실시간 스트리밍 정보 가져옴 + 카메라 이동/토스트
 watch(
-  [() => props.liveStreams, scene, globeCenter, globeRadius],
-  async () => {
-    if (!scene.value || !globeCenter.value || !globeRadius.value) return;
+  [isSceneReady, () => props.liveStreams],
+  async ([ready, list]) => {
+    if (!ready) return;
+    const streams = Array.isArray(list) ? list : [];
+    if (streams.length === 0) return;
+
+    // 핀 렌더링(먼저 호출해서 월드 좌표 맵이 채워지도록)
     await nextTick();
     await renderPins({
       scene: scene.value,
       globeCenter: globeCenter.value,
       globeRadius: globeRadius.value,
-      pins: props.liveStreams
+      pins: streams
     });
+
+    const newest = streams.reduce((a, b) => (a.id > b.id ? a : b));
+    const prev = lastMaxId.value;
+    lastMaxId.value = newest.id;
+
+    // 카메라 이동 (가능하면 월드좌표 기반, 아니면 위경도 기반)
+    const m = scene.value?.metadata || {};
+    const pos = m._pinWorldPosById?.get(newest.id);
+
+    const flyInitial = () => {
+      if (pos && m.flyToWorld) m.flyToWorld(pos, { duration: 1200 });
+      else if (m.flyToLatLon) m.flyToLatLon(newest.latitude, newest.longitude, { duration: 1200 });
+    };
+    const flyUpdate = () => {
+      if (pos && m.flyToWorld) m.flyToWorld(pos, { duration: 1000 });
+      else if (m.flyToLatLon) m.flyToLatLon(newest.latitude, newest.longitude, { duration: 1000 });
+    };
+
+    if (prev == null) {
+      // 최초 진입
+      flyInitial();
+    } else if (newest.id > prev) {
+      // 신규 방 등장
+      flyUpdate();
+      pushToast(newest.title);;
+    }
   },
-  { immediate: true, deep: false, flush: 'post' } 
+  { immediate: true, deep: false, flush: 'post' }
 );
 
 // 언마운트 시 정리
@@ -130,25 +197,23 @@ onBeforeUnmount(() => {
 <style scoped>
 .globe-wrapper {
   position: absolute;
-  top: 55px;
-  left: 0;
-  width: 100vw;
-  height: calc(100vh - 60px);
+  inset: 0;
+  width: 100%;
+  height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
   overflow: hidden;
-  z-index: 0;
+  z-index: 1;
 }
 
 .globe-container {
   position: relative;
+  width: 100%;
+  height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
 }
 
 canvas {
@@ -166,7 +231,7 @@ canvas:focus {
 .tooltip {
   pointer-events: none;
   position: absolute;
-  width: 580px; 
+  width: 580px;
   max-width: 15vw;
   z-index: 20;
   transform: translate(-50%, -100%);
@@ -261,5 +326,109 @@ canvas:focus {
 @keyframes tt-pop {
   from { transform: scale(.96); opacity: 0; }
   to   { transform: scale(1);   opacity: 1; }
+}
+
+/* 여기서부터 알림창 스타일링 */
+.toast-wrap {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+.toast-enter-from, .toast-leave-to { opacity: 0; transform: translateY(-8px) scale(.98); }
+.toast-enter-active, .toast-leave-active { transition: all .18s ease; }
+
+.toast.ship {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 260px;
+  max-width: min(46vw, 380px);
+  padding: 12px 14px;
+  border-radius: 12px;
+
+  /* 글라스+우주 느낌 배경 */
+  background:
+    radial-gradient(120% 180% at 120% -10%, rgba(142,162,255,.25), rgba(179,136,255,.1) 60%, transparent 70%),
+    rgba(16, 18, 28, 0.85);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow:
+    0 8px 28px rgba(0,0,0,.35),
+    inset 0 1px 0 rgba(255,255,255,.06),
+    0 0 0 1px rgba(142,162,255,.08);
+
+  position: relative;
+  overflow: hidden;
+}
+
+.toast.ship::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,.45), transparent 50%),
+    radial-gradient(1px 1px at 70% 60%, rgba(255,255,255,.35), transparent 50%),
+    radial-gradient(1px 1px at 40% 80%, rgba(255,255,255,.25), transparent 50%);
+  opacity: .35;
+  pointer-events: none;
+}
+
+.ship-icon {
+  width: 28px; height: 28px;
+  display: grid; place-items: center;
+  filter: drop-shadow(0 0 6px rgba(153, 171, 255, .4));
+  position: relative;
+}
+.ship-icon::after {
+  content: "";
+  position: absolute;
+  bottom: -2px; left: 50%;
+  width: 6px; height: 10px;
+  transform: translateX(-50%);
+  background: radial-gradient(50% 60% at 50% 0%, #ffd180, rgba(255,140,0,.0));
+  filter: blur(0.5px);
+  animation: thruster .5s ease-in-out infinite alternate;
+}
+@keyframes thruster {
+  from { opacity: .55; transform: translateX(-50%) translateY(0) scaleY(1); }
+  to   { opacity: .9;  transform: translateX(-50%) translateY(1px) scaleY(1.15); }
+}
+
+.ship-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.ship-sub {
+  font-size: 12px;
+  color: #cfd2e8;
+  letter-spacing: .2px;
+  opacity: .9;
+}
+.ship-title {
+  margin-top: 2px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: .2px;
+  text-shadow: 0 0 8px rgba(142,162,255,.2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 모바일 대응 */
+@media (max-width: 640px) {
+  .toast-wrap { top: 12px; right: 12px; }
+  .toast.ship { min-width: 220px; padding: 10px 12px; }
+  .ship-title { font-size: 13px; }
 }
 </style>

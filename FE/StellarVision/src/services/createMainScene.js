@@ -14,6 +14,8 @@ import {
   ActionManager,
   ExecuteCodeAction,
 } from '@babylonjs/core';
+import { Animation } from '@babylonjs/core/Animations/animation.js';
+import { CubicEase, EasingFunction } from '@babylonjs/core/Animations/easing.js';
 
 export default async function createGlobeScene({
   engine,
@@ -40,6 +42,49 @@ export default async function createGlobeScene({
   camera.attachControl(canvas, true);
   camera.lowerRadiusLimit = 50;
   cameraRef.value = camera;
+
+  // 가장 짧은 각도로 회전하도록 조정
+  function shortestTo(current, target) {
+    let d = ((target - current + Math.PI) % (2 * Math.PI)) - Math.PI;
+    return current + d;
+  }
+
+  function animateCamProp(cam, prop, to, duration = 1200) {
+    const from = cam[prop];
+    const fps = 60;
+    const ease = new CubicEase();
+    ease.setEasingMode(EasingFunction.EASINGMODE_EASEINOUT);
+    return Animation.CreateAndStartAnimation(
+      `fly_${prop}_${Date.now()}`,
+      cam, prop, fps,
+      Math.max(1, Math.round((duration/1000)*fps)),
+      from, to,
+      Animation.ANIMATIONLOOPMODE_CONSTANT, ease
+    );
+  }
+
+  // ✅ 외부에서 호출할 수 있게 scene.metadata에 붙임
+  scene.metadata ||= {};
+  scene.metadata.isFlying = false;
+
+  scene.metadata.flyToWorld = (worldPos, opts = {}) => {
+    if (!camera || !worldPos) return;
+    const dur = opts.duration ?? 1200;
+
+    // ArcRotateCamera 기준: target(=지구 중심)을 기준으로 방향 벡터 계산
+    const dir = worldPos.subtract(camera.target).normalize();
+    const targetAlpha = Math.atan2(dir.z, dir.x);
+    const targetBeta  = Math.acos(Math.min(Math.max(dir.y, -1), 1));
+
+    scene.metadata.isFlying = true;
+    const a1 = animateCamProp(camera, 'alpha', shortestTo(camera.alpha, targetAlpha), dur);
+    const a2 = animateCamProp(camera, 'beta',  targetBeta, dur);
+
+    let left = 2;
+    const done = () => { if (--left === 0) scene.metadata.isFlying = false; };
+    a1?.onAnimationEndObservable?.addOnce(done) || (a1.onAnimationEnd = done);
+    a2?.onAnimationEndObservable?.addOnce(done) || (a2.onAnimationEnd = done);
+  };
 
   // 빛나게 하는 효과들 추가
   new HemisphericLight('light', new Vector3(0, 1, 0), scene);
@@ -86,7 +131,7 @@ export default async function createGlobeScene({
 
     fogAura.position = center;
     camera.setTarget(center);
-    camera.radius = maxRadius * 1.2;
+    camera.radius = maxRadius * 1.5;
   }
 
   // 모델링의 와이어프레임 효과 추가 (지구본의 테두리 선이 보이는 효과는 전부 여기서 처리됩니다)
