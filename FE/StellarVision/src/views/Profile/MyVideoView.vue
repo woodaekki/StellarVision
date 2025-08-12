@@ -3,7 +3,11 @@
     <div class="profile-section">
       <div class="section-header">
         <h2 class="section-title">My Video</h2>
-        <button v-if="recentVideos.length > 0" @click="goVideoList" class="detail-button">
+        <button
+          v-if="recentVideos.length > 0"
+          @click="goVideoList"
+          class="detail-button"
+        >
           더보기
         </button>
       </div>
@@ -17,7 +21,6 @@
           <img
             :src="video.thumbnailDownloadUrl"
             alt="video thumbnail"
-            style="width: 100%; height: 100%; object-fit: cover"
           />
           <p class="content-info video-date">Date: {{ video.createdAt?.split('T')[0] }}</p>
         </div>
@@ -50,9 +53,7 @@ const goVideoList = () => {
   router.push({
     name: 'MyVideoListView',
     params: { id: route.params.id },
-    state: {
-      profilePk: props.profilePk,
-    },
+    state: { profilePk: props.profilePk },
   })
 }
 
@@ -66,16 +67,20 @@ const goToReplayRoom = (videoId) => {
 
 <style scoped>
 .profile-section-container {
+  margin-top: 15px;
+  margin-bottom: 8px;
   display: flex;
   justify-content: center;
   width: 100%;
-  margin-bottom: 20px;
+  font-family: 'Pretendard', sans-serif;
+  color: white;
+  padding: 20px 0;
+  border-radius: 20px;
 }
 
 .profile-section {
   width: 100%;
   max-width: 1200px;
-  margin: 0;
   padding: 10px 0;
 }
 
@@ -84,36 +89,40 @@ const goToReplayRoom = (videoId) => {
   justify-content: space-between;
   align-items: center;
   padding: 0 35px;
-  margin-bottom: 5px;
-  padding-bottom: 5px;
+  margin-bottom: 10px;
 }
 
 .section-title {
-  font-size: 18px;
+  font-size: 25px;
   font-weight: 700;
-  color: #000;
 }
 
 .detail-button {
-  color: #000;
+  color: white;
   cursor: pointer;
-  background: transparent;
-  border: 1px solid #4a4a4a;
-  padding: 5px 12px;
-  border-radius: 4px;
+  background: rgba(15, 20, 40, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  padding: 6px 14px;
+  border-radius: 6px;
+  backdrop-filter: blur(6px);
+  transition: background 0.3s ease;
+}
+.detail-button:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .content-frames {
+  max-width: calc(100% - 70px);
+  margin: 0 auto;
   display: flex;
   gap: 15px;
-  justify-content: flex-start;
   flex-wrap: wrap;
   padding-top: 5px;
+  box-sizing: border-box;
 }
 
-.content-frame,
-.empty-frame {
-  flex-basis: calc(25% - 12px);
+.content-frame {
+  border-radius: 10px;
   width: calc(25% - 12px);
   max-width: 280px;
   aspect-ratio: 1.3;
@@ -122,40 +131,59 @@ const goToReplayRoom = (videoId) => {
   flex-direction: column;
   position: relative;
   overflow: hidden;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+.content-frame:hover {
+  box-shadow: 0 8px 20px rgba(0,0,0,0.7);
+  transform: translateY(-5px);
 }
 
-.video-frame {
-  background: #fff;
+.video-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.8);
+  opacity: 0.97;
+  transition: filter 0.3s ease, opacity 0.3s ease;
+  border-radius: 10px 10px 0 0;
+}
+.content-frame:hover img {
+  filter: brightness(1);
+  opacity: 1;
 }
 
 .content-info {
   position: absolute;
-  top: 3px;
-  left: 3px;
-  color: #fff;
+  bottom: 6px;
+  left: 6px;
+  color: white;
   background: rgba(0, 0, 0, 0.5);
-  padding: 2px 4px;
-  border-radius: 2px;
-  font-size: 10px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  font-size: 12px;
   z-index: 10;
   opacity: 0;
   transition: opacity 0.3s ease;
+  user-select: none;
 }
-
 .content-frame:hover .content-info {
   opacity: 1;
 }
 
 .empty-frame {
-  background-color: #f5f5f5;
-  border: 2px dashed #ccc;
   justify-content: center;
   align-items: center;
+  min-height: 140px;
 }
 
 .empty-text {
-  color: #999;
-  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 16px;
+  margin-top: 10px;
   font-weight: 500;
 }
 </style>

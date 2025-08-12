@@ -97,4 +97,27 @@ $container-radius: 9999px; // 둥근 형태
   background-color: #1f2833;
 }
 
+.white-panel {
+   background: rgba(255, 255, 255, 0.12);          
+  border-radius: 20px;                           
+  padding: 35px 40px;
+  margin: 25px auto;
+  max-width: 1140px;
 
+  backdrop-filter: blur(12px);                    
+  -webkit-backdrop-filter: blur(12px);
+
+  box-shadow:
+    inset 3px 3px 6px rgba(255 255 255 / 0.5),   
+    inset -3px -3px 6px rgba(0 0 0 / 0.1);       
+
+  border: 1.2px solid rgba(255, 255, 255, 0.2);   
+
+  color: rgba(30, 30, 30, 0.7);
+
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  letter-spacing: 0.02em;
+
+  transition: box-shadow 0.3s ease;
+  cursor: default;
+}
