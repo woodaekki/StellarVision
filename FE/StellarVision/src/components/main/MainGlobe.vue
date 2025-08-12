@@ -1,3 +1,4 @@
+<!-- MainGlobe.vue -->
 <template>
   <div class="globe-wrapper">
     <div class="globe-container">
@@ -39,7 +40,7 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick, onMounted, onBeforeUnmount, computed } from 'vue';
+import { ref, watch, nextTick, onMounted, onBeforeUnmount, computed, inject } from 'vue';
 import { renderPins, setupPinClickHandler } from '../../services/globeMarker.js';
 import createGlobeScene from '../../services/createMainScene.js';
 import { showInfoOnClick } from '../../services/showInfoOnClick.js';
@@ -60,6 +61,9 @@ const globeCenter = ref(null);
 const globeRadius = ref(null);
 const isHoveringGlobe = ref(false);
 const isSceneReady = computed(() => !!scene.value && !!globeCenter.value && !!globeRadius.value);
+
+//사이드바 상태 감지
+const sidebarState = inject('sidebarState', null)
 
 // Tooltip 로직 (말풍선)
 const {
