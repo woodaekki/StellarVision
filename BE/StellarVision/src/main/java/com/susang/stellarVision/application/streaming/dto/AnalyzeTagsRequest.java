@@ -1,5 +1,6 @@
 package com.susang.stellarVision.application.streaming.dto;
 
+import java.util.ArrayList;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,5 +12,5 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AnalyzeTagsRequest {
-    private List<String> tags;
+    private List<String> tags = new ArrayList<>();
 }
