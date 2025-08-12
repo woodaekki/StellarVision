@@ -39,6 +39,25 @@ public class APISecurityConfig {
 
     @Order(1)
     @Bean
+    public SecurityFilterChain oauth2SecurityFilterChain(
+            HttpSecurity http,
+            AuthenticationSuccessHandler authenticationSuccessHandler,
+            AuthenticationFailureHandler authenticationFailureHandler
+    ) throws Exception {
+        http.securityMatcher("/api/oauth2/**", "/api/login/oauth2/**")
+                .csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+//                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+                .oauth2Login(oauth -> oauth
+                        .successHandler(authenticationSuccessHandler)
+                        .failureHandler(authenticationFailureHandler));
+
+        return http.build();
+    }
+
+    @Order(2)
+    @Bean
     public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http, @Qualifier("corsConfigurationSource") CorsConfigurationSource corsConfig, CustomUserDetailsService userDetailsService,
             JWTAuthenticationFilter authFilter, JWTVerificationFilter jwtVerifyFilter, SecurityExceptionHandlingFilter exceptionFilter) throws Exception {
 
@@ -57,25 +76,6 @@ public class APISecurityConfig {
         http.addFilterBefore(jwtVerifyFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterAt(authFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(exceptionFilter, JWTVerificationFilter.class);
-
-        return http.build();
-    }
-
-    @Order(2)
-    @Bean
-    public SecurityFilterChain oauth2SecurityFilterChain(
-            HttpSecurity http,
-            AuthenticationSuccessHandler authenticationSuccessHandler,
-            AuthenticationFailureHandler authenticationFailureHandler
-            ) throws Exception {
-        http.securityMatcher("/api/oauth2/**", "/api/login/oauth2/**")
-                .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
-//                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
-                .oauth2Login(oauth -> oauth
-                        .successHandler(authenticationSuccessHandler)
-                        .failureHandler(authenticationFailureHandler));
 
         return http.build();
     }
