@@ -2,7 +2,7 @@
   <div v-if="loading">
     <p>Loading profile...</p>
   </div>
-  <div v-else class="profile-wrapper">
+  <div v-else class="profile-wrapper bg-stone-800">
     <main class="main-content">
       <div class="content-section">
          <ProfileHeader

@@ -204,8 +204,8 @@ const modalList = computed(() =>
 
 <style scoped>
 .profile-header {
-  background-color: #414147;
-  background: linear-gradient(135deg, #4d4949 0%, #3e3a3a 100%);
+  /* background-color: #414147; */
+  /* background: linear-gradient(135deg, #4d4949 0%, #3e3a3a 100%); */
   width: 100vw;
   position: relative;
   left: 50%;
@@ -285,7 +285,7 @@ const modalList = computed(() =>
 }
 
 .btn {
-  background: #505055;
+  /* background: #505055; */
   color: #fff;
   border-radius: 8px;
   padding: 8px 16px;
