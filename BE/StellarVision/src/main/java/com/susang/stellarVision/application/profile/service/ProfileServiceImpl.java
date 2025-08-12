@@ -8,6 +8,7 @@ import com.susang.stellarVision.application.profile.dto.ProfileVisibilityUpdateR
 import com.susang.stellarVision.application.profile.dto.UpdateDescriptionrequest;
 import com.susang.stellarVision.application.profile.error.DescriptionTooLongException;
 import com.susang.stellarVision.common.s3.S3FileManager;
+import com.susang.stellarVision.common.s3.S3ResizedImageKeyMapper;
 import com.susang.stellarVision.config.security.authentication.CustomUserDetails;
 import com.susang.stellarVision.entity.Member;
 import com.susang.stellarVision.entity.Profile;
@@ -25,6 +26,7 @@ public class ProfileServiceImpl implements ProfileService {
     private final MemberRepository memberRepository;
     private final S3FileManager s3FileManager;
     private static final String DEFAULT_PROFILE_IMAGE_KEY = "profile/profile.png";
+
 
     @Override
     public String getProfileImageUrl(String s3Key) {
@@ -80,8 +82,10 @@ public class ProfileServiceImpl implements ProfileService {
                 .orElseThrow(() -> new MemberNotFoundException(memberId.toString()));
         Profile profile = member.getProfile();
 
+        String resizedKey = S3ResizedImageKeyMapper.toResizedKey(profile.getProfileS3Key());
+
         ProfileResponse response = ProfileResponse.builder().memberId(member.getId())
-                .profileImageUrl(getProfileImageUrl(profile.getProfileS3Key()))
+                .profileImageUrl(getProfileImageUrl(resizedKey))
                 .description(profile.getDescription()).isGalleryPublic(profile.isGalleryPublic())
                 .isVideoPublic(profile.isVideoPublic())
                 .isCollectionPublic(profile.isCollectionPublic())

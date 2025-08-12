@@ -24,6 +24,7 @@ import com.susang.stellarVision.common.s3.FileExtensionUtil;
 import com.susang.stellarVision.common.s3.S3Directory;
 import com.susang.stellarVision.common.s3.S3FileManager;
 import com.susang.stellarVision.common.s3.S3KeyGenerator;
+import com.susang.stellarVision.common.s3.S3ResizedImageKeyMapper;
 import com.susang.stellarVision.entity.Collection;
 import com.susang.stellarVision.entity.Member;
 import com.susang.stellarVision.entity.MemberCollection;
@@ -54,6 +55,8 @@ public class PhotoServiceImpl implements PhotoService {
     private final WebClient aiWebClient;
     private final CollectionRepository collectionRepository;
     private final MemberCollectionRepository memberCollectionRepository;
+
+
 
     public PhotoUploadResponse generatePresignedUploadUrl(S3Directory directory, Long memberId,
             String originalFilename) {
@@ -92,10 +95,16 @@ public class PhotoServiceImpl implements PhotoService {
     public Page<PhotoResponse> getPhotosByMemberId(Long memberId, Pageable pageable) {
         Page<Photo> photos = photoRepository.findByMemberId(memberId, pageable);
 
-        return photos.map(photo -> PhotoResponse.builder().id(photo.getId())
-                .originalFilename(photo.getTitle()).extension(photo.getFileExtension())
-                .createdAt(photo.getCreatedAt())
-                .downloadUrl(s3FileManager.getPresignedDownloadUrl(photo.getPhotoS3Key())).build());
+        return photos.map(photo -> {
+            String resizedKey = S3ResizedImageKeyMapper.toResizedKey(photo.getPhotoS3Key());
+            return PhotoResponse.builder()
+                    .id(photo.getId())
+                    .originalFilename(photo.getTitle())
+                    .extension(photo.getFileExtension())
+                    .createdAt(photo.getCreatedAt())
+                    .downloadUrl(s3FileManager.getPresignedDownloadUrl(resizedKey))
+                    .build();
+        });
     }
 
 
@@ -149,7 +158,7 @@ public class PhotoServiceImpl implements PhotoService {
         AiPhotoRequest requestBody = new AiPhotoRequest(photoId, imageUrl);
 
         AiPhotoResponse response = aiWebClient.post()
-                .uri("https://i13c106.p.ssafy.io/api/detect/photo")
+                .uri("https://susang-fastapi.my/api/detect/photo")
                 .header("Content-Type", "application/json")
                 .bodyValue(requestBody)
                 .retrieve()
