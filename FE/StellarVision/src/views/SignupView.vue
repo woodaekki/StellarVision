@@ -224,6 +224,11 @@ const onSignUp = async () => {
   width: 100%;
   max-width: 341px;
   margin: 0 auto;
+  background-image: #f2f2f2;
+  min-height: calc(100vh - 64px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .form-title {
@@ -332,7 +337,7 @@ const onSignUp = async () => {
 
   .form-title {
     font-size: 30px;
-    margin-top: 15x;
+    margin-top: 15px;
     margin-bottom: 40px;
   }
 

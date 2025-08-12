@@ -58,11 +58,12 @@
           v-if="editMode"
           @click="deleteProfileImage"
         />
+        <RouterLink to="/badge" class="btn">배지</RouterLink>
         <EditButton
           v-if="isOwner"
           :is-editing="editMode"
           @click="toggleEditMode"
-          class="edit-button"
+          class="btn"
         />
         <FollowButton
           v-else
@@ -283,7 +284,7 @@ const modalList = computed(() =>
   line-height: 1;
 }
 
-.edit-button {
+.btn {
   background: #505055;
   color: #fff;
   border-radius: 8px;
@@ -294,7 +295,7 @@ const modalList = computed(() =>
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
-.edit-button:hover {
+.btn:hover {
   background: #545459;
 }
 

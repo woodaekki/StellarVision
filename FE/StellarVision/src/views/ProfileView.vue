@@ -106,7 +106,6 @@ function goToReplay(videoId) {
   color: white;
   display: flex;
   flex-direction: column;
-  margin-bottom: 30px;
 }
 
 .main-content {
