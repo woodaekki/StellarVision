@@ -45,7 +45,7 @@
 <!-- bg-black/80  bg-slate-900/95 -->
   <!-- 사이드바 -->
   <nav
-    class="fixed top-0 right-0 w-[400px] max-w-[90vw] h-screen z-50
+    class="fixed top-12 right-0 w-[400px] max-w-[90vw] h-screen z-50
             bg-slate-900/55 backdrop-blur-2xl border-l border-white/10
            flex flex-col transition-transform duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)]
            shadow-[-10px_0_50px_rgba(0,0,0,0.5)] overscroll-contain"

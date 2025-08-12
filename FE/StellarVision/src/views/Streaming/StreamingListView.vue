@@ -85,7 +85,7 @@
       </div>
 
       <!-- 비디오 그리드 - 세로 배치 -->
-      <div v-else class=" flex flex-col gap-4 p-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2">
+      <div v-else class="flex flex-col gap-4 p-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 items-center">
         <VideoCard
           v-for="video in filteredVideos"
           :key="`${activeTab}-${video.id}`"

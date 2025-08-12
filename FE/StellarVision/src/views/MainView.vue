@@ -6,7 +6,7 @@
       <MainGlobe :liveStreams="liveStreams" />
     </section>
     <MainSidebar ref="sidebarRef"
-    class="absolute top-0 right-0 h-screen"/>
+    class="absolute top-20 right-0 h-[calc(100vh-5rem)]"/>
   </div>
 </template>
 

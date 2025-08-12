@@ -13,7 +13,7 @@
 
     <!-- 썸네일 -->
      <!-- 비디오 종횡비로 구성 -->
-    <div class="relative aspect-video overflow-hidden rounded-xl bg-white
+    <div class="relative aspect-video w-[240px] overflow-hidden rounded-xl bg-white
              shadow-md ring-1 ring-black/5 transition-transform duration-500 ease-out
              group-hover:-translate-y-0.5 group-hover:shadow-lg group-active:translate-y-0">
       <img
@@ -53,7 +53,7 @@
        line-clamp-1 ">
         {{ title }}
       </h3>
-      <p class="mt-0.5 text-[20px] text-zinc-100 line-clamp-1">
+      <p class="mt-0.5 text-[18px] text-zinc-100 line-clamp-1">
         {{ user }}
       </p>
         <!-- <div class="text-base text-zinc-400 mb-2 truncate">{{ video.tags }}</div> 태그는 나중에 -->
