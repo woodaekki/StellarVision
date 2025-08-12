@@ -319,9 +319,12 @@ const { session, publisher, subscribers, leave, setPublisherEl, attachSubEl, isP
           return
         }
         // 태그들을 가져온다.
-        const tags = aiTagStore.list(sessionId)
+        const tags = aiTagStore.list(sessionId).map(String)
+        const payload = { tags };
         console.log("인식된 태그들: ", tags);
-        const res = await streamingService.stopRecording(recordingId.value, {tags: tags})
+        const res = await streamingService.stopRecording(recordingId.value, payload, 
+          { headers : { 'Content-Type': 'application/json'} }
+        )
         isRecording.value = false
         recordingId.value = null
         console.log('res: ', res.data.data)
