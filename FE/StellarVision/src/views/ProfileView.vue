@@ -100,7 +100,6 @@ function goToReplay(videoId) {
 
 <style scoped>
 .profile-wrapper {
-  background-color: #ffffff;
   background-size: cover;
   min-height: 100vh;
   color: white;
