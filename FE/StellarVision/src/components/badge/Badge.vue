@@ -31,6 +31,7 @@ const badgeImagePath = computed(() => {
   padding: var(--r);
   background: #fff;
   filter: drop-shadow(0 2px 6px rgba(0,0,0,.15));
+  width: 80%;
 
   /* ✅ 콘텐츠 중앙 정렬 & 내부 영역의 안정적인 높이 확보 */
   display: grid;
