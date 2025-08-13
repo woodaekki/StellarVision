@@ -1,111 +1,156 @@
 <script setup>
-import { onMounted, onUnmounted, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import openviduService from '@/services/openviduService'
-import streamingService from '@/services/streamingService'
-import { DoorOpen, Camera, Download, MessageCircle, Mic, MicOff,  Square, SquareStop, ToggleLeft, ToggleRight } from 'lucide-vue-next'
-import ChatPanel from '@/components/comment/ChatPanel.vue'
-import { useRecordingStore } from '@/stores/recording'
-import { createAIAnalyzeService } from '@/services/AIAnalyeService'
-import { useAITagStore } from '@/stores/aiTags'
-import { createUpscaleService } from '@/services/upscaleService'
-import { latLngToPosition } from '@/services/latLngToPosition'
-import { computed } from 'vue'
+  import { onMounted, onUnmounted, ref, watch } from 'vue'
+  import { useRoute, useRouter } from 'vue-router'
+  import openviduService from '@/services/openviduService'
+  import streamingService from '@/services/streamingService'
+  import { Download } from 'lucide-vue-next'
+  import ChatPanel from '@/components/comment/ChatPanel.vue'
+  import { useRecordingStore } from '@/stores/recording'
+  import { createAIAnalyzeService } from '@/services/AIAnalyzeService'
+  import { useAITagStore } from '@/stores/aiTags'
+  import { createUpscaleService } from '@/services/upscaleService'
+  import { useToast } from 'primevue/usetoast'
+  import Toast from 'primevue/toast'
+  import ProgressBar from 'primevue/progressbar'
+  import Button from 'primevue/button'
+  import welcomImg from '@/assets/pictures/stellabot/logo.png'
+  import aiOffImg from '@/assets/pictures/stellabot/aioff.png'
+  import aiOnImg from '@/assets/pictures/stellabot/aiOn.png'
 
-import { useToast } from 'primevue/usetoast'
-import Toast from 'primevue/toast'
-import ProgressBar from 'primevue/progressbar'
-import Button from 'primevue/button'
-import welcomImg from '@/assets/pictures/stellabot/logo.png'
-import aiOffImg from '@/assets/pictures/stellabot/aioff.png'
-import aiOnImg from '@/assets/pictures/stellabot/aiOn.png'
+  import StreamerRoomComponent from '@/components/streaming/StreamerRoomComponent.vue'
+  import ViewerRoomComponent from '@/components/streaming/ViewerRoomComponent.vue'
+  import { useAIAnalysis } from '@/composables/streaming/useAIAnalysis'
+  import { useEndModal } from '@/composables/streaming/useEndModal'
+  import { useOpenViduBindings } from '@/composables/streaming/useOpenViduBindings'
+  import { useUpscale } from '@/composables/streaming/useUpscale'
+  import { makeSoftBoxRenderer } from '@/composables/streaming/renderers/softBoxRenderer'
+  import { CONSTELLATION_KO } from '@/constants/constellations'
 
-// ai 분석 결과를 담을 store
-const aiTagStore = useAITagStore();
-const upscaleService = createUpscaleService();
+  // ai 분석 결과를 담을 store
+  const aiTagStore = useAITagStore();
+  const upscaleService = createUpscaleService();
 
-// 업스케일링 URL과 파일명
-const upscaledUrl = ref(null)
-const isDownloading = ref(false)
-const isUpscaling = ref(false)
+  const route = useRoute()
+  const router = useRouter()
+  // 세션관련 객체
+  const sessionId = route.params.id
+  const userName = route.query.userName || 'Host'
+  const roomTitle = route.query.title
 
-const route = useRoute()
-const router = useRouter()
-// 세션관련 객체
-const sessionId = route.params.id
-const userName = route.query.userName || 'Host'
-const roomTitle = route.query.title
+  // 알림창 전용 객체
+  const toast = useToast()
+  const visible = ref(false);
+  const progress = ref(0);
+  const interval = ref();
+  const WELCOME_TOAST_KEY = `roomview_welcome_shown:${sessionId}`  // 세션별로 첫 입장 시
 
-// 알림창 전용 객체
-const toast = useToast()
-const visible = ref(false);
-const progress = ref(0);
-const interval = ref();
-const WELCOME_TOAST_KEY = `roomview_welcome_shown:${sessionId}`  // 세션별로 첫 입장 시
+  // 녹화 전용 객체
+  const isRecording = ref(false)
+  const recordingId = ref(null)
+  const isRecordingButtonDisabled = ref(false)
+  const recordingStore = useRecordingStore()
 
-// 녹화 전용 객체
-const isRecording = ref(false)
-const recordingId = ref(null)
-const isRecordingButtonDisabled = ref(false)
-const recordingStore = useRecordingStore()
+  const showChat = ref(false)
+  const micEnabled = ref(true)
+  // ai 버튼 및 기능
+  const aiOn = ref(false)
+  const toggleAI = () => { aiOn.value = !aiOn.value }
 
-const showChat = ref(false)
-const micEnabled = ref(true)
-// ai 버튼 및 기능
-const aiOn = ref(false)
-const toggleAI = () => { aiOn.value = !aiOn.value }
-// 업스케일링
-const hasUpscaled = computed(() => !!upscaledUrl.value)
-
-// 방 종료 모달 상태 추가
-const showEndModal = ref(false)
-const endModalMsg = ref('스트리머가 스트리밍을 종료했어요.') // 기본 메시지
-
-// 캡쳐와 다운로드를 구분하는 함수
-async function onCaptureOrDownload() {
-  if (hasUpscaled.value) {
-    await downloadUpscaled()
-  } else {
-    await captureAndUpscale()
-  }
-}
-
-// 컴포저블에서 필요한 것들 모두 꺼냄 (isPublish, role 추가)
-const { session, publisher, subscribers, leave, setPublisherEl, attachSubEl, isPublish, endRoom } = openviduService(
+  // 컴포저블에서 필요한 것들 모두 꺼냄 (isPublish, role 추가)
+  const { session, publisher, subscribers, leave, setPublisherEl, attachSubEl, isPublish, endRoom } = openviduService(
    sessionId,
    userName,
-   e => {
-     alert('연결 실패')
-     console.error(e)
-     router.push({ name: 'PreRoomView' })
-   }
- )
-
-  // 로컬(퍼블리셔) 프리뷰 엘리먼트
-  const localVideo = ref(null)
-  // 로컬 오버레이 캔버스
-  const overlayLocal = ref(null)
-
-
-
-  // 현재 프레임을 캡쳐해 JPEG Blob으로 반환
-  async function captureVideoFrame(videoEl, type = 'image/jpeg', quality = 0.92) {
-    if (!videoEl || !videoEl.videoWidth || !videoEl.videoHeight) {
-      throw new Error('비디오 준비가 안 됨(loadedmetadata 이후 시도)')
+    e => {
+      alert('연결 실패')
+      console.error(e)
+      router.push({ name: 'PreRoomView' })
     }
-    const canvas = document.createElement('canvas')
-    canvas.width = videoEl.videoWidth
-    canvas.height = videoEl.videoHeight
-    const ctx = canvas.getContext('2d', { willReadFrequently: false })
-    ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height)
+  )
 
-    return new Promise((resolve, reject) => {
-      canvas.toBlob((blob) => {
-        if (!blob) return reject(new Error('캡쳐 실패'))
-        resolve(blob)
-      }, type, quality)
+  const boxRenderer = makeSoftBoxRenderer({
+    // 필요 시 옵션 조정
+    color: 'rgba(255,255,255,0.55)',
+    strokeWidth: 1.25,
+    radius: 0,                         // 완전 네모
+    bboxFormat: 'auto',
+    labelMap: (cls) => CONSTELLATION_KO[cls] ?? (cls || 'Object'),
+  });
+
+  // useAIAnalysis
+  const {
+    attachLocal,                  // 로컬 비디오/오버레이 attach
+    attachSubElWithAIFactory,     // 구독자 attach + 오버레이 팩토리
+    watchAI,                      // aiOn 토글 시 주기 실행/정지
+    clearAllOverlays,             // 오버레이 지우기(overlayLocal 인자로)
+    onStreamDestroyed,            // 구독 스트림 파괴 시 정리
+    destroy,                      // 전체 정리
+  } = useAIAnalysis({
+    createAIAnalyzeService,
+    endpoint: 'https://i13c106.p.ssafy.io/api/detect/streaming',
+    isPublish,
+    sessionId,
+    aiTagStore,
+    renderer: boxRenderer,
+  })
+
+  // useOpenViduBindings
+  const {
+    localVideo,         // <video> ref
+    overlayLocal,       // <canvas> ref
+    onSetPublisherEl,   // 스트리머용 ref 콜백 (내부서 addVideoElement 및 setPublisherEl 보강)
+    onSetLocalVideoEl,  // 시청자용 ref 콜백
+    onSetOverlayEl,     // 오버레이 ref 콜백
+    baseAttachSubEl,    // 구독자 attach 기본 함수
+  } = useOpenViduBindings({ publisher, setPublisherEl, attachSubEl })
+
+  // useEndModal
+  const {
+    showEndModal,
+    endModalMsg,
+    handleEndRoom,
+    confirmEndModal,
+    wireSessionEvents,
+  } = useEndModal({ session, endRoom, leave, router, isPublish })
+
+  // 다운로드 알림 띄우기
+  function startDownloadToast(summary = '이미지 캡쳐 중입니다...'){
+    toast.add({
+      severity: 'custom',
+      summary,
+      group: 'download',
+      styleClass: 'backdrop-blur-lg rounded-2xl'
     })
+    visible.value = true
+    progress.value = 0
+    // 임의로 진행하는 가짜 진행 바입니다 대충 5초? 정도 걸리게 해놨음. 더 천천히 하길 원한다면 +=7을 조절하면 됨
+    if (interval.value) clearInterval(interval.value)
+    interval.value = setInterval(()=>{
+      if (progress.value <= 100) {
+        progress.value +=4.4
+      }
+      if (progress.value >=100) {
+        progress.value = 100
+        clearInterval(interval.value)
+      }
+      }, 300)
   }
+
+  const {
+    isDownloading,
+    isUpscaling,
+    hasUpscaled,
+    resetUpscaled,
+    makeOnCaptureOrDownload,
+  } = useUpscale({
+    upscaleService,
+    startDownloadToast, // 진행 토스트 콜백 주입
+  })
+
+  watch([localVideo, overlayLocal], ([v, ov]) => {
+    if (v && ov) {
+      try { attachLocal(v, ov) } catch (e) { console.debug('[AI] local attach failed', e) }
+    }
+  })
 
   function pickTargetVideoEl() {
     // 1) 퍼블리셔면 로컬 비디오
@@ -124,127 +169,16 @@ const { session, publisher, subscribers, leave, setPublisherEl, attachSubEl, isP
     return localVideo.value
   }
 
-  function setUpscaledResult(urlFromServer) {
-    upscaledUrl.value = urlFromServer
-  }
+  const onCaptureOrDownload = makeOnCaptureOrDownload(
+    pickTargetVideoEl, // 어떤 비디오를 캡쳐할지
+    toast,             // 에러 토스트 출력 위해
+    interval,          // 진행 토스트 인터벌 참조
+    visible,           // 진행 토스트 visible
+    progress,          // 진행 토스트 progress
+  )
 
-  function buildFilenameFromUrl(url, fallback = 'upscaled.jpg') {
-    try {
-      const u = new URL(url)
-      const name = u.pathname.split('/').pop()
-      if (!name || !name.includes('.')) return fallback
-      return name
-    } catch {
-      return fallback
-    }
-  }
-
-  async function downloadUpscaled() {
-    if (!upscaledUrl.value) return
-    const filename = buildFilenameFromUrl(upscaledUrl.value, `upscaled_${Date.now()}.jpg`)
-
-    if (isDownloading.value) return
-    isDownloading.value = true
-    try {
-      // 1) blob으로 받아서 ObjectURL로 강제 다운로드 (가장 호환성 좋음)
-      const res = await fetch(upscaledUrl.value, {
-        // 필요시 인증 쿠키가 있다면:
-        // credentials: 'include',
-        // CORS가 필요하면 서버에서 허용해야 함(아래 주의사항 참고)
-      })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      const blob = await res.blob()
-      const objUrl = URL.createObjectURL(blob)
-
-      const a = document.createElement('a')
-      a.href = objUrl
-      a.download = filename // 저장 파일명 지정
-      document.body.appendChild(a)
-      a.click()
-      a.remove()
-      URL.revokeObjectURL(objUrl)
-
-      // 상태 초기화 -> 다시 캡쳐 할 수 있게 08.11 23:18
-      resetUpscaled()
-    } catch (err) {
-      console.warn('blob 다운로드 실패, 새 탭으로 오픈 시도', err)
-      // 2) 최후: 새 탭으로 열어서 사용자가 저장하도록 유도
-      const a = document.createElement('a')
-      a.href = upscaledUrl.value
-      a.target = '_blank'
-      a.rel = 'noopener'
-      document.body.appendChild(a)
-      a.click()
-      a.remove()
-      // 실패 시 알람 추가
-      if(interval.value) {clearInterval(interval.value); interval.value=null}
-      toast.add({severity:'error', summary:'다운로드 실패', detail: err?.message ?? 'unknown', life:3000})
-      toast.removeGroup('download')
-      visible.value = false
-    } finally {
-      isDownloading.value = false
-    }
-  }
-
-
-
-  async function captureAndUpscale() {
-    if (isUpscaling.value) return
-    try {
-      // 알림창 추가
-      startDownloadToast('이미지 업스케일 중...')
-      isUpscaling.value = true
-      // 기존 URL revoke
-      if (upscaledUrl.value?.startsWith('blob:')) {
-        URL.revokeObjectURL(upscaledUrl.value)
-        upscaledUrl.value = null
-      }
-
-      const target = pickTargetVideoEl()
-      if (!target) {
-        alert('캡쳐할 비디오가 없습니다.')
-        return
-      }
-
-      // 1) 현재 프레임 캡쳐
-      const captured = await captureVideoFrame(target, 'image/jpeg', 0.92)
-
-      // 2) 업스케일 서버에 전송 → blob 응답
-      const upscaledBlob = await upscaleService.upscaleImage(captured, 'capture.jpg')
-
-      // 3) Object URL로 미리보기/다운로드 제공
-      const url = URL.createObjectURL(upscaledBlob)
-      upscaledUrl.value = url;
-
-      // 3-1) 새 탭으로 열기(미리보기)
-      window.open(url, '_blank', 'noopener')
-
-
-    } catch (e) {
-      console.error('업스케일 실패', e)
-      alert('업스케일 중 오류가 발생했습니다: ' + (e?.message ?? 'unknown'))
-    } finally {
-      isUpscaling.value = false
-    }
-  }
-
-  // 다운로드 후 초기화 로직  08-11 23:16분
-  function resetUpscaled() {
-  const url = upscaledUrl.value
-  if (url?.startsWith('blob:')) URL.revokeObjectURL(url)
-  upscaledUrl.value = null           // => hasUpscaled=false, 아이콘이 Camera로 변경되게끔 유도
-}
-
-
-  // 로컬용 AI 분석기
-  const localAnalyzer = createAIAnalyzeService({
-    endpoint: 'https://i13c106.p.ssafy.io/api/detect/streaming', // TODO: 실제 주소로 교체
-    minConfidence: 0.7,
-    targetFps: 3,
-  })
-
-  // 구독자별 분석기/캔버스 관리
-  const subAnalyzers = new Map() // streamId -> { svc, canvas }
+    // AI 오버레이 붙이는 래퍼
+  const attachSubElWithAI = attachSubElWithAIFactory(baseAttachSubEl)
 
   // 퍼블리셔/엘리먼트 준비 시 재부착 보강
   watch([publisher, localVideo], () => {
@@ -261,76 +195,9 @@ const { session, publisher, subscribers, leave, setPublisherEl, attachSubEl, isP
   }}
 )
 
-
-  // 구독자 비디오에 AI 오버레이 붙이는 래퍼
-  function attachSubElWithAI(sub, el) {
-    attachSubEl(sub, el)            // 기존 OpenVidu 부착
-    if (!el) return
-
-    const streamId = sub.stream.streamId
-
-    // 비디오 메타데이터 준비되면 시작
-    const start = () => {
-      // 비디오를 감싸는 컨테이너가 relative 아니면 덮을 수 없으므로 보장
-      el.parentElement?.classList.add('relative')
-
-      // 캔버스 생성 & 비디오 위에 얹기
-      const canvas = document.createElement('canvas')
-      canvas.className = 'pointer-events-none absolute inset-0'
-      el.parentElement?.appendChild(canvas)
-
-      // 구독자용 분석기 만들고 시작
-      const svc = createAIAnalyzeService({
-        endpoint: 'https://i13c106.p.ssafy.io/api/detect/streaming',
-        minConfidence: 0.7,
-        targetFps: 3
-      })
-      svc.attach({ video: el, overlay: canvas })
-
-      subAnalyzers.set(streamId, { svc, canvas })
-    }
-
-    if (el.readyState >= 1 && el.videoWidth) start()
-    else el.addEventListener('loadedmetadata', start, { once: true })
-  }
-
-// 스트리머가 종료시 시청자도 자동 종료하는 로직
-async function handleEndRoom() {
-  try {
-    await session.signal({  // 시그널로 보내면
-      type: 'room-ended',
-      data: JSON.stringify({ ts: Date.now() })
-    }).catch(() => {})
-    await endRoom()  // 기다린 후 시청자 전용 로직인 endRoom을 실행한다
-  } catch (e) {
-    console.error('방 종료 실패', e)
-    alert('방 종료 중 오류가 발생했습니다.')
-  }
-}
-
-
-// 모달 열기/확인 핸들러
-function openEndModal(msg) {
-  endModalMsg.value = msg || '스트리머가 스트리밍을 종료했어요.'
-  showEndModal.value = true
-}
-function confirmEndModal() {
-  showEndModal.value = false
-  leave()
-  router.replace({ name: 'PreRoomView', query: { ended: '1' } })
-}
-
   // 구독 스트림 종료 시 정리
   onMounted(() => {
-    session.on('streamDestroyed', (ev) => {
-      const streamId = ev.stream.streamId
-      const found = subAnalyzers.get(streamId)
-      if (found) {
-        found.svc.destroy()
-        found.canvas.remove()
-        subAnalyzers.delete(streamId)
-      }
-    })
+    session.on('streamDestroyed', onStreamDestroyed)
   })
 
   // 녹화 시작/중단 api 요청
@@ -392,129 +259,29 @@ function confirmEndModal() {
     publisher.value.publishAudio(micEnabled.value)
   }
 
-  const TEN_MIN = 10 * 1000
-  let intervalId = null
-  let inFlight = false
-
-  // 기존 runOnceAll() 전체 교체
-  async function runOnceAll() {
-    // 토글 꺼져 있으면 실행 안 함
-    if (!aiOn.value) return
-    if (inFlight) return
-    inFlight = true
-    try {
-      // 로컬 응답 로깅
-      const localRes = await localAnalyzer.once()
-      prettyLog('[AI][local]', localRes)
-      if (isPublish.value) {    // 퍼블리셔일 때만 태그 누적
-        aiTagStore.addFromPredictions(sessionId, localRes)
-      }
-
-      // 구독자별 응답 로깅
-      for (const [streamId, { svc }] of subAnalyzers.entries()) {
-        const subRes = await svc.once()
-        prettyLog(`[AI][sub:${streamId}]`, subRes)
-      }
-    } catch (e) {
-      console.debug('[AI] once error', e)
-    } finally {
-      inFlight = false
-    }
-  }
-
-  // ✅ ADD: AI 응답 보기 좋게 콘솔에 출력
-  function prettyLog(prefix, data) {
-    try {
-      const preds = data?.predictions ?? []
-      console.group(prefix)
-      console.log('총 개수:', preds.length)
-      for (const p of preds) {
-        const { class: klass, confidence, bbox } = p
-        console.log(
-          `• ${klass}  conf=${Number(confidence).toFixed(3)}  bbox=[${bbox?.map(n => Number(n).toFixed(2)).join(', ')}]`
-        )
-      }
-      if (!preds.length) console.log('(빈 결과)')
-      console.groupEnd()
-    } catch (e) {
-      console.log(prefix, data)
-    }
-  }
-
-  // ✅ ADD: 토글에 따라 실행/정지
-  watch(aiOn, (on) => {
-    if (on) {
-      runOnceAll() // 즉시 1회
-      if (!intervalId) intervalId = window.setInterval(runOnceAll, TEN_MIN)
-    } else {
-      if (intervalId) { clearInterval(intervalId); intervalId = null }
-      clearAllOverlays() // 선택: 화면에서 박스 지우기
-    }
+  // 토글에 따라 실행/정지
+  watch(aiOn, () => {
+    watchAI(aiOn, () => clearAllOverlays(overlayLocal))
   })
 
-  // ✅ ADD: 캔버스 클리어 함수
-  function clearAllOverlays() {
-    // 로컬
-    const c = overlayLocal.value
-    if (c) {
-      const ctx = c.getContext('2d')
-      if (ctx) ctx.clearRect(0, 0, c.width, c.height)
-    }
-    // 구독자
-    for (const { canvas } of subAnalyzers.values()) {
-      const ctx = canvas.getContext('2d')
-      if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height)
-    }
-  }
 
-  // 다운로드 알림 띄우기
-  function startDownloadToast(summary = '이미지 캡쳐 중입니다...'){
+  // 환영 알림창
+  function showWelcomeToast() {
     toast.add({
       severity: 'custom',
-      summary,
-      group: 'download',
-      styleClass: 'backdrop-blur-lg rounded-2xl'
+      summary: '환영합니다!',
+      group: 'welcome',                  // 템플릿에서 이 group 받음
+      styleClass: 'backdrop-blur-md rounded-2xl'  // 배경 블러 등
     })
-    visible.value = true
-    progress.value = 0
-    // 임의로 진행하는 가짜 진행 바입니다 대충 5초? 정도 걸리게 해놨음. 더 천천히 하길 원한다면 +=7을 조절하면 됨
-    if (interval.value) clearInterval(interval.value)
-    interval.value = setInterval(()=>{
-      if (progress.value <= 100) {
-        progress.value +=4.4
-      }
-      if (progress.value >=100) {
-        progress.value = 100
-        clearInterval(interval.value)
-      }
-      }, 300)
+    sessionStorage.setItem(WELCOME_TOAST_KEY, '1')
   }
-
-
-// 환영 알림창
-function showWelcomeToast() {
-  toast.add({
-    severity: 'custom',
-    summary: '환영합니다!',
-    group: 'welcome',                  // 템플릿에서 이 group 받음
-    styleClass: 'backdrop-blur-md rounded-2xl'  // 배경 블러 등
-  })
-  sessionStorage.setItem(WELCOME_TOAST_KEY, '1')
-}
 
   onMounted(() => {
     // 퍼블리셔라면 프리뷰가 이 엘리먼트에 붙는다
-    setPublisherEl(localVideo.value)
+    onSetPublisherEl
     session.on('recordingStarted', ()=>{ isRecording.value = true })
     session.on('recordingStopped', ()=>{ isRecording.value = false })
-
-    // 로컬 분석 attach (start()는 호출하지 않음)
-    const v = localVideo.value
-    const attachLocal = () => {
-      localAnalyzer.attach({ video: v, overlay: overlayLocal.value })
-    }
-    if (v?.readyState >= 1 && v.videoWidth) attachLocal()
-    else v?.addEventListener('loadedmetadata', attachLocal, { once: true })
+    session.on('streamDestroyed', onStreamDestroyed)  // 스트림 종료 시 캔버스 정리
 
     // 진입 시 한 번만 노출
     if (!sessionStorage.getItem(WELCOME_TOAST_KEY)) {
@@ -522,33 +289,13 @@ function showWelcomeToast() {
       setTimeout(showWelcomeToast, 150)
     }
 
-    // 스트리머 종료 감지 -> 시청자 모달 발생 & 자동 처리 로직 실행
-    session.on('sessionDisconnected', (ev) => {
-      if (!isPublish.value) {   // 호스트가 아니라면
-        const reason = ev?.reason || ''
-      if (reason.includes('session') || reason.includes('force') || reason.includes('network') || reason.includes('disconnect')) {
-          openEndModal('스트리머가 스트리밍을 종료했어요.')
-        }
-      }
-    })
-    // 커스텀 종료 시그널 수신
-    session.on('signal:room-ended', (e) => {
-    if (!isPublish.value) {
-      openEndModal('스트리머가 스트리밍을 종료했어요.') // 여기서 leave 로직 실행됨
-    }
-  })
+    wireSessionEvents()
   })
 
   onUnmounted(() => {
-    if (intervalId) { clearInterval(intervalId); intervalId = null }
-    localAnalyzer.destroy()
-    subAnalyzers.forEach(({ svc, canvas }) => { svc.destroy(); canvas.remove() })
-    subAnalyzers.clear()
+    destroy();  // AI/overlay 정리
 
-    if (upscaledUrl.value?.startsWith('blob:')) {
-      URL.revokeObjectURL(upscaledUrl.value)
-      upscaledUrl.value = null
-    }
+    resetUpscaled() // 업스케일 blob 정리
 
     // 알림창 해소
     if (interval.value) {
@@ -556,6 +303,8 @@ function showWelcomeToast() {
     }
   })
 </script>
+
+
 
 <template>
   <div>
@@ -566,117 +315,54 @@ function showWelcomeToast() {
         showChat ? 'sm:w-[70%] w-full' :'w-full']"
         class="relative flex-1 bg-black h-full rounded-none">
 
-        <!-- 변경: 로컬 프리뷰 + 오버레이 -->
-        <div class="relative w-full h-full">
-          <video
-            ref="localVideo"
-            autoplay
-            playsinline
-            muted
-            class="w-full h-full object-cover absolute inset-0 rounded-none"
-          ></video>
-          <!-- 로컬 오버레이 캔버스 -->
-          <canvas ref="overlayLocal" class="pointer-events-none absolute inset-0"></canvas>
-        </div>
+        <!-- 스트리머 화면 -->
+        <StreamerRoomComponent
+          v-if="isPublish"
+          :subscribers="subscribers"
+          :attachSubElWithAI="attachSubElWithAI"
+          :roomTitle="roomTitle"
+          :userName="userName"
+          :setPublisherEl="onSetPublisherEl"
+          :setOverlayEl="onSetOverlayEl"
+          :onCaptureOrDownload="onCaptureOrDownload"
+          :hasUpscaled="hasUpscaled"
+          :isUpscaling="isUpscaling"
+          :isDownloading="isDownloading"
+          :micEnabled="micEnabled"
+          :toggleMic="toggleMic"
+          :isRecording="isRecording"
+          :isRecordingButtonDisabled="isRecordingButtonDisabled"
+          :toggleRecording="toggleRecording"
+          :aiOn="aiOn"
+          :toggleAI="toggleAI"
+          :aiOnImg="aiOnImg"
+          :aiOffImg="aiOffImg"
+          :showChat="showChat"
+          :onToggleChat="() => showChat = !showChat"
+          :handleEndRoom="handleEndRoom"
+        />
 
-        <!-- 변경: 원격 구독 영상 컨테이너 각 비디오를 relative 래퍼로 감싸고, ref 콜백을 attachSubElWithAI로 교체 -->
-        <div class="absolute inset-0 grid gap-0 p-0 z-0">
-          <div
-            v-for="sub in subscribers"
-            :key="sub.stream.streamId"
-            class="relative w-full h-full">
-            <video
-              :data-stream-id="sub.stream.streamId"
-              autoplay
-              playsinline
-              muted
-              class="w-full h-full object-cover absolute inset-0 rounded-none"
-              :ref="el => attachSubElWithAI(sub, el)"
-            ></video>
-            <!-- 구독자 오버레이 캔버스는 JS에서 동적 생성해서 append -->
-          </div>
-        </div>
-
-          <!-- 방 제목 -->
-          <h2 class="text-xl text-white font-bold my-2 absolute left-3 top-3 z-10">
-            방제목 {{ roomTitle }} — {{ userName }}
-          </h2>
-
-          <!-- 버튼 바 -->
-          <div class="absolute left-1/2 bottom-6 -translate-x-1/2 flex gap-4 z-10">
-
-            <!-- 캡쳐/다운로드 토글 버튼(하나) -->
-            <button
-              @click="onCaptureOrDownload"
-              :title="hasUpscaled ? '업스케일된 이미지 다운로드' : '현재 프레임 캡쳐 & 업스케일'"
-              :disabled="isUpscaling || isDownloading"
-              class=" bg-gray-600 transition shadow rounded-full text-white p-4 disabled:opacity-50 disabled:cursor-not-allowed">
-              <component :is="hasUpscaled ? Download : Camera"/>
-            </button>
-            <!-- 음성 버튼 -->
-            <button
-              v-if="isPublish"
-              @click="toggleMic"
-              class="text-white rounded-full p-4  shadow transition"
-              :class="micEnabled ? 'bg-green-600' : 'bg-red-600' ">
-              <component :is="micEnabled ? Mic : MicOff"/>
-            </button>
-            <!-- 녹화 버튼 -->
-            <button
-              v-if="isPublish"
-              @click="toggleRecording"
-              :disabled="isRecordingButtonDisabled"
-              class="bg-opacity-70 text-white rounded-full p-4 hover:bg-red-600 shadow transition"
-              :class="isRecording ? 'bg-gray-600' : 'bg-red-600 ' ">
-              <component :is="isRecording ? Square : SquareStop" />
-            </button>
-
-            <!-- AI 탐지 on/off -->
-          <button
-            @click="toggleAI"
-            :aria-pressed="aiOn"
-            :title="aiOn ? 'AI 탐지 끄기' : 'AI 탐지 켜기'"
-            class="bg-black bg-opacity-70 inline-flex justify-center items-center
-                   rounded-full overflow-hidden w-14 hover:bg-gray-600 transition "
-            :class="aiOn ? 'bg-black/70 hover:bg-gray-600 ring-1 ring-blue-400' : 'hover:text-sky-600'">
-            <img :src="aiOn ? aiOnImg : aiOffImg"
-              class="w-full h-full object-cover"/>
-          </button>
-
-          <!-- 채팅 버튼 -->
-          <button
-            class=" bg-yellow-400 transition shadow rounded-full text-yellow p-4"
-            @click="showChat = !showChat">
-            <MessageCircle class=""/>
-          </button>
-
-
-          </div>
-
-          <!-- 스트리머 : 스트리밍 종료 버튼 / 기존의 endRoom 버튼을 스트리머 종료시도 자동종료도 포함되게 바꿨습니다.-->
-          <button v-if="isPublish" @click="handleEndRoom"
-            class="absolute right-3 top-3 z-10 bg-black bg-opacity-70
-            text-white rounded-full px-3 py-1 hover:bg-red-600 transition">
-            <DoorOpen/>
-          </button>
-
-
-          <!-- 시청자: 나가기 버튼 -->
-          <button v-else @click="leave"
-            class="absolute right-3 top-3 z-10 bg-black bg-opacity-70
-            text-white rounded-full px-3 py-1 hover:bg-red-600 transition">
-            <DoorOpen/>
-          </button>
-
-
-
-          <!-- 캡처 버튼 -->
-          <!-- <button
-            @click="captureAndUpscale"
-            :disabled="isUpscaling"
-            class="absolute left-3 bottom-6 hover:bg-gray-600 transition shadow rounded-full text-white p-4">
-            <ImageDown/>
-          </button> -->
+        <!-- 시청자 화면 -->
+        <ViewerRoomComponent
+          v-else
+          :subscribers="subscribers"
+          :attachSubElWithAI="attachSubElWithAI"
+          :roomTitle="roomTitle"
+          :userName="userName"
+          :setLocalVideoEl="onSetLocalVideoEl"
+          :setOverlayEl="onSetOverlayEl"
+          :onCaptureOrDownload="onCaptureOrDownload"
+          :hasUpscaled="hasUpscaled"
+          :isUpscaling="isUpscaling"
+          :isDownloading="isDownloading"
+          :aiOn="aiOn"
+          :toggleAI="toggleAI"
+          :aiOnImg="aiOnImg"
+          :aiOffImg="aiOffImg"
+          :showChat="showChat"
+          :onToggleChat="() => showChat = !showChat"
+          :leave="leave"
+        />
 
       </div>
       <!-- 채팅 창 -->

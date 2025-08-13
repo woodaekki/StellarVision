@@ -13,6 +13,7 @@ export function createAIAnalyzeService({
   getAuthToken = null,      // 선택: () => 'Bearer ...'
   jpegQuality = 0.8,
   timeoutMs = 5000,
+  renderer = null,
 } = {}) {
   if (!endpoint) throw new Error('AI endpoint is required')
 
@@ -43,7 +44,7 @@ export function createAIAnalyzeService({
     }
   }
 
-  function _drawOverlay(preds = []) {
+  function _defaultDrawOverlay(preds = []) {
     if (!overlayCtx || !overlayEl) return
     overlayCtx.clearRect(0, 0, overlayEl.width, overlayEl.height)
 
@@ -98,7 +99,12 @@ export function createAIAnalyzeService({
             form,
             { headers, timeout: timeoutMs, withCredentials: false }
           )
-          _drawOverlay(data?.predictions ?? [])
+          const predictions = data?.predictions ?? []
+          if(renderer && overlayCtx && overlayEl) {
+            renderer(predictions, overlayCtx, overlayEl, { minConfidence })
+          } else {
+            _defaultDrawOverlay(predictions)
+          }
           resolve(data)
         } catch (e) {
           // 실패해도 앱 끊기지 않게 조용히
