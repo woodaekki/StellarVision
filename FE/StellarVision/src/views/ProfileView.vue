@@ -122,9 +122,7 @@ function goToReplay(videoId) {
 .profile-wrapper {
   position: relative;
   min-height: 100vh;
-  background-image:
-    linear-gradient(rgba(11, 12, 16, 0.7), rgba(11, 12, 16, 0.7)),
-    url('https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=1920&q=80');
+  background-image: linear-gradient(rgba(11, 12, 16, 0.7), rgba(11, 12, 16, 0.7));
   background-size: cover;
   background-position: center;
   color: white;
