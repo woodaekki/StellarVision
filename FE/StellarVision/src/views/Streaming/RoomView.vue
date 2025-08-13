@@ -509,7 +509,7 @@ function showWelcomeToast() {
 
 <template>
   <div>
-    <div class="flex flex-col sm:flex-row w-full h-[100svh] w-[100vw] gap-0" alt="videos">
+    <div class=" flex flex-col sm:flex-row w-full h-[100svh] w-[100vw] gap-0" alt="videos">
       <!-- 동영상 -->
       <div
         :class="['relative bg-black transition-all duration-300',

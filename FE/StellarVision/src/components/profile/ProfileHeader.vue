@@ -1,3 +1,4 @@
+<!-- profileheader -->
 <template>
   <div class="profile-header">
     <div class="profile-header-inner">
@@ -45,7 +46,6 @@
             <button type="button" class="follow-link" @click="openModal('following')">
               팔로잉 {{ profileFollowings?.length ?? 0 }}
             </button>
-            <span class="stats-gap"></span>
             <button type="button" class="follow-link" @click="openModal('follower')">
               팔로워 {{ profileFollowers?.length ?? 0 }}
             </button>
@@ -58,7 +58,7 @@
           v-if="editMode"
           @click="deleteProfileImage"
         />
-        <RouterLink to="/badge" class="btn">배지</RouterLink>
+        <RouterLink to="/badge" class="btn">도감</RouterLink>
         <EditButton
           v-if="isOwner"
           :is-editing="editMode"
@@ -156,7 +156,7 @@ const uploadProfileImage = async (e) => {
       return
     };
 
-    const uploadRes = await axios.put(presignedData.uploadUrl, file, {
+    await axios.put(presignedData.uploadUrl, file, {
       headers: {
         'Content-Type': file.type
       },
@@ -164,7 +164,7 @@ const uploadProfileImage = async (e) => {
       maxBodyLength: Infinity,
     });
 
-    const saveRes = await axiosApi.post('/profiles/complete', {
+    await axiosApi.post('/profiles/complete', {
       memberId: mid,
       originalFilename: file.name,
       s3Key: presignedData.s3Key,
@@ -203,49 +203,15 @@ const modalList = computed(() =>
 </script>
 
 <style scoped>
-.profile-header {
-  /* background-color: #414147; */
-  /* background: linear-gradient(135deg, #4d4949 0%, #3e3a3a 100%); */
-  width: 100vw;
-  position: relative;
-  left: 50%;
-  right: 50%;
-  margin-left: -50vw;
-  margin-right: -50vw;
-}
-
-.profile-header-inner {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding-left: 12px;
-  padding-right: 36px;
-  padding-top: 12px;
-  padding-bottom: 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-}
-
-.profile-header-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.profile-header-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .profile-image {
   position: relative;
   width: 130px;
   height: 130px;
-  border-radius: 50%;
+  border-radius: 50%;  
   overflow: hidden;
-  background-color: #444;
+  background: rgba(15, 20, 40, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -253,6 +219,34 @@ const modalList = computed(() =>
   transition: border-color 0.2s ease;
   margin-top: 8px;
   margin-bottom: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  opacity: 0.9;
+}
+
+.profile-header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-left: 35px;
+  padding-right: 35px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.profile-header-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.profile-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px; 
+  margin-left: 30px; 
 }
 
 .profile-image img,
@@ -263,9 +257,9 @@ const modalList = computed(() =>
   display: block;
   color: #ccc;
   font-size: 28px;
+  border-radius: 50%;
 }
 
-/* 편집 모드 오버레이 */
 .edit-mode-overlay {
   position: absolute;
   inset: 0;
@@ -284,63 +278,62 @@ const modalList = computed(() =>
   line-height: 1;
 }
 
-.btn {
-  /* background: #505055; */
-  color: #fff;
-  border-radius: 8px;
-  padding: 8px 16px;
+.btn,
+.follow-link {
+  background: rgba(15, 20, 40, 0.4);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  padding: 6px 12px;
+  border-radius: 6px;
+  backdrop-filter: blur(6px);
   font-size: 15px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: background 0.3s ease;
+  box-shadow: none;
+  font-weight: 400;
 }
 
-.btn:hover {
-  background: #545459;
+.btn:hover,
+.follow-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.9);
 }
 
 .profile-text {
   display: flex;
   flex-direction: column;
   font-size: 16px;
-  color: #fff;
+  color: white;
+  gap: 8px;
 }
 
-.profile-text > * {
-  margin-bottom: 2px;
-}
-
-.profile-text > *:last-child {
-  margin-bottom: 0;
-}
-
-/* 이메일 + 배지 한 줄 */
-.email-row {
+.email-row,
+.desc-row,
+.stats-row {
   display: flex;
   align-items: center;
+}
+
+.email-row {
   gap: 6px;
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 700;
-  color: #fff;
+  color: white;
   letter-spacing: 0.2px;
 }
 
-/* 자기소개 영역 */
 .desc-row {
-  display: flex;
-  margin-left: 3px;
-  align-items: center;
   min-height: 40px;
 }
 
 .description {
   margin: 0;
-  color: #cfd1d6;
+  color: rgba(255, 255, 255, 0.8);
   font-size: 15px;
   line-height: 1.4;
 }
 
-/* 입력창 스타일 */
 .desc-input {
   width: 100%;
   max-width: 400px;
@@ -348,101 +341,33 @@ const modalList = computed(() =>
   box-sizing: border-box;
   padding: 6px 12px;
   font-size: 15px;
-  color: #fff;
-  background: #3a3a3f;
-  border: 1px solid #525257;
+  color: white;
+  background: rgba(15, 20, 40, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.6);
   border-radius: 8px;
   outline: none;
   transition: all 0.2s ease;
   margin-bottom: 3px;
+  line-height: 1.2;
 }
 
 .desc-input:focus {
-  border-color: #7a7a80;
+  border-color: rgba(255, 255, 255, 0.9);
   transform: translateY(-1px);
 }
 
-/* 팔로잉/팔로워 줄 */
 .stats-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  gap: 9px;
   margin: 0;
   font-size: 14px;
 }
 
-/* 칩 스타일 버튼 */
-.follow-link {
-  background: #5a5a63;
-  color: #e2e2e7;
-  border: 1px solid #6c6c77;
-  border-radius: 999px;
-  padding: 5px 10px;
+.stats-row button.follow-link {
+  height: 32px;
+  line-height: 32px;
+  padding: 0 12px;
   font-size: 14px;
-  font-weight: 500;
-  line-height: 1;
-  transition: all 0.2s ease;
-  cursor: pointer;
-  margin-top: 1px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
-.follow-link:hover {
-  background: #6c6c77;
-  color: #ffffff;
-  border-color: #888892;
-  transform: translateY(-1px);
-}
-
-/* ===== 반응형 ===== */
-@media (max-width: 768px) {
-  .profile-header-inner {
-    flex-direction: column;
-    align-items: center;
-    padding-left: 16px;
-    padding-right: 16px;
-    gap: 10px;
-  }
-
-  .profile-header-left {
-    flex-direction: column;
-    gap: 10px;
-    align-items: center;
-  }
-
-  .profile-image {
-    width: 110px;
-    height: 110px;
-  }
-
-  .email-row {
-    font-size: 20px;
-    text-align: center;
-  }
-
-  .desc-input,
-  .description {
-    font-size: 14px;
-    max-width: 100%;
-    text-align: center;
-  }
-
-  .follow-link {
-    padding: 4px 8px;
-    font-size: 13px;
-  }
-
-  .profile-header-right {
-    width: 100%;
-    justify-content: center;
-    gap: 6px;
-  }
-
-  .stats-row {
-    justify-content: center;
-    gap: 6px;
-    margin-top: 8px;
-  }
-}
 
 </style>
