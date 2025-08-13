@@ -1,6 +1,8 @@
 <template>
   <div class="app-layout">
-    <div class="main-content">
+    <div 
+        :class="{ 'main-content': !isRoomView }"
+>
       <MainHeader
         v-if="!isRoomView"
         :is-main-view="isMainView"

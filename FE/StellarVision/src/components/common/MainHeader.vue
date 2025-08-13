@@ -3,7 +3,7 @@
     <div class="header flex justify-between items-center px-8 py-2">
       <div class="flex items-center gap-2">
         <img :src="logo" alt="로고" width="30px" height="42px" />
-        <RouterLink to="/" class="no-underline relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-[#f2f2f2] after:w-0 after:transition-all after:duration-300 hover:after:w-full font-bold font-pretendard">StellaVision</RouterLink>
+        <RouterLink to="/main" class="no-underline relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-[#f2f2f2] after:w-0 after:transition-all after:duration-300 hover:after:w-full font-bold font-pretendard">StellaVision</RouterLink>
       </div>
       <nav class="flex items-center gap-2">
         <div class="icon-container gap-2">

@@ -6,7 +6,7 @@ import { Minimize, Minimize2, Users } from 'lucide-vue-next'
 import { Session } from 'openvidu-browser'
 import { computed, onBeforeMount, onBeforeUnmount, onMounted, ref } from 'vue'
 import bgTex from '@/assets/pictures/stellabot/chatPanel.png'
-
+import { nextTick } from 'vue'
 
 const {userInfo} = useAccountStore()
 const props = defineProps({
@@ -17,11 +17,13 @@ const myName = computed(() => userInfo?.name || '')
 const emit = defineEmits(['close'])
 
 // 예제 채팅
-const messages = ref([
-  { user: 'Alice', text: '안녕하세요!' },
-  { user: 'Bob',   text: '어서오세요!' }
-])
+const messages = ref([])
 const newMessage = ref('')
+
+const listRef = ref(null)
+// 사용자가 거의 맨 아래에 있는지 여부
+const isNearBottom = ref(true)
+
 
 //openvidu 수신 콜백 핸들러
 function signalHandler(event){
@@ -29,6 +31,7 @@ function signalHandler(event){
   try {
     msg = JSON.parse(event.data)
   } catch (e) {
+    // Json으로 안 올 경우 대비
     msg = { user: 'Unknown', text: event.data }
   }
   messages.value.push({
@@ -36,18 +39,24 @@ function signalHandler(event){
     text: msg.text,
     ts: msg.ts,
   })
+  nextTick(() => { if (isNearBottom.value) scrollToBottom() })
+
 }
 
 onMounted(()=>{
   // 채팅 메시지 수신
   props.session.on('signal:chat', signalHandler)
+  listRef.value?.addEventListener('scroll', handleScroll, { passive: true })
+  nextTick(scrollToBottom)
 })
 
 // 언마운트 시 해제
 onBeforeUnmount(()=>{
   props.session.off('signal:chat', signalHandler)
+  listRef.value?.removeEventListener('scroll', handleScroll)
 })
 
+// 메시지 송신
 async function sendMessage() {
   const text = newMessage.value.trim()
 
@@ -71,18 +80,31 @@ async function sendMessage() {
     console.error('signal 전송실패', err)
   }
 }
+
+function atBottom(el, threshold = 40) {
+  return el.scrollHeight - el.scrollTop - el.clientHeight <= threshold
+}
+function scrollToBottom() {
+  const el = listRef.value
+  if (!el) return
+  el.scrollTop = el.scrollHeight
+}
+function handleScroll() {
+  const el = listRef.value
+  if (!el) return
+  isNearBottom.value = atBottom(el)
+}
+
 </script>
 
 <template>
   <aside 
     :style="{ 
-      backgroundImage: `url(${bgTex})`,
-      backgroundSize: '520px',        // 크기 (예: 가로 280px)
+      backgroundImage: `linear-gradient(rgba(255,255,255,0.15), rgba(255,255,255,0.15)), url(${bgTex})`,
+      backgroundSize: '460px',        // 크기 (예: 가로 280px)
       backgroundRepeat: 'no-repeat',       // 한 장만
       backgroundPosition: 'center' // 위치
-
-
- }"
+    }"
     class="chat-panel h-full w-full flex flex-col bg-zinc-900/70 backdrop-blur-md ring-1
     ring-white/10 text-zinc-100 rounded-none sm:rounded-l-2xl overflow-hidden" >
     <header class="chat-header flex items-center gap-1 text-xs text-zinc-400">
@@ -101,7 +123,8 @@ async function sendMessage() {
     </header>
 
     <!-- 메시지 리스트 -->
-    <ul class="chat-messages flex-1 overflow-y-auto p-3 space-y-2 min-h-0">
+    <!-- 08.13 12:34 분 listRef 추가 -->
+    <ul ref="listRef" class="chat-messages flex-1 overflow-y-auto p-3 space-y-2 min-h-0">          
       <li v-for="(msg, i) in messages" :key="i"
           class="flex"
           :class="msg.user === myName ? 'justify-end' : 'justify-start'">
@@ -167,5 +190,7 @@ async function sendMessage() {
 ul::-webkit-scrollbar { width: 8px; }
 ul::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 8px; }
 ul::-webkit-scrollbar-track { background: transparent; }
+
+
 
 </style>

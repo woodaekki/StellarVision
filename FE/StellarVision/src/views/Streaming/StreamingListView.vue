@@ -68,18 +68,18 @@
 
       <!-- 빈 상태 -->
       <div v-else-if="filteredVideos.length === 0"
-           class="flex flex-col items-center justify-center min-h-[300px] p-8 relative">
+           class="flex flex-col items-center justify-start min-h-[700px] p-8 relative">
         <div
           class="absolute inset-0 bg-no-repeat bg-center opacity-10"
           :style="{
             backgroundImage: `url(${bgImage})`,
-            backgroundSize: 'contain',
-            backgroundPosition: 'center'
+            backgroundSize: '620px',
+            backgroundPosition: 'bottom'
           }"
           aria-hidden="true"
         />
         <div class="text-center z-10">
-          <p class="text-slate-200 text-lg font-semibold m-0 mb-2">조건에 맞는 스트림이 없어요.</p>
+          <p class="text-slate-200 text-lg font-semibold m-0 mb-2 top-0">조건에 맞는 스트림이 없어요.</p>
           <p class="text-slate-500 text-sm m-0">검색어를 바꾸거나 필터를 해제해 보세요.</p>
         </div>
       </div>
