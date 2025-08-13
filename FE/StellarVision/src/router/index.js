@@ -17,7 +17,7 @@ import ProfileHeader from '@/components/profile/ProfileHeader.vue'
 import TodaysPhoto from '@/components/landing/TodaysPhoto.vue'
 import PreRoomView from '@/views/Streaming/PreRoomView.vue'
 import ReplayView from '@/views/Streaming/ReplayView.vue'
-import UpdateReplayView from '@/views/Profile/UpdateReplayView.vue'
+import UpdateTagView from '@/views/Profile/UpdateTagView.vue'
 import MyLikedListView from '@/views/Profile/MyLikedListView.vue'
 
 const router = createRouter({
@@ -116,8 +116,8 @@ const router = createRouter({
     },
     {
       path:'/replay/:id/edit',
-      name: 'UpdateReplayView',
-      component: UpdateReplayView
+      name: 'UpdateTagView',
+      component: UpdateTagView
     },
   ],
     }

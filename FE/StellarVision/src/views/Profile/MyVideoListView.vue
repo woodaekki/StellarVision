@@ -191,8 +191,9 @@ const fetchVideos = async (pageNum = 0) => {
   }
 };
 
-// 참고: 이제 올바른 API 엔드포인트를 사용합니다
-// /api/profiles/{memberId}/videos?page={pageNum}&size={pageSize}
+const handleEditVideo = (video) => {
+  router.push({ name: 'UpdateTagView', params: { id: video.id } });
+};
 
 // 날짜 포맷팅
 const formatDate = (dateString) => {
