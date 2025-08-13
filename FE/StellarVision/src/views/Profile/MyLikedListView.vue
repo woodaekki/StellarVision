@@ -112,11 +112,14 @@ import { useRoute, useRouter } from 'vue-router';
 import { useStreamingStore } from '@/stores/streaming.js';
 import commonApi from '@/api/commonApi';
 import bg from '@/assets/pictures/stellabot/spaceBackground.avif';
+import { useAccountStore } from '@/stores/account';
 
 const route = useRoute();
 const router = useRouter();
 const streamingStore = useStreamingStore();
 const memberEmail = computed(() => route.params.id);
+const accountStore = useAccountStore();
+const userInfo = computed(() => accountStore.userInfo)
 
 const pageRef = ref(null);
 const allVideos = ref([]);
