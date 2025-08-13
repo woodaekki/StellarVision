@@ -4,41 +4,84 @@
 
     <div class="stars-background">
       <div class="px-4 pt-12 pb-6">
-        <RouterLink :to="{ name: 'MyVideoListView', params: { id: myId } }">
-          내 비디오
-        </RouterLink>
-
-        <RouterLink :to="{ name: 'MyLikedListView', params: { id: myId } }">
-          좋아요한 영상
-        </RouterLink>
-        <h2 id="stars-background" class="text-2xl mb-2 text-center font-pretendard" style="font-family: 'Pretendard', sans-serif !important;">
+        <div class="navigation-links">
+          <RouterLink :to="{ name: 'MyVideoListView', params: { id: myId } }" class="active">
+            내 비디오
+          </RouterLink>
+          <span>|</span>
+          <RouterLink :to="{ name: 'MyLikedListView', params: { id: myId } }">
+            좋아요한 영상
+          </RouterLink>
+        </div>
+        <h2 id="stars-background" class="text-2xl mb-2 text-center font-pretendard">
           My Space Video
         </h2>
         <hr class="border-t-2 border-neutral-200 w-full mt-2" />
       </div>
 
       <div class="px-4 pb-12">
-        <div v-if="!loading && videos.length > 0" class="video-grid">
-          <VideoCell
+        <div v-if="loading" class="loading-container">
+          <div class="loading-spinner">
+            <div class="spinner"></div>
+            <div class="loading-text">영상 목록을 불러오는 중...</div>
+          </div>
+        </div>
+
+        <div v-else-if="!loading && videos.length === 0" class="empty-state">
+          <div class="empty-icon">📂</div>
+          <h3>아직 업로드한 영상이 없습니다.</h3>
+          <p>새로운 영상을 업로드하고 공유해 보세요!</p>
+          <RouterLink :to="{ name: 'ReplayView' }" class="browse-button">
+            영상 업로드하기
+          </RouterLink>
+        </div>
+
+        <div v-else class="video-grid">
+          <div
             v-for="(video, index) in videos"
             :key="video.id"
-            :video="video"
-            :tags="video.tags.slice(0, 3)"
-            :show-edit="isUploader"
-            :class="{ 'fade-in': video.isNew }"
-            @select="goToReplay(video.id)"
-            @delete="handleDeleteVideo"
+            class="video-cell fade-in"
             @animationend="onAnimationEnd(video.id)"
-          />
-        </div>
+          >
+            <div @click="goToReplay(video.id)" class="video-clickable-area">
+              <div class="video-thumbnail-wrapper">
+                <img
+                  :src="video.thumbnail"
+                  :alt="video.name"
+                  class="video-thumbnail"
+                  @error="handleImageError"
+                />
+                <div class="video-overlay">
+                  <div class="play-button">
+                    <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
 
-        <div v-else-if="!loading && !videos.length && !hasMore" class="loading-text">
-          아직 업로드한 영상이 없습니다.
-        </div>
-
-        <div v-if="loading" class="loading-spinner">
-          <div class="spinner"></div>
-          <div class="loading-text">영상 목록을 불러오는 중...</div>
+              <div class="video-info">
+                <div class="video-header">
+                  <h3 class="video-title">{{ video.name }}</h3>
+                  <button v-if="isUploader" @click.stop="handleDeleteVideo(video)" class="delete-button" title="삭제">
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zm2.46-7.12l1.41-1.41L12 12.59l2.12-2.12 1.41 1.41L13.41 14l2.12 2.12-1.41 1.41L12 15.41l-2.12 2.12-1.41-1.41L10.59 14l-2.13-2.12zM15.5 4l-1-1h-5l-1 1H5v2h14V4z" />
+                    </svg>
+                  </button>
+                </div>
+                <div class="video-meta">
+                  <span class="video-date">{{ video.date }}</span>
+                </div>
+                <div class="video-stats">
+                  <div class="tags-container">
+                    <span v-for="tag in video.tags" :key="tag.id" class="video-tag">
+                      #{{ tag.name }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div v-if="loadingMore" class="loading-spinner">
@@ -60,7 +103,6 @@
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useVideoStore } from '@/stores/video';
-import VideoCell from '@/components/video/VideoCell.vue';
 import commonApi from '@/api/commonApi';
 import bg from '@/assets/pictures/stellabot/spaceBackground.avif';
 
@@ -82,6 +124,7 @@ const isThrottling = ref(false);
 const PAGE_SIZE = 8;
 const SORT_OPTION = 0;
 
+const myId = computed(() => route.params.id);
 const profilePk = window.history.state?.profilePk || route.params.id;
 const isUploader = JSON.parse(localStorage.getItem('userInfo'))?.email === route.params.id;
 
@@ -149,23 +192,21 @@ const goToReplay = (videoId) => {
   router.push(`/replay/${videoId}`);
 };
 
-const handleDeleteVideo = (video) => {
+const handleDeleteVideo = async (video) => {
   if (!confirm('정말로 이 영상을 삭제하시겠습니까?')) return;
-  performDelete(video);
-};
-
-const performDelete = async (video) => {
   try {
     await commonApi.delete(`/videos/${video.id}`);
-
     const idx = videoStore.replays.findIndex(v => v.id === video.id);
     if (idx > -1) videoStore.replays.splice(idx, 1);
-
     alert('영상이 성공적으로 삭제되었습니다.');
   } catch (error) {
     console.error('영상 삭제 실패:', error);
     alert('영상 삭제에 실패했습니다. 다시 시도해주세요.');
   }
+};
+
+const handleImageError = (event) => {
+  event.target.src = '/default-thumbnail.jpg';
 };
 
 const getScrollMetrics = () => {
@@ -180,11 +221,9 @@ const getScrollMetrics = () => {
     document.body.scrollHeight
   );
   const clientHeight = window.innerHeight || document.documentElement.clientHeight;
-
   const headerOffset = 60;
   const footerOffset = 40;
   const totalOffset = headerOffset + footerOffset;
-
   return {
     scrollTop,
     scrollHeight,
@@ -195,16 +234,12 @@ const getScrollMetrics = () => {
 
 const checkScrollPosition = () => {
   if (loading.value || loadingMore.value || !hasMore.value || isThrottling.value) return false;
-
   const { scrollTop, scrollHeight, clientHeight, effectiveScrollHeight } = getScrollMetrics();
-
   if (scrollHeight <= clientHeight + 200) {
     return true;
   }
-
   const scrollPercentage = (scrollTop + clientHeight) / effectiveScrollHeight;
   const remaining = effectiveScrollHeight - scrollTop - clientHeight;
-
   return scrollPercentage >= 0.7 || remaining <= 1200;
 };
 
@@ -216,19 +251,16 @@ const handleScroll = () => {
   if (scrollTimeout) clearTimeout(scrollTimeout);
   if (rafId) cancelAnimationFrame(rafId);
   if (debounceTimeout) clearTimeout(debounceTimeout);
-
   rafId = requestAnimationFrame(() => {
     if (checkScrollPosition()) {
       fetchVideos();
     }
   });
-
   scrollTimeout = setTimeout(() => {
     if (checkScrollPosition()) {
       fetchVideos();
     }
   }, 50);
-
   debounceTimeout = setTimeout(() => {
     if (checkScrollPosition()) {
       fetchVideos();
@@ -238,7 +270,6 @@ const handleScroll = () => {
 
 const setupIntersectionObserver = () => {
   if (!observerTarget.value) return null;
-
   return new IntersectionObserver(
     (entries) => {
       const entry = entries[0];
@@ -260,26 +291,21 @@ let observer = null;
 
 const setupInfiniteScroll = async () => {
   await nextTick();
-
   let retryCount = 0;
   while (!observerTarget.value && retryCount < 10) {
     await new Promise(resolve => setTimeout(resolve, 100));
     retryCount++;
   }
-
   if (!observerTarget.value) {
     return;
   }
-
   observer = setupIntersectionObserver();
   if (observer) {
     observer.observe(observerTarget.value);
   }
-
   const scrollOptions = { passive: true, capture: false };
   window.addEventListener('scroll', handleScroll, scrollOptions);
   document.addEventListener('scroll', handleScroll, scrollOptions);
-
   window.addEventListener('resize', () => {
     setTimeout(() => {
       if (checkScrollPosition()) {
@@ -287,7 +313,6 @@ const setupInfiniteScroll = async () => {
       }
     }, 100);
   }, { passive: true });
-
   const fullscreenEvents = ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange'];
   fullscreenEvents.forEach(event => {
     document.addEventListener(event, () => {
@@ -298,7 +323,6 @@ const setupInfiniteScroll = async () => {
       }, 300);
     });
   });
-
   window.addEventListener('popstate', () => {
     setTimeout(() => {
       if (checkScrollPosition()) {
@@ -313,7 +337,6 @@ const cleanupInfiniteScroll = () => {
     observer.disconnect();
     observer = null;
   }
-
   const timers = [scrollTimeout, rafId, debounceTimeout];
   timers.forEach(timer => {
     if (timer) {
@@ -324,21 +347,17 @@ const cleanupInfiniteScroll = () => {
       }
     }
   });
-
   scrollTimeout = null;
   rafId = null;
   debounceTimeout = null;
-
   window.removeEventListener('scroll', handleScroll);
   document.removeEventListener('scroll', handleScroll);
   window.removeEventListener('resize', checkScrollPosition);
   window.removeEventListener('popstate', checkScrollPosition);
-
   const fullscreenEvents = ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange'];
   fullscreenEvents.forEach(event => {
     document.removeEventListener(event, checkScrollPosition);
   });
-
   isThrottling.value = false;
 };
 
@@ -352,10 +371,8 @@ let initialCheckInterval = null;
 
 onMounted(async () => {
   preventScrollRestore();
-
   await fetchVideos(true);
   await setupInfiniteScroll();
-
   let checkCount = 0;
   initialCheckInterval = setInterval(() => {
     checkCount++;
@@ -365,7 +382,6 @@ onMounted(async () => {
         clearInterval(initialCheckInterval);
       }
     }
-
     if (checkCount > 150) {
       clearInterval(initialCheckInterval);
     }
@@ -422,6 +438,34 @@ onBeforeUnmount(() => {
   overflow-y: auto;
 }
 
+.navigation-links {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 20px;
+  font-size: 16px;
+}
+
+.navigation-links a {
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.navigation-links a:hover,
+.navigation-links a.active {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.navigation-links span {
+  color: rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+}
+
 .stars-background h2 {
   margin-top: 20px !important;
   margin-bottom: 40px !important;
@@ -431,12 +475,11 @@ onBeforeUnmount(() => {
   color: #ffffff;
 }
 
-.video-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 18px;
-  max-width: 100%;
+.loading-container {
+  display: flex;
   justify-content: center;
+  align-items: center;
+  min-height: 300px;
 }
 
 .loading-text {
@@ -448,9 +491,9 @@ onBeforeUnmount(() => {
 
 .loading-spinner {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  margin-top: 20px;
   gap: 10px;
 }
 
@@ -468,6 +511,212 @@ onBeforeUnmount(() => {
   100% { transform: rotate(360deg); }
 }
 
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  text-align: center;
+  gap: 20px;
+}
+
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: 10px;
+}
+
+.empty-state h3 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+}
+
+.empty-state p {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+}
+
+.browse-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  text-decoration: none;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.browse-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.video-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+  max-width: 100%;
+  justify-content: center;
+}
+
+.video-cell {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.video-cell:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.video-clickable-area {
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+}
+
+.video-thumbnail-wrapper {
+  position: relative;
+  width: 100%;
+  height: 180px;
+  overflow: hidden;
+}
+
+.video-thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.video-cell:hover .video-thumbnail {
+  transform: scale(1.05);
+}
+
+.video-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.video-cell:hover .video-overlay {
+  opacity: 1;
+}
+
+.play-button {
+  background: rgba(255, 255, 255, 0.9);
+  color: #333;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.play-button:hover {
+  background: #ffffff;
+  transform: scale(1.1);
+}
+
+.video-info {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.video-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.video-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0;
+  flex-grow: 1;
+  padding-right: 10px;
+}
+
+.delete-button {
+  background-color: rgba(239, 68, 68, 0.9);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  opacity: 0;
+}
+
+.video-cell:hover .delete-button {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.video-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.video-stats {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.video-tag {
+  font-size: 12px;
+  color: #4ade80;
+  background: rgba(76, 175, 80, 0.15);
+  padding: 4px 8px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
 .observer-target {
   width: 100%;
   height: 200px;
@@ -482,27 +731,34 @@ onBeforeUnmount(() => {
   to { opacity: 1; transform: translateY(0); }
 }
 
-.delete-button {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background-color: rgba(239, 68, 68, 0.9);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 6px 12px;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 600;
-  transition: opacity 0.25s ease;
-  z-index: 15;
-  user-select: none;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+@media (max-width: 1024px) {
+  .video-grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 20px;
+  }
 }
 
-.video-cell:hover .delete-button {
-  opacity: 0.95;
-  border: none;
+@media (max-width: 768px) {
+  .video-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+  }
+  .stars-background {
+    padding: 20px 24px;
+  }
+  .navigation-links {
+    font-size: 14px;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .video-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .page {
+    padding: 20px 10px;
+  }
 }
 </style>

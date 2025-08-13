@@ -3,7 +3,7 @@
     <img :src="bg" alt="" class="bg-img">
     <div class="stars-background">
       <div class="px-4 pt-12 pb-6">
-        <h2 class="text-2xl mb-2 text-center font-pretendard" style="font-family: 'Pretendard', sans-serif !important;">
+        <h2 class="text-2xl mb-2 text-center font-pretendard">
           My Space Gallery
         </h2>
         <hr class="border-t-2 border-neutral-200 w-full mt-2" />
@@ -28,13 +28,13 @@
             class="photo-box"
             @click="viewPhoto(item.id)"
             @mouseenter="loadPhotoTags(item.id)"
-            @animationend="onAnimationEnd(item.id)"
           >
             <img
               :src="item.url"
               class="photo-img"
               :class="{ 'loaded': item.isLoaded }"
               @load="onImageLoad(item.id)"
+              @error="handleImageError"
             />
             <div class="photo-text">
               <p>{{ item.name }}</p>
@@ -52,7 +52,12 @@
                 <span class="tag-loading-text">태그 로딩중...</span>
               </div>
             </div>
-            <button class="delete-button" @click.stop="deletePhoto(item.id)">삭제</button>
+            <button class="delete-button" @click.stop="deletePhoto(item.id)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+              </svg>
+            </button>
           </div>
         </div>
 
@@ -62,7 +67,6 @@
         </div>
         <div v-if="!photos.length && !loading && !hasMore" class="loading-text">아직 사진이 없습니다.</div>
 
-        <!-- 더 큰 Intersection Observer 감지 요소 -->
         <div ref="observerTarget" class="observer-target"></div>
       </div>
     </div>
@@ -98,18 +102,15 @@ const isThrottling = ref(false)
 const memberId = computed(() => accountStore.myProfile?.memberId)
 const canUpload = computed(() => accountStore.isLogin)
 
-const onAnimationEnd = (photoId) => {
-  const photo = photos.value.find(p => p.id === photoId)
-  if (photo) {
-    photo.isNew = false
-  }
-}
-
 const onImageLoad = (photoId) => {
   const photo = photos.value.find(p => p.id === photoId)
   if (photo) {
     photo.isLoaded = true
   }
+}
+
+const handleImageError = (event) => {
+  event.target.src = '/default-thumbnail.jpg'
 }
 
 const fetchPhotos = async (force = false) => {
@@ -131,7 +132,7 @@ const fetchPhotos = async (force = false) => {
     const { data } = await axiosApi.get(`profiles/${memberId.value}/photos`, {
       params: {
         page: page.value,
-        size: 8, // 한 번에 더 많이 로드
+        size: 8,
       },
     })
 
@@ -152,7 +153,6 @@ const fetchPhotos = async (force = false) => {
     console.error('사진 불러오기 실패:', e)
   } finally {
     loading.value = false
-
     setTimeout(() => {
       isThrottling.value = false
     }, fetchCooldown)
@@ -349,7 +349,6 @@ const handleScroll = () => {
   }, 500)
 }
 
-// Intersection Observer 설정
 const setupIntersectionObserver = () => {
   if (!observerTarget.value) return null
 
@@ -375,7 +374,6 @@ let observer = null
 const setupInfiniteScroll = async () => {
   await nextTick()
 
-  // Observer 타겟 확인 및 재시도
   let retryCount = 0
   while (!observerTarget.value && retryCount < 10) {
     await new Promise(resolve => setTimeout(resolve, 100))
@@ -387,13 +385,11 @@ const setupInfiniteScroll = async () => {
     return
   }
 
-  // Intersection Observer 설정
   observer = setupIntersectionObserver()
   if (observer) {
     observer.observe(observerTarget.value)
   }
 
-  // 스크롤 이벤트 리스너 추가 (passive 옵션으로 성능 향상)
   const scrollOptions = { passive: true, capture: false }
   window.addEventListener('scroll', handleScroll, scrollOptions)
   document.addEventListener('scroll', handleScroll, scrollOptions)
@@ -406,7 +402,6 @@ const setupInfiniteScroll = async () => {
     }, 100)
   }, { passive: true })
 
-  // 전체화면 변경 이벤트
   const fullscreenEvents = ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange']
   fullscreenEvents.forEach(event => {
     document.addEventListener(event, () => {
@@ -433,16 +428,16 @@ const cleanupInfiniteScroll = () => {
     observer = null
   }
 
-  const timers = [scrollTimeout, velocityTimeout, rafId, debounceTimeout]
+  const timers = [scrollTimeout, velocityTimeout, rafId, debounceTimeout];
   timers.forEach(timer => {
     if (timer) {
       if (timer === rafId) {
-        cancelAnimationFrame(timer)
+        cancelAnimationFrame(timer);
       } else {
-        clearTimeout(timer)
+        clearTimeout(timer);
       }
     }
-  })
+  });
 
   scrollTimeout = null
   velocityTimeout = null
@@ -564,8 +559,10 @@ onBeforeUnmount(() => {
 
 .gallery-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 15px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+  max-width: 100%;
+  justify-content: center;
 }
 
 .upload-box,
@@ -617,22 +614,23 @@ onBeforeUnmount(() => {
 }
 
 .photo-box:hover {
-  transform: scale(1.07);
+  transform: translateY(-8px);
   box-shadow:
-    inset 8px 8px 16px rgba(255 255 255 / 0.8),
-    inset -8px -8px 16px rgba(0 0 0 / 0.3),
-    0 6px 20px rgba(255, 255, 255, 0.25);
+    0 12px 35px rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 0.12);
   z-index: 2;
 }
 
 .photo-img {
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   flex-grow: 1;
   filter: blur(8px);
   transition: filter 0.45s ease;
   border-radius: 18px;
   opacity: 0.95;
+  will-change: filter;
 }
 
 .photo-img.loaded {
@@ -696,19 +694,22 @@ onBeforeUnmount(() => {
   background-color: rgba(255, 50, 50, 0.95);
   color: white;
   border: none;
-  border-radius: 8px;
-  padding: 5px 12px;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  font-size: 13px;
   opacity: 0;
-  transition: opacity 0.25s ease;
+  transition: opacity 0.25s ease, transform 0.3s ease;
   z-index: 15;
   user-select: none;
-  font-weight: 600;
 }
 
 .photo-box:hover .delete-button {
-  opacity: 0.9;
+  opacity: 1;
+  transform: scale(1.1);
 }
 
 .loading-spinner {
@@ -747,39 +748,30 @@ onBeforeUnmount(() => {
   margin: 40px 0;
 }
 
+@media (max-width: 1024px) {
+  .gallery-grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 20px;
+  }
+}
+
 @media (max-width: 768px) {
   .gallery-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
   }
-
-  .observer-target {
-    height: 150px;
-    margin: 30px 0;
+  .stars-background {
+    padding: 20px 24px;
   }
 }
 
-:fullscreen .page,
-:-webkit-full-screen .page,
-:-moz-full-screen .page {
-  padding: 20px 10px;
-}
-
-:fullscreen .stars-background,
-:-webkit-full-screen .stars-background,
-:-moz-full-screen .stars-background {
-  max-width: 95vw;
-  padding: 20px 30px;
-}
-
-* {
-  scroll-behavior: smooth;
-}
-
-.page {
-  will-change: scroll-position;
-}
-
-.photo-box {
-  will-change: transform;
+@media (max-width: 480px) {
+  .gallery-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .page {
+    padding: 20px 10px;
+  }
 }
 </style>
