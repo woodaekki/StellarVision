@@ -18,6 +18,7 @@ import TodaysPhoto from '@/components/landing/TodaysPhoto.vue'
 import PreRoomView from '@/views/Streaming/PreRoomView.vue'
 import ReplayView from '@/views/Streaming/ReplayView.vue'
 import UpdateReplayView from '@/views/Profile/UpdateReplayView.vue'
+import MyLikedListView from '@/views/Profile/MyLikedListView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -87,6 +88,11 @@ const router = createRouter({
       path: '/profile/:id/mygallery/detail',
       name: 'MyGalleryListView',
       component: MyGalleryListView
+    },
+    {
+      path: '/profile/:id/mygallery/liked',
+      name: 'MyLikedListView',
+      component: MyLikedListView
     },
     {
       path: '/profile/:id/myvideo/detail',

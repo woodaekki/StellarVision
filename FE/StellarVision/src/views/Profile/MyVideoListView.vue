@@ -1,8 +1,16 @@
 <template>
   <div class="page" ref="pageRef">
     <img :src="bg" alt="" class="bg-img">
+
     <div class="stars-background">
       <div class="px-4 pt-12 pb-6">
+        <RouterLink :to="{ name: 'MyVideoListView', params: { id: myId } }">
+          내 비디오
+        </RouterLink>
+
+        <RouterLink :to="{ name: 'MyLikedListView', params: { id: myId } }">
+          좋아요한 영상
+        </RouterLink>
         <h2 id="stars-background" class="text-2xl mb-2 text-center font-pretendard" style="font-family: 'Pretendard', sans-serif !important;">
           My Space Video
         </h2>
