@@ -8,7 +8,7 @@
         @load="onThumbnailLoad"
       />
 
-      <button v-if="showEdit" class="delete-button" @click.stop="handleDelete">
+      <button class="delete-button" @click.stop="handleDelete">
         삭제
       </button>
     </div>
@@ -16,7 +16,7 @@
     <div class="video-info">
       <div class="video-title">
         {{ video.name }}
-        <button v-if="showEdit" class="edit-button" @click.stop="goToReplayEdit">
+        <button class="edit-button" @click.stop="goToReplayEdit">
           <VideoEditIcon class="edit-icon" />
         </button>
       </div>
@@ -43,7 +43,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import VideoEditIcon from './VideoEditIcon.vue';
+import VideoEditIcon from '@/components/video/VideoEditIcon.vue';
 import commonApi from '@/api/commonApi';
 
 const props = defineProps({
@@ -54,10 +54,6 @@ const props = defineProps({
   tags: {
     type: Array,
     default: () => [],
-  },
-  showEdit: {
-    type: Boolean,
-    required: true,
   },
 });
 
@@ -260,7 +256,7 @@ defineExpose({
   position: absolute;
   top: 10px;
   right: 10px;
-  background-color: rgba(239, 68, 68, 0.9);
+  background-color: rgba(252, 47, 47, 0.9);
   color: white;
   border: none;
   border-radius: 8px;
@@ -281,7 +277,7 @@ defineExpose({
 }
 
 .edit-button {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 6px;
   cursor: pointer;
@@ -291,6 +287,10 @@ defineExpose({
   transition: all 0.2s ease;
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
+}
+
+.video-cell:hover .edit-button {
+  opacity: 0.9;
 }
 
 .edit-button:hover {

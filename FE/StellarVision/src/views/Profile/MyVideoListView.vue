@@ -200,10 +200,6 @@ const checkScrollPosition = () => {
   return scrollPercentage >= 0.7 || remaining <= 1200;
 };
 
-const updateScrollVelocity = () => {
-  // 이 부분은 velocity 관련 변수가 제거되어도 남겨둠 (향후 필요 시 다시 활용 가능)
-};
-
 let scrollTimeout = null;
 let rafId = null;
 let debounceTimeout = null;
@@ -429,7 +425,7 @@ onBeforeUnmount(() => {
 
 .video-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 18px;
   max-width: 100%;
   justify-content: center;
@@ -476,5 +472,29 @@ onBeforeUnmount(() => {
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+.delete-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: rgba(239, 68, 68, 0.9);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: opacity 0.25s ease;
+  z-index: 15;
+  user-select: none;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.video-cell:hover .delete-button {
+  opacity: 0.95;
+  border: none;
 }
 </style>

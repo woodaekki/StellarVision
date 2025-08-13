@@ -22,7 +22,7 @@
 
 <style scoped>
 .edit-icon {
-  fill: #666;
+  fill: #f2f2f2;
   vertical-align: middle;
 }
 </style>
