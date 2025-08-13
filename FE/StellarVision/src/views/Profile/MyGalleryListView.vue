@@ -2,13 +2,18 @@
   <div class="page" ref="pageRef">
     <img :src="bg" alt="우주 배경" class="bg-img" />
     <div class="stars-background">
-      <div class="header-container">
-        <h2 class="page-title">
-          My Space Gallery
-        </h2>
-        <hr class="divider" />
+      <div class="header-and-back-container"> <div class="back-button-container">
+          <button @click="goBack" class="back-button-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
+        </div>
+        <div class="header-container">
+          <h2 class="page-title">My Space Gallery</h2>
+        </div>
       </div>
-
+      <hr class="divider" />
       <div class="content-container">
         <div class="gallery-grid">
           <div class="upload-box" @click="triggerGalleryUpload">
@@ -32,7 +37,7 @@
             <img
               :src="item.url"
               class="photo-img"
-              :class="{ 'loaded': item.isLoaded }"
+              :class="{ loaded: item.isLoaded }"
               @load="onImageLoad(item.id)"
               @error="handleImageError"
             />
@@ -40,11 +45,7 @@
               <p class="photo-title">{{ item.name }}</p>
               <p class="photo-date">{{ item.date }}</p>
               <div v-if="item.tags && item.tags.length" class="photo-tags">
-                <span
-                  v-for="tag in item.tags.slice(0, 3)"
-                  :key="tag.tagId"
-                  class="tag-chip"
-                >
+                <span v-for="tag in item.tags.slice(0, 3)" :key="tag.tagId" class="tag-chip">
                   #{{ tag.tagName }}
                 </span>
                 <span v-if="item.tags.length > 3" class="tag-chip tag-more">
@@ -57,8 +58,13 @@
             </div>
             <button class="delete-button" @click.stop="deletePhoto(item.id)">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
-                <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                <path
+                  d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"
+                />
+                <path
+                  fill-rule="evenodd"
+                  d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"
+                />
               </svg>
             </button>
           </div>
@@ -82,9 +88,11 @@ import { useAccountStore } from '@/stores/account';
 import axios from 'axios';
 import axiosApi from '@/api/axiosApi';
 import bg from '@/assets/pictures/stellabot/spaceBackground.avif';
+import { useRouter, useRoute } from 'vue-router'
 
 const accountStore = useAccountStore();
-
+const route = useRoute();
+const router = useRouter();
 const pageRef = ref(null);
 const galleryInput = ref(null);
 const observerTarget = ref(null);
@@ -101,9 +109,14 @@ const isNearBottom = ref(false);
 const lastScrollTop = ref(0);
 const scrollVelocity = ref(0);
 const isThrottling = ref(false);
-
+const memberEmail = computed(() => route.params.id);
 const memberId = computed(() => accountStore.myProfile?.memberId);
 const canUpload = computed(() => accountStore.isLogin);
+
+const goBack = () => {
+  router.push({ name: 'profileView', params: { id: memberEmail.value } });
+};
+
 
 const formatDate = (dateString) => {
   try {
@@ -122,7 +135,7 @@ const formatDate = (dateString) => {
 };
 
 const onImageLoad = (photoId) => {
-  const photo = photos.value.find(p => p.id === photoId);
+  const photo = photos.value.find((p) => p.id === photoId);
   if (photo) {
     photo.isLoaded = true;
   }
@@ -139,7 +152,7 @@ const fetchPhotos = async (force = false) => {
     return;
   }
 
-  if (!force && (isThrottling.value || (now - lastFetchTime.value < fetchCooldown))) {
+  if (!force && (isThrottling.value || now - lastFetchTime.value < fetchCooldown)) {
     return;
   }
 
@@ -151,8 +164,8 @@ const fetchPhotos = async (force = false) => {
     const { data } = await axiosApi.get(`profiles/${memberId.value}/photos`, {
       params: {
         page: page.value,
-        size: 8,
-      },
+        size: 8
+      }
     });
 
     const newPhotos = data.data.photos.map((p) => ({
@@ -179,7 +192,7 @@ const fetchPhotos = async (force = false) => {
 };
 
 const loadPhotoTags = async (photoId) => {
-  const photo = photos.value.find(p => p.id === photoId);
+  const photo = photos.value.find((p) => p.id === photoId);
   if (!photo || photo.tags !== null || loadingTags.value[photoId]) return;
 
   loadingTags.value[photoId] = true;
@@ -187,12 +200,12 @@ const loadPhotoTags = async (photoId) => {
   try {
     const response = await axiosApi.get(`/photos/${photoId}/tags`);
     const { data } = response;
-    const photoIndex = photos.value.findIndex(p => p.id === photoId);
+    const photoIndex = photos.value.findIndex((p) => p.id === photoId);
     if (photoIndex !== -1) {
       photos.value[photoIndex].tags = data?.data?.tags || [];
     }
   } catch (e) {
-    const photoIndex = photos.value.findIndex(p => p.id === photoId);
+    const photoIndex = photos.value.findIndex((p) => p.id === photoId);
     if (photoIndex !== -1) {
       photos.value[photoIndex].tags = [];
     }
@@ -225,7 +238,7 @@ const uploadGalleryImage = async (e) => {
     const { data: presignedResponse } = await axiosApi.post('/photos/presignedUrl', {
       memberId: memberId.value,
       originalFilename: file.name,
-      contentType: file.type,
+      contentType: file.type
     });
     const presignedData = presignedResponse.data;
     if (!presignedData.uploadUrl || !presignedData.s3Key) {
@@ -235,12 +248,12 @@ const uploadGalleryImage = async (e) => {
     await axios.put(presignedData.uploadUrl, file, {
       headers: { 'Content-Type': file.type },
       maxContentLength: Infinity,
-      maxBodyLength: Infinity,
+      maxBodyLength: Infinity
     });
     await axiosApi.post('/photos/complete', {
       memberId: memberId.value,
       originalFilename: file.name,
-      s3Key: presignedData.s3Key,
+      s3Key: presignedData.s3Key
     });
     page.value = 0;
     photos.value = [];
@@ -274,7 +287,7 @@ const deletePhoto = async (photoId) => {
   if (!confirm('정말로 이 사진을 삭제하시겠습니까?')) return;
   try {
     await axiosApi.delete(`/photos/${photoId}`);
-    photos.value = photos.value.filter(p => p.id !== photoId);
+    photos.value = photos.value.filter((p) => p.id !== photoId);
     alert('사진이 성공적으로 삭제되었습니다.');
   } catch (e) {
     console.error(`사진(ID: ${photoId}) 삭제 실패:`, e);
@@ -289,10 +302,7 @@ const getScrollMetrics = () => {
     document.body.scrollTop,
     window.pageYOffset || 0
   );
-  const scrollHeight = Math.max(
-    scrollElement.scrollHeight,
-    document.body.scrollHeight
-  );
+  const scrollHeight = Math.max(scrollElement.scrollHeight, document.body.scrollHeight);
   const clientHeight = window.innerHeight || document.documentElement.clientHeight;
 
   const headerOffset = 60;
@@ -395,7 +405,7 @@ const setupInfiniteScroll = async () => {
 
   let retryCount = 0;
   while (!observerTarget.value && retryCount < 10) {
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
     retryCount++;
   }
 
@@ -413,16 +423,20 @@ const setupInfiniteScroll = async () => {
   window.addEventListener('scroll', handleScroll, scrollOptions);
   document.addEventListener('scroll', handleScroll, scrollOptions);
 
-  window.addEventListener('resize', () => {
-    setTimeout(() => {
-      if (checkScrollPosition()) {
-        fetchPhotos();
-      }
-    }, 100);
-  }, { passive: true });
+  window.addEventListener(
+    'resize',
+    () => {
+      setTimeout(() => {
+        if (checkScrollPosition()) {
+          fetchPhotos();
+        }
+      }, 100);
+    },
+    { passive: true }
+  );
 
   const fullscreenEvents = ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange'];
-  fullscreenEvents.forEach(event => {
+  fullscreenEvents.forEach((event) => {
     document.addEventListener(event, () => {
       setTimeout(() => {
         if (checkScrollPosition()) {
@@ -448,7 +462,7 @@ const cleanupInfiniteScroll = () => {
   }
 
   const timers = [scrollTimeout, velocityTimeout, rafId, debounceTimeout];
-  timers.forEach(timer => {
+  timers.forEach((timer) => {
     if (timer) {
       if (timer === rafId) {
         cancelAnimationFrame(timer);
@@ -469,7 +483,7 @@ const cleanupInfiniteScroll = () => {
   window.removeEventListener('popstate', checkScrollPosition);
 
   const fullscreenEvents = ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange'];
-  fullscreenEvents.forEach(event => {
+  fullscreenEvents.forEach((event) => {
     document.removeEventListener(event, checkScrollPosition);
   });
 
@@ -547,6 +561,7 @@ onBeforeUnmount(() => {
 }
 
 .stars-background {
+  position: relative;
   background: rgba(255, 255, 255, 0.12);
   border-radius: 20px;
   padding: 30px 40px;
@@ -567,17 +582,51 @@ onBeforeUnmount(() => {
     inset -6px -6px 14px rgba(0 0 0 / 0.2);
 }
 
-.header-container {
+.header-and-back-container {
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
   padding: 0 10px 24px;
+  gap: 15px; 
+}
+
+.back-button-container {
+  flex-shrink: 0; 
+}
+
+.back-button-icon {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(8px);
+}
+
+.back-button-icon:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+.header-container {
+  flex: 1; 
+  display: flex;
+  align-items: center; 
 }
 
 .page-title {
-  margin-top: 20px;
-  margin-bottom: 20px;
+  margin: 0; 
   text-align: left;
   font-weight: 700;
   font-size: 1.5rem;
   color: #ffffff;
+  line-height: 1.2; 
 }
 
 .divider {
@@ -587,6 +636,7 @@ onBeforeUnmount(() => {
 }
 
 .content-container {
+  margin-top: 20px;
   padding: 1rem 0;
 }
 
@@ -770,8 +820,12 @@ onBeforeUnmount(() => {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .loading-text {
@@ -787,5 +841,4 @@ onBeforeUnmount(() => {
   width: 100%;
   margin: 40px 0;
 }
-
 </style>

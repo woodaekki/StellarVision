@@ -3,6 +3,12 @@
     <img :src="bg" alt="" class="bg-img" />
 
     <div class="stars-background">
+      <button @click="goBack" class="back-button">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+      </button>
+
       <div class="px-4 pt-12 pb-6">
         <div class="navigation-links">
           <RouterLink :to="{ name: 'MyVideoListView', params: { id: myId } }" class="active">
@@ -130,6 +136,7 @@ import bg from '@/assets/pictures/stellabot/spaceBackground.avif';
 
 const route = useRoute();
 const router = useRouter();
+const memberEmail = computed(() => route.params.id);
 
 const loading = ref(true);
 const loadingMore = ref(false);
@@ -148,7 +155,10 @@ const myId = computed(() => {
 
 const videos = ref([]);
 
-// 각 비디오의 태그를 가져오는 함수
+const goBack = () => {
+  router.push({ name: 'profileView', params: { id: memberEmail.value } });
+}
+
 const fetchTagsForVideos = async (videosList) => {
   if (!videosList || videosList.length === 0) return videosList;
 
@@ -165,7 +175,6 @@ const fetchTagsForVideos = async (videosList) => {
   return Promise.all(tagPromises);
 };
 
-// 내 영상만 가져오는 함수
 const fetchVideos = async (pageNum = 0) => {
   if (loadingMore.value || !hasMore.value) return;
 
@@ -189,8 +198,6 @@ const fetchVideos = async (pageNum = 0) => {
     console.log('API 응답:', res.data);
 
     let newVideos = res.data.data?.videos || [];
-
-    // 태그 정보 추가
     newVideos = await fetchTagsForVideos(newVideos);
 
     if (pageNum === 0) {
@@ -215,7 +222,6 @@ const handleEditVideo = (video) => {
   router.push({ name: 'UpdateTagView', params: { id: video.id } });
 };
 
-// 날짜 포맷팅
 const formatDate = (dateString) => {
   try {
     const date = new Date(dateString);
@@ -347,6 +353,30 @@ onBeforeUnmount(() => {
     8px 8px 30px rgba(0 0 0 / 0.4);
   overflow-x: hidden;
   overflow-y: auto;
+}
+
+.back-button {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(8px);
+}
+
+.back-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
 }
 
 .navigation-links {
