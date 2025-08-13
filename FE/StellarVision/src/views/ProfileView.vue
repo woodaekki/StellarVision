@@ -17,6 +17,7 @@
             :profile-followers="profileFollowers"
             :profile-email="profileEmail"
             @updateProfileImageUrl="handleUpdateImageUrl"
+            @descriptionUpdated="onDescriptionUpdated"
           />
         </div>
 
@@ -105,6 +106,11 @@ async function handleUpdateImageUrl() {
     profileInfo.value = userRes.data.data;
   }
   profileUpdateLoading.value = false;
+}
+
+function onDescriptionUpdated(newDesc) {
+  if (!profileInfo.value) return
+  profileInfo.value = { ...profileInfo.value, description: newDesc }
 }
 
 function goToReplay(videoId) {
@@ -224,6 +230,6 @@ function goToReplay(videoId) {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  z-index: -1; 
+  z-index: -1;
 }
 </style>

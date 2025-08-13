@@ -117,7 +117,7 @@ function apply251Compensation(cam) {
   for (const it of comp251) {
     const m = it.mesh;
     if (!m || !m.isEnabled()) continue;
-    
+
     m.computeWorldMatrix(true);
     const pos = m.getAbsolutePosition();
     const dist = Vector3.Distance(cam.position, pos);
@@ -209,7 +209,7 @@ async function createScene() {
 
   const container = await LoadAssetContainerAsync("/models/dot_globe.glb", scene);
   container.addAllToScene();
-  
+
   container.animationGroups.forEach(g => { g.stop(); g.reset(); });
 
   const keepPrefixes = ["Object_249", "Object_250", "Object_251"];
