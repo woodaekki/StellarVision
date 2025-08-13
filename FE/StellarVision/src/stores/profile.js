@@ -53,6 +53,18 @@ export const useProfileStore = defineStore('profile', () => {
     }
   };
 
+  // 프로필 자기소개 문구 수정
+  const updateDescription = async (description) => {
+    try {
+      const res = await commonApi.patch('/profiles/me/description', {
+        description: description
+      });
+    } catch (err) {
+      console.error('자기소개를 변경할 수 없었습니다:', err);
+      console.error('서버 응답:', err.response?.data ?? err.response ?? err);
+    }
+  };
+
   // 전시한 뱃지 관련
 
   const archivedBadges = ref([]);
@@ -80,6 +92,7 @@ export const useProfileStore = defineStore('profile', () => {
 
   return {
     followers, followings, fetchMemberFollowers, fetchMemberFollowings, followMember, unfollowMember,
+    updateDescription,
     archivedBadges, fetchArchivedBadges, updateArchivedBadges
   };
 });
