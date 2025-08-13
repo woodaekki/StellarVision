@@ -22,7 +22,7 @@
             :src="video.thumbnailDownloadUrl"
             alt="video thumbnail"
           />
-          <p class="content-info video-date">Date: {{ video.createdAt.split('T')[0] }}</p>
+          <p class="content-info video-title">{{ video.name }}</p>
         </div>
         <div v-if="recentVideos.length === 0 && !loading" class="empty-frame">
           <p class="empty-text">업로드한 영상이 없습니다.</p>
@@ -59,13 +59,14 @@ const fetchVideos = async () => {
   loading.value = true
   try {
     const { data } = await axiosApi.get(`profiles/${memberId.value}/videos`, {
-      params: { page: 0, size: 4 },
+      params: { page: 0, size: 3 },
     })
     if (data.data?.videos) {
       recentVideos.value = data.data.videos.map((v) => ({
         id: v.id,
         thumbnailDownloadUrl: v.thumbnailDownloadUrl,
         createdAt: v.createdAt,
+        name: v.originalFilename, // originalFilename을 name으로 사용하도록 추가
       }))
     } else {
       recentVideos.value = []
@@ -151,7 +152,8 @@ onMounted(async () => {
   max-width: calc(100% - 70px);
   margin: 0 auto;
   display: flex;
-  gap: 15px;
+  justify-content: space-between;
+  gap: 20px;
   flex-wrap: wrap;
   padding-top: 5px;
   box-sizing: border-box;
@@ -159,8 +161,8 @@ onMounted(async () => {
 
 .content-frame {
   border-radius: 10px;
-  width: calc(25% - 12px);
-  max-width: 280px;
+  width: calc(33.333% - 14px);
+  max-width: 380px;
   aspect-ratio: 1.3;
   cursor: pointer;
   display: flex;
@@ -223,6 +225,4 @@ onMounted(async () => {
   margin-top: 10px;
   font-weight: 500;
 }
-
-
 </style>

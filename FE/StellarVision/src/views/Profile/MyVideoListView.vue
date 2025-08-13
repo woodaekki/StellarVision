@@ -3,6 +3,14 @@
     <img :src="bg" alt="" class="bg-img" />
 
     <div class="stars-background">
+        <div class="back-button">
+          <RouterLink :to="`/profile/${userInfo?.email}`" class="no-underline relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-[#f2f2f2] after:w-0 after:transition-all after:duration-300 hover:after:w-full font-pretendard">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </RouterLink>
+        </div>
+
       <div class="px-4 pt-12 pb-6">
         <div class="navigation-links">
           <RouterLink :to="{ name: 'MyVideoListView', params: { id: myId } }" class="active">
@@ -98,6 +106,11 @@
                   </svg>
                   {{ video.likeCount }}
                 </span>
+                <div v-if="video.tags && video.tags.length > 0" class="video-tags">
+                  <span v-for="tag in video.tags.slice(0, 5)" :key="tag.tagId" class="tag-item">
+                    #{{ tag.tagName }}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -122,10 +135,12 @@ import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router';
 import commonApi from '@/api/commonApi';
 import bg from '@/assets/pictures/stellabot/spaceBackground.avif';
+import { useAccountStore } from '@/stores/account';
 
 const route = useRoute();
 const router = useRouter();
-
+const accountStore = useAccountStore();
+const userInfo = computed(() => accountStore.userInfo)
 const loading = ref(true);
 const loadingMore = ref(false);
 const hasMore = ref(true);
@@ -135,20 +150,32 @@ const observerTarget = ref(null);
 const INITIAL_PAGE_SIZE = 11;
 const INFINITE_SCROLL_PAGE_SIZE = 12;
 
-// myId computed - 사용자 ID 가져오기
 const myId = computed(() => {
   const id = route.params.id;
-  console.log('현재 사용자 ID:', id); // 디버깅용
+  console.log('현재 사용자 ID:', id);
   return id;
 });
 
 const videos = ref([]);
+const fetchTagsForVideos = async (videosList) => {
+  if (!videosList || videosList.length === 0) return videosList;
 
-// 내 영상만 가져오는 함수
+  const tagPromises = videosList.map(async (video) => {
+    try {
+      const res = await commonApi.get(`/videos/${video.id}/tags`);
+      return { ...video, tags: res.data.data?.tags || [] };
+    } catch (err) {
+      console.error(`비디오 ${video.id}의 태그를 불러오는 데 실패했습니다:`, err);
+      return { ...video, tags: [] };
+    }
+  });
+
+  return Promise.all(tagPromises);
+};
+
 const fetchVideos = async (pageNum = 0) => {
   if (loadingMore.value || !hasMore.value) return;
 
-  // myId가 유효하지 않으면 실행하지 않음
   if (!myId.value || myId.value === 'undefined' || myId.value === null) {
     console.error('유효하지 않은 사용자 ID:', myId.value);
     loading.value = false;
@@ -164,14 +191,12 @@ const fetchVideos = async (pageNum = 0) => {
   }
 
   try {
-    console.log('요청할 memberId:', myId.value, 'page:', pageNum, 'size:', pageSize); // 디버깅용
-
-    // API 요청 - 올바른 엔드포인트로 내 영상만 가져오기
+    console.log('요청할 memberId:', myId.value, 'page:', pageNum, 'size:', pageSize);
     const res = await commonApi.get(`profiles/${myId.value}/videos?page=${pageNum}&size=${pageSize}`);
+    console.log('API 응답:', res.data);
 
-    console.log('API 응답:', res.data); // 디버깅용
-
-    const newVideos = res.data.data?.videos || [];
+    let newVideos = res.data.data?.videos || [];
+    newVideos = await fetchTagsForVideos(newVideos);
 
     if (pageNum === 0) {
       videos.value = newVideos;
@@ -195,7 +220,6 @@ const handleEditVideo = (video) => {
   router.push({ name: 'UpdateTagView', params: { id: video.id } });
 };
 
-// 날짜 포맷팅
 const formatDate = (dateString) => {
   try {
     const date = new Date(dateString);
@@ -257,7 +281,6 @@ const preventScrollRestore = () => {
   }
 };
 
-// route params가 변경되면 다시 로드
 watch(() => route.params.id, (newId) => {
   if (newId) {
     videos.value = [];
@@ -270,7 +293,6 @@ watch(() => route.params.id, (newId) => {
 onMounted(async () => {
   preventScrollRestore();
 
-  // myId가 유효한 경우에만 영상 로드
   if (myId.value && myId.value !== 'undefined' && myId.value !== null) {
     console.log('사용자 영상 로딩 시작:', myId.value);
     await fetchVideos(0);
@@ -329,6 +351,30 @@ onBeforeUnmount(() => {
     8px 8px 30px rgba(0 0 0 / 0.4);
   overflow-x: hidden;
   overflow-y: auto;
+}
+
+.back-button {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(8px);
+}
+
+.back-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
 }
 
 .navigation-links {
@@ -633,6 +679,23 @@ onBeforeUnmount(() => {
 
 .fade-in {
   animation: fadeIn 0.8s ease-in forwards;
+}
+
+.video-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.tag-item {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-weight: 500;
+  backdrop-filter: blur(5px);
 }
 
 @keyframes fadeIn {

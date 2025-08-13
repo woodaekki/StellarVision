@@ -3,13 +3,21 @@
     <img :src="bg" alt="" class="bg-img" />
 
     <div class="stars-background">
+      <div class="back-button">  
+        <RouterLink :to="`/profile/${userInfo?.email}`" class="no-underline relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-[#f2f2f2] after:w-0 after:transition-all after:duration-300 hover:after:w-full font-pretendard">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </RouterLink>
+      </div>
+
       <div class="px-4 pt-12 pb-6">
         <div class="navigation-links">
           <RouterLink :to="{ name: 'MyVideoListView', params: { id: myId } }" >
             내 비디오
           </RouterLink>
           <span>|</span>
-          <RouterLink :to="{ name: 'MyLikedListView', params: { id: myId } }" >
+          <RouterLink :to="{ name: 'MyLikedListView', params: { id: myId } }" class="active" >
             좋아요한 영상
           </RouterLink>
         </div>
@@ -52,8 +60,10 @@
               />
               <div class="video-overlay">
                 <div class="play-button">
-                  <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M8 5v14l11-7z" />
+                  <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                    <path
+                      d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"
+                    />
                   </svg>
                 </div>
               </div>
@@ -67,9 +77,9 @@
                   class="unlike-button"
                   title="좋아요 취소"
                 >
-                  <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                  <svg width="16" height="16" fill="#FFD700" viewBox="0 0 24 24">
                     <path
-                      d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+                      d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"
                     />
                   </svg>
                 </button>
@@ -102,10 +112,14 @@ import { useRoute, useRouter } from 'vue-router';
 import { useStreamingStore } from '@/stores/streaming.js';
 import commonApi from '@/api/commonApi';
 import bg from '@/assets/pictures/stellabot/spaceBackground.avif';
+import { useAccountStore } from '@/stores/account';
 
 const route = useRoute();
 const router = useRouter();
 const streamingStore = useStreamingStore();
+const memberEmail = computed(() => route.params.id);
+const accountStore = useAccountStore();
+const userInfo = computed(() => accountStore.userInfo)
 
 const pageRef = ref(null);
 const allVideos = ref([]);
@@ -226,6 +240,30 @@ onMounted(async () => {
   overflow-y: auto;
 }
 
+.back-button {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(8px);
+}
+
+.back-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
 .navigation-links {
   display: flex;
   justify-content: center;
@@ -299,6 +337,11 @@ onMounted(async () => {
   100% {
     transform: rotate(360deg);
   }
+}
+
+.navigation-links a.active {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .empty-state {

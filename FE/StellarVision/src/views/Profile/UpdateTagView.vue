@@ -1,66 +1,73 @@
 <template>
-  <div class="video-edit-page">
-    <div class="edit-header">
-      <h1 class="edit-title">My Space Video Edit</h1>
-      <button @click="goBack" class="back-button">← Back</button>
-    </div>
+  <div class="page video-edit-page">
+    <img :src="bg" alt="우주 배경" class="bg-img" />
 
-    <div class="tags-section">
-      <div class="tags-header">
-        <h3 class="tags-title">Tags from Space</h3>
-        <img src="../../assets/pictures/stellabot/tag3.png" alt="노바 태그" class="tags-image">
+    <div class="stars-background">
+      <div class="edit-header">
+        <h1 class="edit-title">태그 수정</h1>
+        <button @click="goBack" class="back-button">← Back</button>
       </div>
 
-      <div class="existing-tags">
-        <h4>현재 태그</h4>
-        <div class="tags-list" v-if="tags.length > 0">
-          <span
-            v-for="tag in tags"
-            :key="tag.tagId"
-            class="tag existing-tag"
-          >
-            {{ tag.tagName }}
-            <button
-              @click="removeTag(tag.tagId)"
-              class="remove-tag-btn"
-              :disabled="isRemoving"
+      <div v-if="isLoading" class="loading-container">
+        <div class="loading-spinner">
+          <div class="spinner"></div>
+          <span class="loading-text">태그 정보를 불러오는 중...</span>
+        </div>
+      </div>
+
+      <div v-else-if="error" class="error-message">
+        {{ error }}
+      </div>
+
+      <div v-else class="tags-section">
+        <div class="tags-header">
+          <h3 class="tags-title">Tags from Space</h3>
+          <img :src="nova" alt="노바 태그" class="tags-image">
+        </div>
+
+        <div class="existing-tags">
+          <h4>현재 태그</h4>
+          <div class="tags-list" v-if="tags.length > 0">
+            <span
+              v-for="tag in tags"
+              :key="tag.tagId"
+              class="tag existing-tag"
             >
-              ×
+              {{ tag.tagName }}
+              <button
+                @click="removeTag(tag.tagId)"
+                class="remove-tag-btn"
+                :disabled="isRemoving"
+              >
+                ×
+              </button>
+            </span>
+          </div>
+          <p v-else class="no-tags">아직 태그가 없습니다.</p>
+        </div>
+
+        <div class="add-tag-section">
+          <h4>태그 추가</h4>
+          <div class="add-tag-form">
+            <input
+              v-model="newTagName"
+              type="text"
+              placeholder="새 태그 입력..."
+              class="tag-input"
+              @keyup.enter="addTag"
+              :disabled="isAdding"
+              maxlength="20"
+            />
+            <button
+              @click="addTag"
+              class="add-tag-btn"
+              :disabled="isAdding || !newTagName.trim()"
+            >
+              {{ isAdding ? '추가 중...' : '태그 추가' }}
             </button>
-          </span>
-        </div>
-        <p v-else class="no-tags">아직 태그가 없습니다.</p>
-      </div>
-
-      <div class="add-tag-section">
-        <h4>태그 추가</h4>
-        <div class="add-tag-form">
-          <input
-            v-model="newTagName"
-            type="text"
-            placeholder="새 태그 입력..."
-            class="tag-input"
-            @keyup.enter="addTag"
-            :disabled="isAdding"
-            maxlength="20"
-          />
-          <button
-            @click="addTag"
-            class="add-tag-btn"
-            :disabled="isAdding || !newTagName.trim()"
-          >
-            {{ isAdding ? '추가 중...' : '태그 추가' }}
-          </button>
+          </div>
         </div>
       </div>
-    </div>
-
-    <div v-if="isLoading" class="loading">
-      비디오 정보를 불러오는 중...
-    </div>
-
-    <div v-if="error" class="error-message">
-      {{ error }}
     </div>
   </div>
 </template>
@@ -69,6 +76,8 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import commonApi from '@/api/commonApi';
+import bg from '@/assets/pictures/stellabot/spaceBackground.avif';
+import nova from '@/assets/pictures/stellabot/nova.png';
 
 const route = useRoute();
 const router = useRouter();
@@ -211,10 +220,45 @@ onMounted(initializeComponent);
 </script>
 
 <style scoped>
-.video-edit-page {
-  padding: 50px 280px;
-  background-color: #fff;
+.page {
   min-height: 100vh;
+  background-size: cover;
+  background-image: linear-gradient(rgba(11, 12, 16, 0.7), rgba(11, 12, 16, 0.7));
+  background-position: center;
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0 auto;
+}
+
+.bg-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -1;
+}
+
+.stars-background {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  padding: 30px 40px;
+  max-width: 800px;
+  width: 100%;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow:
+    inset 4px 4px 10px rgba(255 255 255 / 0.6),
+    inset -4px -4px 10px rgba(0 0 0 / 0.3),
+    8px 8px 30px rgba(0 0 0 / 0.4);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .edit-header {
@@ -227,35 +271,35 @@ onMounted(initializeComponent);
 }
 
 .edit-title {
-  margin-left: 10px;
+  margin: 0;
   text-align: left;
   font-weight: 700;
-  font-size: medium;
+  font-size: 1.5rem;
+  color: white;
 }
 
 .back-button {
   padding: 8px 16px;
-  background-color: transparent;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  color: #666;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: white;
   cursor: pointer;
   transition: all 0.2s;
   font-size: 0.9rem;
+  backdrop-filter: blur(4px);
 }
 
 .back-button:hover {
-  background-color: #f0f0f0;
-  border-color: #bbb;
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 .tags-section {
-  background-color: #fff;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
   padding: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  margin-top: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .tags-header {
@@ -264,13 +308,13 @@ onMounted(initializeComponent);
   justify-content: space-between;
   margin-bottom: 25px;
   padding-bottom: 20px;
-  border-bottom: 1px dashed #d1d5da;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
 }
 
 .tags-title {
   font-size: 1rem;
   font-weight: 600;
-  color: #4a5568;
+  color: white;
   margin: 0;
   margin-right: 15px;
 }
@@ -283,7 +327,7 @@ onMounted(initializeComponent);
 .tags-section h4 {
   font-size: 1rem;
   font-weight: 500;
-  color: #555;
+  color: rgba(255, 255, 255, 0.9);
   margin-bottom: 15px;
 }
 
@@ -303,34 +347,36 @@ onMounted(initializeComponent);
   padding: 6px 12px;
   border-radius: 16px;
   font-size: 0.85rem;
-  background-color: #f0f4f8;
-  color: #333;
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
   border: none;
+  backdrop-filter: blur(5px);
 }
 
 .remove-tag-btn {
   background: none;
   border: none;
-  color: #888;
+  color: rgba(255, 255, 255, 0.6);
   cursor: pointer;
   font-size: 1rem;
   line-height: 1;
   padding: 0 0 0 6px;
+  transition: color 0.2s;
 }
 
 .remove-tag-btn:hover {
-  color: #d32f2f;
+  color: #ff4d4f;
 }
 
 .no-tags {
-  color: #999;
+  color: rgba(255, 255, 255, 0.6);
   font-style: italic;
   font-size: 0.9rem;
 }
 
 .add-tag-section {
   padding-top: 20px;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .add-tag-form {
@@ -342,48 +388,78 @@ onMounted(initializeComponent);
 .tag-input {
   flex: 1;
   padding: 10px 12px;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
   font-size: 0.9rem;
   transition: border-color 0.2s;
+  background: rgba(0, 0, 0, 0.2);
+  color: white;
 }
 
 .tag-input:focus {
   outline: none;
-  border-color: #2196f3;
-  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+  border-color: #00ffff;
+  box-shadow: 0 0 0 2px rgba(0, 255, 255, 0.2);
 }
 
 .add-tag-btn {
   padding: 10px 20px;
-  background-color: #42a5f5;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   font-size: 0.9rem;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.3s ease;
   white-space: nowrap;
 }
 
 .add-tag-btn:hover:not(:disabled) {
-  background-color: #1e88e5;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
 }
 
-.loading {
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+}
+
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.spinner {
+  border: 4px solid rgba(255, 255, 255, 0.2);
+  border-top: 4px solid #fff;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1.1s linear infinite;
+}
+
+.loading-text {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.8);
   text-align: center;
-  padding: 20px;
-  color: #666;
-  font-size: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .error-message {
-  background-color: #fff1f0;
-  color: #d32f2f;
+  background-color: rgba(255, 0, 0, 0.2);
+  color: #ff4d4f;
   padding: 12px;
-  border-radius: 4px;
+  border-radius: 8px;
   margin: 15px 0;
-  border-left: 3px solid #ef5350;
+  border-left: 3px solid #ff4d4f;
   font-weight: 500;
   font-size: 0.9rem;
 }

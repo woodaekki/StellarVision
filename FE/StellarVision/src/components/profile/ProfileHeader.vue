@@ -2,22 +2,30 @@
   <div class="profile-header">
     <div class="profile-header-inner">
       <div class="profile-header-left">
-        <div class="profile-image" @click="triggerProfileImageUpload">
-          <img v-if="profileInfo?.profileImageUrl" :src="profileInfo.profileImageUrl" />
-          <span v-else>+</span>
-          <div class="edit-mode-overlay" v-if="editMode">
-            <span>+</span>
+        <div class="profile-image-container">
+          <div
+            class="profile-image"
+            :class="{ 'editable': canEdit }"
+            @click="triggerProfileImageUpload"
+          >
+            <img
+              v-if="profileInfo?.profileImageUrl"
+              :src="profileInfo.profileImageUrl"
+            />
+            <span v-else>+</span>
+            <div class="edit-mode-overlay" v-if="editMode">
+              <span>+</span>
+            </div>
           </div>
+          <input
+            type="file"
+            ref="profileImageInput"
+            @change="uploadProfileImage"
+            accept="image/*"
+            style="display: none;"
+            :disabled="!canEdit"
+          />
         </div>
-
-        <input
-          type="file"
-          ref="profileImageInput"
-          @change="uploadProfileImage"
-          accept="image/*"
-          style="display: none;"
-          :disabled="!canEdit"
-        />
 
         <div class="profile-text">
           <div class="email-row">
@@ -55,7 +63,7 @@
 
       <div class="profile-header-right">
         <DeleteProfileImageButton
-          v-if="editMode"
+          v-if="editMode && profileInfo?.profileImageUrl"
           @click="deleteProfileImage"
         />
         <RouterLink to="/badge" class="btn">도감</RouterLink>
@@ -120,11 +128,12 @@ const emit = defineEmits([
 
 const route = useRoute();
 const profileStore = useProfileStore();
-const isOwner = JSON.parse(localStorage.getItem('userInfo'))?.email === route.params.id;
+const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+const isOwner = computed(() => userInfo?.email === route.params.id);
 const memberId = computed(() => props.profileInfo?.memberId ?? null);
 
 const editMode = ref(false);
-const canEdit = computed(() => isOwner && editMode.value);
+const canEdit = computed(() => isOwner.value && editMode.value);
 
 // 프로필 자기소개 수정
 const descriptionDraft = ref('');
@@ -181,6 +190,7 @@ const uploadProfileImage = async (e) => {
     const { data } = await axiosApi.post('/profiles/presignedUrl', {
       memberId: mid,
       originalFilename: file.name,
+      contentType: file.type,
     });
 
     const presignedData = data.data;
@@ -219,42 +229,35 @@ const deleteProfileImage = async () => {
 
 const showFollowModal = ref(false);
 const modalType = ref(null);
-const openModal = (type) => { modalType.value = type; showFollowModal.value = true; };
+const openModal = (type) => {
+  modalType.value = type;
+  showFollowModal.value = true;
+};
 const modalList = computed(() => (modalType.value === 'following' ? props.profileFollowings : props.profileFollowers));
 </script>
 
 <style scoped>
-.profile-image {
-  position: relative;
-  width: 130px;
-  height: 130px;
-  border-radius: 50%;
-  overflow: hidden;
-  background: rgba(15, 20, 40, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: border-color 0.2s ease;
-  margin-top: 8px;
+.profile-header {
+  margin-top: 15px;
   margin-bottom: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-  opacity: 0.9;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  font-family: 'Pretendard', sans-serif;
+  color: white;
+  background: url('/assets/space-bg.jpg') center/cover no-repeat;
+  padding: 20px 0;
 }
 
 .profile-header-inner {
   max-width: 1200px;
   margin: 0 auto;
-  padding-left: 35px;
-  padding-right: 35px;
-  padding-top: 10px;
-  padding-bottom: 10px;
+  padding: 10px 35px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 20px;
+  width: 100%;
 }
 
 .profile-header-left {
@@ -270,6 +273,34 @@ const modalList = computed(() => (modalType.value === 'following' ? props.profil
   margin-left: 30px;
 }
 
+.profile-image-container {
+  position: relative;
+}
+
+.profile-image {
+  position: relative;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: rgba(15, 20, 40, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+  transition: border-color 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  opacity: 0.9;
+}
+.profile-image.editable {
+  cursor: pointer;
+}
+.profile-image.editable:hover {
+  border-color: rgba(255, 255, 255, 0.9);
+}
+
 .profile-image img,
 .profile-image > span {
   width: 100%;
@@ -279,6 +310,7 @@ const modalList = computed(() => (modalType.value === 'following' ? props.profil
   color: #ccc;
   font-size: 28px;
   border-radius: 50%;
+  text-align: center;
 }
 
 .edit-mode-overlay {
@@ -304,7 +336,7 @@ const modalList = computed(() => (modalType.value === 'following' ? props.profil
   background: rgba(15, 20, 40, 0.4);
   color: white;
   border: 1px solid rgba(255, 255, 255, 0.7);
-  padding: 6px 12px;
+  padding: 6px 14px;
   border-radius: 6px;
   backdrop-filter: blur(6px);
   font-size: 15px;
@@ -312,6 +344,7 @@ const modalList = computed(() => (modalType.value === 'following' ? props.profil
   transition: background 0.3s ease;
   box-shadow: none;
   font-weight: 400;
+  text-decoration: none;
 }
 
 .btn:hover,
@@ -329,14 +362,9 @@ const modalList = computed(() => (modalType.value === 'following' ? props.profil
   gap: 8px;
 }
 
-.email-row,
-.desc-row,
-.stats-row {
+.email-row {
   display: flex;
   align-items: center;
-}
-
-.email-row {
   gap: 6px;
   font-size: 20px;
   font-weight: 700;
@@ -358,7 +386,6 @@ const modalList = computed(() => (modalType.value === 'following' ? props.profil
 .desc-input {
   width: 100%;
   max-width: 400px;
-  height: 40px;
   box-sizing: border-box;
   padding: 6px 12px;
   font-size: 15px;
@@ -368,7 +395,6 @@ const modalList = computed(() => (modalType.value === 'following' ? props.profil
   border-radius: 8px;
   outline: none;
   transition: all 0.2s ease;
-  margin-bottom: 3px;
   line-height: 1.2;
 }
 
@@ -378,6 +404,8 @@ const modalList = computed(() => (modalType.value === 'following' ? props.profil
 }
 
 .stats-row {
+  display: flex;
+  align-items: center;
   gap: 9px;
   margin: 0;
   font-size: 14px;
@@ -389,6 +417,4 @@ const modalList = computed(() => (modalType.value === 'following' ? props.profil
   padding: 0 12px;
   font-size: 14px;
 }
-
-
 </style>
