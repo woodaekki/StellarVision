@@ -17,7 +17,8 @@ import Toast from 'primevue/toast'
 import ProgressBar from 'primevue/progressbar'
 import Button from 'primevue/button'
 import welcomImg from '@/assets/pictures/stellabot/logo.png'
-
+import aiOffImg from '@/assets/pictures/stellabot/aioff.png'
+import aiOnImg from '@/assets/pictures/stellabot/aiOn.png'
 
 // ai 분석 결과를 담을 store
 const aiTagStore = useAITagStore();
@@ -50,11 +51,15 @@ const recordingStore = useRecordingStore()
 
 const showChat = ref(false)
 const micEnabled = ref(true)
-
+// ai 버튼 및 기능
 const aiOn = ref(false)
 const toggleAI = () => { aiOn.value = !aiOn.value }
-
+// 업스케일링
 const hasUpscaled = computed(() => !!upscaledUrl.value)
+
+// 방 종료 모달 상태 추가
+const showEndModal = ref(false)
+const endModalMsg = ref('스트리머가 스트리밍을 종료했어요.') // 기본 메시지
 
 // 캡쳐와 다운로드를 구분하는 함수
 async function onCaptureOrDownload() {
@@ -81,7 +86,7 @@ const { session, publisher, subscribers, leave, setPublisherEl, attachSubEl, isP
   // 로컬 오버레이 캔버스
   const overlayLocal = ref(null)
 
-   
+
 
   // 현재 프레임을 캡쳐해 JPEG Blob으로 반환
   async function captureVideoFrame(videoEl, type = 'image/jpeg', quality = 0.92) {
@@ -93,7 +98,7 @@ const { session, publisher, subscribers, leave, setPublisherEl, attachSubEl, isP
     canvas.height = videoEl.videoHeight
     const ctx = canvas.getContext('2d', { willReadFrequently: false })
     ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height)
-  
+
     return new Promise((resolve, reject) => {
       canvas.toBlob((blob) => {
         if (!blob) return reject(new Error('캡쳐 실패'))
@@ -137,8 +142,7 @@ const { session, publisher, subscribers, leave, setPublisherEl, attachSubEl, isP
   async function downloadUpscaled() {
     if (!upscaledUrl.value) return
     const filename = buildFilenameFromUrl(upscaledUrl.value, `upscaled_${Date.now()}.jpg`)
-    // 알림창 추가
-    startDownloadToast('업스케일된 이미지 저장 중...')
+
     if (isDownloading.value) return
     isDownloading.value = true
     try {
@@ -187,6 +191,8 @@ const { session, publisher, subscribers, leave, setPublisherEl, attachSubEl, isP
   async function captureAndUpscale() {
     if (isUpscaling.value) return
     try {
+      // 알림창 추가
+      startDownloadToast('이미지 업스케일 중...')
       isUpscaling.value = true
       // 기존 URL revoke
       if (upscaledUrl.value?.startsWith('blob:')) {
@@ -212,6 +218,8 @@ const { session, publisher, subscribers, leave, setPublisherEl, attachSubEl, isP
 
       // 3-1) 새 탭으로 열기(미리보기)
       window.open(url, '_blank', 'noopener')
+
+
     } catch (e) {
       console.error('업스케일 실패', e)
       alert('업스케일 중 오류가 발생했습니다: ' + (e?.message ?? 'unknown'))
@@ -286,6 +294,32 @@ const { session, publisher, subscribers, leave, setPublisherEl, attachSubEl, isP
     else el.addEventListener('loadedmetadata', start, { once: true })
   }
 
+// 스트리머가 종료시 시청자도 자동 종료하는 로직
+async function handleEndRoom() {
+  try {
+    await session.signal({  // 시그널로 보내면
+      type: 'room-ended',
+      data: JSON.stringify({ ts: Date.now() })
+    }).catch(() => {})
+    await endRoom()  // 기다린 후 시청자 전용 로직인 endRoom을 실행한다
+  } catch (e) {
+    console.error('방 종료 실패', e)
+    alert('방 종료 중 오류가 발생했습니다.')
+  }
+}
+
+
+// 모달 열기/확인 핸들러
+function openEndModal(msg) {
+  endModalMsg.value = msg || '스트리머가 스트리밍을 종료했어요.'
+  showEndModal.value = true
+}
+function confirmEndModal() {
+  showEndModal.value = false
+  leave()
+  router.replace({ name: 'PreRoomView', query: { ended: '1' } })
+}
+
   // 구독 스트림 종료 시 정리
   onMounted(() => {
     session.on('streamDestroyed', (ev) => {
@@ -322,7 +356,7 @@ const { session, publisher, subscribers, leave, setPublisherEl, attachSubEl, isP
         const tags = aiTagStore.list(sessionId).map(String)
         const payload = { tags };
         console.log("인식된 태그들: ", tags);
-        const res = await streamingService.stopRecording(recordingId.value, payload, 
+        const res = await streamingService.stopRecording(recordingId.value, payload,
           { headers : { 'Content-Type': 'application/json'} }
         )
         isRecording.value = false
@@ -434,7 +468,7 @@ const { session, publisher, subscribers, leave, setPublisherEl, attachSubEl, isP
   }
 
   // 다운로드 알림 띄우기
-  function startDownloadToast(summary = '이미지 저장 중입니다...'){
+  function startDownloadToast(summary = '이미지 캡쳐 중입니다...'){
     toast.add({
       severity: 'custom',
       summary,
@@ -447,7 +481,7 @@ const { session, publisher, subscribers, leave, setPublisherEl, attachSubEl, isP
     if (interval.value) clearInterval(interval.value)
     interval.value = setInterval(()=>{
       if (progress.value <= 100) {
-        progress.value +=7
+        progress.value +=4.4
       }
       if (progress.value >=100) {
         progress.value = 100
@@ -485,8 +519,24 @@ function showWelcomeToast() {
     // 진입 시 한 번만 노출
     if (!sessionStorage.getItem(WELCOME_TOAST_KEY)) {
       // 약간의 지연을 줘서 첫 렌더 후 노출 (선택)
-      setTimeout(showWelcomeToast(), 150)
+      setTimeout(showWelcomeToast, 150)
     }
+
+    // 스트리머 종료 감지 -> 시청자 모달 발생 & 자동 처리 로직 실행
+    session.on('sessionDisconnected', (ev) => {
+      if (!isPublish.value) {   // 호스트가 아니라면
+        const reason = ev?.reason || ''
+      if (reason.includes('session') || reason.includes('force') || reason.includes('network') || reason.includes('disconnect')) {
+          openEndModal('스트리머가 스트리밍을 종료했어요.')
+        }
+      }
+    })
+    // 커스텀 종료 시그널 수신
+    session.on('signal:room-ended', (e) => {
+    if (!isPublish.value) {
+      openEndModal('스트리머가 스트리밍을 종료했어요.') // 여기서 leave 로직 실행됨
+    }
+  })
   })
 
   onUnmounted(() => {
@@ -509,12 +559,12 @@ function showWelcomeToast() {
 
 <template>
   <div>
-    <div class=" flex flex-col sm:flex-row w-full h-[100svh] w-[100vw] gap-0" alt="videos">
+    <div class="flex flex-col sm:flex-row h-[100svh] w-[100vw] overflow-hidden bg-zinc-900" alt="videos">
       <!-- 동영상 -->
       <div
         :class="['relative bg-black transition-all duration-300',
         showChat ? 'sm:w-[70%] w-full' :'w-full']"
-        class="h-full rounded-none">
+        class="relative flex-1 bg-black h-full rounded-none">
 
         <!-- 변경: 로컬 프리뷰 + 오버레이 -->
         <div class="relative w-full h-full">
@@ -523,14 +573,14 @@ function showWelcomeToast() {
             autoplay
             playsinline
             muted
-            class="w-full h-full object-contain rounded-none"
+            class="w-full h-full object-cover absolute inset-0 rounded-none"
           ></video>
           <!-- 로컬 오버레이 캔버스 -->
           <canvas ref="overlayLocal" class="pointer-events-none absolute inset-0"></canvas>
         </div>
 
         <!-- 변경: 원격 구독 영상 컨테이너 각 비디오를 relative 래퍼로 감싸고, ref 콜백을 attachSubElWithAI로 교체 -->
-        <div class="absolute inset-0 grid gap-2 p-2 z-0">
+        <div class="absolute inset-0 grid gap-0 p-0 z-0">
           <div
             v-for="sub in subscribers"
             :key="sub.stream.streamId"
@@ -540,7 +590,7 @@ function showWelcomeToast() {
               autoplay
               playsinline
               muted
-              class="w-full h-full object-contain"
+              class="w-full h-full object-cover absolute inset-0 rounded-none"
               :ref="el => attachSubElWithAI(sub, el)"
             ></video>
             <!-- 구독자 오버레이 캔버스는 JS에서 동적 생성해서 append -->
@@ -552,24 +602,59 @@ function showWelcomeToast() {
             방제목 {{ roomTitle }} — {{ userName }}
           </h2>
 
-          <!-- 음성 버튼 -->
+          <!-- 버튼 바 -->
           <div class="absolute left-1/2 bottom-6 -translate-x-1/2 flex gap-4 z-10">
+
+            <!-- 캡쳐/다운로드 토글 버튼(하나) -->
             <button
+              @click="onCaptureOrDownload"
+              :title="hasUpscaled ? '업스케일된 이미지 다운로드' : '현재 프레임 캡쳐 & 업스케일'"
+              :disabled="isUpscaling || isDownloading"
+              class=" bg-gray-600 transition shadow rounded-full text-white p-4 disabled:opacity-50 disabled:cursor-not-allowed">
+              <component :is="hasUpscaled ? Download : Camera"/>
+            </button>
+            <!-- 음성 버튼 -->
+            <button
+              v-if="isPublish"
               @click="toggleMic"
-              class="text-white rounded-full p-4 hover:bg-green-600 shadow transition">
+              class="text-white rounded-full p-4  shadow transition"
+              :class="micEnabled ? 'bg-green-600' : 'bg-red-600' ">
               <component :is="micEnabled ? Mic : MicOff"/>
             </button>
             <!-- 녹화 버튼 -->
             <button
+              v-if="isPublish"
               @click="toggleRecording"
               :disabled="isRecordingButtonDisabled"
-              class="bg-opacity-70 text-white rounded-full p-4 hover:bg-red-600 shadow transition">
+              class="bg-opacity-70 text-white rounded-full p-4 hover:bg-red-600 shadow transition"
+              :class="isRecording ? 'bg-gray-600' : 'bg-red-600 ' ">
               <component :is="isRecording ? Square : SquareStop" />
             </button>
+
+            <!-- AI 탐지 on/off -->
+          <button
+            @click="toggleAI"
+            :aria-pressed="aiOn"
+            :title="aiOn ? 'AI 탐지 끄기' : 'AI 탐지 켜기'"
+            class="bg-black bg-opacity-70 inline-flex justify-center items-center
+                   rounded-full overflow-hidden w-14 hover:bg-gray-600 transition "
+            :class="aiOn ? 'bg-black/70 hover:bg-gray-600 ring-1 ring-blue-400' : 'hover:text-sky-600'">
+            <img :src="aiOn ? aiOnImg : aiOffImg"
+              class="w-full h-full object-cover"/>
+          </button>
+
+          <!-- 채팅 버튼 -->
+          <button
+            class=" bg-yellow-400 transition shadow rounded-full text-yellow p-4"
+            @click="showChat = !showChat">
+            <MessageCircle class=""/>
+          </button>
+
+
           </div>
 
-          <!-- 스트리머 : 스트리밍 종료 버튼 -->
-          <button v-if="isPublish" @click="endRoom"
+          <!-- 스트리머 : 스트리밍 종료 버튼 / 기존의 endRoom 버튼을 스트리머 종료시도 자동종료도 포함되게 바꿨습니다.-->
+          <button v-if="isPublish" @click="handleEndRoom"
             class="absolute right-3 top-3 z-10 bg-black bg-opacity-70
             text-white rounded-full px-3 py-1 hover:bg-red-600 transition">
             <DoorOpen/>
@@ -583,18 +668,7 @@ function showWelcomeToast() {
             <DoorOpen/>
           </button>
 
-          <!-- AI 탐지 on/off -->
-          <button
-            @click="toggleAI"
-            :aria-pressed="aiOn"
-            :title="aiOn ? 'AI 탐지 켜기' : 'AI 탐지 끄기'"
-            class="absolute right-20 top-2 z-10 bg-black bg-opacity-70 w-15 h-10 inline-flex
-                 justify-center items-center text-white rounded-full px-3 py-1 hover:bg-gray-600 transition "
-            :class="aiOn ? 'bg-black/70 hover:bg-gray-600' : 'hover:text-sky-600'">
-            <component :is="aiOn ? ToggleLeft : ToggleRight"
-              class="w-10 h-10 "
-              :class="aiOn ? 'text-sky-400' : 'text-white/80'"/>
-          </button> 
+
 
           <!-- 캡처 버튼 -->
           <!-- <button
@@ -604,36 +678,23 @@ function showWelcomeToast() {
             <ImageDown/>
           </button> -->
 
-          <!-- 채팅 버튼 -->
-          <button
-            class="absolute right-3 bottom-6 hover:bg-gray-600 transition shadow rounded-full text-yellow p-4"
-            @click="showChat = !showChat">
-            <MessageCircle/>
-          </button>
-
-          <!-- 캡쳐/다운로드 토글 버튼(하나) -->
-          <button
-            @click="onCaptureOrDownload"
-            :title="hasUpscaled ? '업스케일된 이미지 다운로드' : '현재 프레임 캡쳐 & 업스케일'"
-            :disabled="isUpscaling || isDownloading"
-            class="absolute left-3 bottom-6 z-20 hover:bg-gray-600 transition shadow rounded-full text-white p-4 disabled:opacity-50 disabled:cursor-not-allowed">
-            <component :is="hasUpscaled ? Download : Camera"/>
-          </button>
       </div>
-
-      <transition name="fade">
-        <div
+      <!-- 채팅 창 -->
+      <transition name="chat-slide">
+        <aside
           v-show="showChat"
-          class="ml-auto basis-0 grow sm:w-[30%] w-full min-w-[360px] max-w-[600px]
-          h-full h-[700px] flex-shrink-0 bg-black pl-36">
+          class="sm:w-[30%] w-full min-w-[360px] max-w-[400px]
+          h-full  flex-shrink-0 bg-black z-40">
             <ChatPanel
               :session="session"
               @close="showChat = false"
               class="h-full"
             />
-        </div>
+        </aside>
       </transition>
+
     </div>
+    <!-- 업스케일링 토스트 -->
     <Toast position="top-center" group="download" @close="visible = false">
       <template #container="{ message, closeCallback }">
         <section class="flex flex-col p-4 gap-4 w-full bg-primary/70 rounded-xl">
@@ -647,7 +708,7 @@ function showWelcomeToast() {
           </div>
           <div class="flex gap-3 justify-end text-white">
             <Button size="small" label="닫기" @click="closeCallback" />
-          </div>  
+          </div>
         </section>
       </template>
     </Toast>
@@ -663,7 +724,7 @@ function showWelcomeToast() {
 
           <!-- 이미지 영역 (원하는 이미지 URL로 교체) -->
           <img
-            :src=welcomImg
+            :src="welcomImg"
             alt="Welcome"
             class="w-24 h-24 object-contain"
             onerror="this.style.display='none'"
@@ -673,7 +734,7 @@ function showWelcomeToast() {
           <h3 class="text-2xl font-bold text-center">관측 준비 완료!</h3>
           <p class="text-center text-white/90">
             {{ userName }}님, 방 <span class="font-semibold">“{{ roomTitle || '스트리밍' }}”</span> 에 오신 걸 환영해요. <br/>
-            캡처 버튼을 누르고 잠시 기다린 후   
+            캡처 버튼을 누르고 잠시 기다린 후
             <span class="inline-flex items-center gap-1 whitespace-nowrap align-middle">
             <Download class="w-5 h-5 inline-block" />
             <span>를 누르면 멋있는 사진을 간직할 수 있어요!</span>
@@ -690,76 +751,44 @@ function showWelcomeToast() {
         </section>
       </template>
     </Toast>
+    <!-- 방송 종료 모달 -->
+    <div
+      v-if="showEndModal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+      <section class="w-[min(92vw,380px)] max-w-[380px] bg-zinc-900 text-white rounded-2xl shadow-xl p-6">
+        <h3 class="text-lg font-semibold mb-2">방송 종료</h3>
+        <p class="text-zinc-200 mb-6">{{ endModalMsg }}</p>
+        <div class="flex justify-end gap-2">
+          <button
+            class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 transition"
+            @click="confirmEndModal">
+            확인
+          </button>
+        </div>
+      </section>
+    </div>
+<!--  -->
+
   </div>
 </template>
 
 <style scoped>
-.fade-enter-active, .fade-leave-active { transition: opacity .2s; }
-.fade-enter-from, .fade-leave-to { opacity: 0; }
+/* 변경: 슬라이드 인/아웃 모션 정의 */
+.chat-slide-enter-from,
+.chat-slide-leave-to {
+  transform: translateX(100%);     /* 오른쪽 밖에서 시작/종료 */
+}
+
+.chat-slide-enter-to,
+.chat-slide-leave-from {
+  transform: translateX(0);         /* 제자리 */
+}
+
+.chat-slide-enter-active,
+.chat-slide-leave-active {
+  transition: transform 0.6s ease;  /* 부드럽게 */
+}
+
+.chat-slide-enter-active, .chat-slide-leave-active { will-change: transform; }
+
 </style>
-
-
-
-<!-- 
-<template>
-    <div class="card flex justify-center">
-        <Toast position="top-center" group="headless" @close="visible = false">
-            <template #container="{ message, closeCallback }">
-                <section class="flex flex-col p-4 gap-4 w-full bg-primary/70 rounded-xl">
-                    <div class="flex items-center gap-5">
-                        <i class="pi pi-cloud-upload text-white dark:text-black text-2xl"></i>
-                        <span class="font-bold text-base text-white dark:text-black">{{ message.summary }}</span>
-                    </div>
-                    <div class="flex flex-col gap-2">
-                        <ProgressBar :value="progress" :showValue="false" :style="{ height: '4px' }" pt:value:class="!bg-primary-50 dark:!bg-primary-900" class="!bg-primary/80"></ProgressBar>
-                        <label class="text-sm font-bold text-white dark:text-black">{{ progress }}% uploaded</label>
-                    </div>
-                    <div class="flex gap-4 mb-4 justify-end">
-                        <Button label="Another Upload?" size="small" @click="closeCallback"></Button>
-                        <Button label="Cancel" size="small" @click="closeCallback"></Button>
-                    </div>
-                </section>
-            </template>
-        </Toast>
-        <Button @click="show" label="View" />
-    </div>
-</template>
-
-<script setup>
-import { useToast } from "primevue/usetoast";
-import { ref, onUnmounted } from 'vue';
-const toast = useToast();
-const visible = ref(false);
-const progress = ref(0);
-const interval = ref();
-
-onUnmounted(() => {
-    if (interval.value) {
-        clearInterval(interval.value);
-    }
-})
-
-const show = () => {
-    if (!visible.value) {
-        toast.add({ severity: 'custom', summary: 'Uploading your files.', group: 'headless', styleClass: 'backdrop-blur-lg rounded-2xl' });
-        visible.value = true;
-        progress.value = 0;
-
-        if (interval.value) {
-            clearInterval(interval.value);
-        }
-
-        interval.value = setInterval(() => {
-            if (progress.value <= 100) {
-                progress.value = progress.value + 20;
-            }
-
-            if (progress.value >= 100) {
-                progress.value = 100;
-                clearInterval(interval.value);
-            }
-        }, 1000);
-    }
-};
-</script>
- -->
