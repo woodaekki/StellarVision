@@ -96,13 +96,13 @@ public class PhotoServiceImpl implements PhotoService {
         Page<Photo> photos = photoRepository.findByMemberId(memberId, pageable);
 
         return photos.map(photo -> {
-            //String resizedKey = S3ResizedImageKeyMapper.toResizedKey(photo.getPhotoS3Key());
+            String resizedKey = S3ResizedImageKeyMapper.toResizedKey(photo.getPhotoS3Key());
             return PhotoResponse.builder()
                     .id(photo.getId())
                     .originalFilename(photo.getTitle())
                     .extension(photo.getFileExtension())
                     .createdAt(photo.getCreatedAt())
-                    .downloadUrl(s3FileManager.getPresignedDownloadUrl(photo.getPhotoS3Key()))
+                    .downloadUrl(s3FileManager.getPresignedDownloadUrl(resizedKey))
                     .build();
         });
     }
