@@ -1,34 +1,43 @@
 <template>
   <div class="landing-wrapper">
-    <video
-      v-show="showIntro"
-      ref="introRef"
-      class="background-video opacity-100 transition-opacity duration-700"
-      src="/videos/test3.mp4" autoplay muted playsinline @ended="onIntroEnded"
-    />
-    <video
-      ref="loopRef"
-      class="background-video opacity-0 transition-opacity duration-700"
-      :class="{ 'opacity-100': loopVisible }"
-      src="/videos/test6.mp4" autoplay muted playsinline loop preload="auto"
-    />
-    <div class="background-globe opacity-0 transition-opacity duration-700"
-         :class="{ 'opacity-100': globeVisible }">
-      <LandingGlobe @ready="onGlobeReady" />
-    </div>
+    <section>
+      <video
+        v-show="showIntro"
+        ref="introRef"
+        class="background-video opacity-100 transition-opacity duration-700"
+        src="/videos/test3.mp4" autoplay muted playsinline @ended="onIntroEnded"
+      />
+      <video
+        ref="loopRef"
+        class="background-video opacity-0 transition-opacity duration-700"
+        :class="{ 'opacity-100': loopVisible }"
+        src="/videos/test6.mp4" autoplay muted playsinline loop preload="auto"
+      />
+      <div class="background-globe opacity-0 transition-opacity duration-700"
+          :class="{ 'opacity-100': globeVisible }">
+        <LandingGlobe @ready="onGlobeReady" />
+      </div>
 
-    <LandingParallax :steps="steps" :visible="contentVisible" />
+      <LandingParallax
+        class="landing-parallax"
+        :steps="steps"
+        :visible="contentVisible"
+      />
 
-    <section class="min-h-[120vh] px-5 pb-28 pt-12 bg-gradient-to-b from-transparent to-black/20">
+      <StartButton class="start-button" />
+    </section>
+
+    <section class="min-h-screen px-5 pt-12 pb-0 bg-gradient-to-b from-transparent to-black/20">
       <TodaysPhoto />
     </section>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, computed} from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import LandingParallax from '@/components/landing/LandingParallax.vue'
 import LandingGlobe from '@/components/landing/LandingGlobe.vue'
+import StartButton from '@/components/landing/StartButton.vue'
 import TodaysPhoto from '@/components/landing/TodaysPhoto.vue'
 
 const showIntro   = ref(true)
@@ -126,10 +135,17 @@ html, body {
   height: 100%; width: 100%;
   overflow-x: hidden;
 }
-.landing-wrapper { display: flex; flex-direction: column; width: 100%; }
+.landing-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
 
 .video-container {
-  position: relative; width: 100%; height: 100vh; overflow: hidden;
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
 }
 .background-video,
 .background-globe {
@@ -140,6 +156,7 @@ html, body {
   height: 100vh;
   object-fit: cover;
   z-index: -1;
+  pointer-events: auto;
 }
 
 /* Loop: 페이드인 */
@@ -166,9 +183,22 @@ html, body {
   transition: opacity 1.6s ease;
   z-index: 0; /* 비디오 위에 */
 }
-.globe-holder.is-visible { opacity: 1; }
+.globe-holder.is-visible {
+  opacity: 1;
+}
+
+.start-button {
+  position: absolute;
+  right: clamp(16px, 4vw, 48px);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + clamp(16px, 4vw, 48px));
+  z-index: 5;
+  pointer-events: auto;
+}
 
 .todays-photo-container {
-  position: relative; z-index: 1; color: white;
+  position: relative;
+  z-index: 1;
+  color: white;
+  margin: auto;
 }
 </style>
