@@ -1,6 +1,6 @@
 <template>
   <div class="page" ref="pageRef">
-    <img :src="bg" alt="" class="bg-img">
+    <img :src="bg" alt="" class="bg-img" />
 
     <div class="stars-background">
       <div class="px-4 pt-12 pb-6">
@@ -13,195 +13,201 @@
             좋아요한 영상
           </RouterLink>
         </div>
-        <h2 id="stars-background" class="text-2xl mb-2 text-center font-pretendard">
+
+        <h2 class="text-2xl mb-2 text-center font-pretendard">
           My Space Video
         </h2>
         <hr class="border-t-2 border-neutral-200 w-full mt-2" />
       </div>
 
-      <div class="px-4 pb-12">
-        <div v-if="loading" class="loading-container">
-          <div class="loading-spinner">
-            <div class="spinner"></div>
-            <div class="loading-text">영상 목록을 불러오는 중...</div>
-          </div>
+      <div v-if="loading" class="loading-container">
+        <div class="loading-spinner">
+          <div class="spinner"></div>
+          <span class="loading-text">내 영상을 불러오는 중...</span>
         </div>
+      </div>
 
-        <div v-else-if="!loading && videos.length === 0" class="empty-state">
-          <div class="empty-icon">📂</div>
-          <h3>아직 업로드한 영상이 없습니다.</h3>
-          <p>새로운 영상을 업로드하고 공유해 보세요!</p>
-          <RouterLink :to="{ name: 'ReplayView' }" class="browse-button">
-            영상 업로드하기
-          </RouterLink>
-        </div>
+      <div v-else-if="!loading && (!videos || videos.length === 0)" class="empty-state">
+        <div class="empty-icon">🎥</div>
+        <h3>아직 업로드한 영상이 없습니다.</h3>
+        <p>나만의 멋진 영상을 업로드해보세요!</p>
+        <RouterLink :to="{ name: 'MainView' }" class="browse-button">
+          영상 둘러보기
+        </RouterLink>
+      </div>
 
-        <div v-else class="video-grid">
-          <div
-            v-for="(video, index) in videos"
-            :key="video.id"
-            class="video-cell fade-in"
-            @animationend="onAnimationEnd(video.id)"
-          >
-            <div @click="goToReplay(video.id)" class="video-clickable-area">
-              <div class="video-thumbnail-wrapper">
-                <img
-                  :src="video.thumbnail"
-                  :alt="video.name"
-                  class="video-thumbnail"
-                  @error="handleImageError"
-                />
-                <div class="video-overlay">
-                  <div class="play-button">
-                    <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                  </div>
+      <div v-else-if="videos && videos.length > 0" class="video-grid">
+        <div
+          v-for="video in videos"
+          :key="video.id"
+          class="video-cell fade-in"
+        >
+          <div @click="goToVideoDetail(video.id)" class="video-clickable-area">
+            <div class="video-thumbnail-wrapper">
+              <img
+                :src="video.thumbnailDownloadUrl"
+                :alt="video.originalFilename"
+                class="video-thumbnail"
+                @error="handleImageError"
+              />
+              <div class="video-overlay">
+                <div class="play-button">
+                  <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
                 </div>
               </div>
+            </div>
 
-              <div class="video-info">
-                <div class="video-header">
-                  <h3 class="video-title">{{ video.name }}</h3>
-                  <button v-if="isUploader" @click.stop="handleDeleteVideo(video)" class="delete-button" title="삭제">
+            <div class="video-info">
+              <div class="video-header">
+                <h3 class="video-title">{{ video.originalFilename }}</h3>
+                <div class="button-group">
+                  <button
+                    @click.stop="handleEditVideo(video)"
+                    class="edit-button"
+                    title="영상 수정"
+                  >
                     <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zm2.46-7.12l1.41-1.41L12 12.59l2.12-2.12 1.41 1.41L13.41 14l2.12 2.12-1.41 1.41L12 15.41l-2.12 2.12-1.41-1.41L10.59 14l-2.13-2.12zM15.5 4l-1-1h-5l-1 1H5v2h14V4z" />
+                      <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a.996.996 0 000-1.41l-2.34-2.34a.996.996 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+                    </svg>
+                  </button>
+                  <button
+                    @click.stop="handleDeleteVideo(video)"
+                    class="delete-button"
+                    title="영상 삭제"
+                  >
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"
+                      />
                     </svg>
                   </button>
                 </div>
-                <div class="video-meta">
-                  <span class="video-date">{{ video.date }}</span>
-                </div>
-                <div class="video-stats">
-                  <div class="tags-container">
-                    <span v-for="tag in video.tags" :key="tag.id" class="video-tag">
-                      #{{ tag.name }}
-                    </span>
-                  </div>
-                </div>
+              </div>
+              <div class="video-meta">
+                <span class="video-author">{{ video.nickname }}</span>
+                <span class="video-date">{{ formatDate(video.createdAt) }}</span>
+              </div>
+              <div class="video-stats">
+                <span class="like-count">
+                  <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+                    <path
+                      d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+                    />
+                  </svg>
+                  {{ video.likeCount }}
+                </span>
               </div>
             </div>
           </div>
         </div>
-
-        <div v-if="loadingMore" class="loading-spinner">
-          <div class="spinner"></div>
-          <div class="loading-text">더 많은 영상 로딩 중...</div>
-        </div>
-
-        <div v-if="!loading && !loadingMore && hasMore && videos.length > 0" class="loading-text">
-          스크롤하여 더 많은 영상 보기
-        </div>
-
-        <div ref="observerTarget" class="observer-target"></div>
       </div>
+
+      <div v-if="loadingMore" class="loading-spinner">
+        <div class="spinner"></div>
+        <span class="loading-text">더 많은 영상 로딩 중...</span>
+      </div>
+
+      <div v-if="!loading && !loadingMore && videos.length > 0 && !hasMore" class="loading-text">
+        모든 영상을 불러왔습니다.
+      </div>
+      <div ref="observerTarget" class="observer-target"></div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useVideoStore } from '@/stores/video';
 import commonApi from '@/api/commonApi';
 import bg from '@/assets/pictures/stellabot/spaceBackground.avif';
 
 const route = useRoute();
 const router = useRouter();
-const videoStore = useVideoStore();
 
 const loading = ref(true);
 const loadingMore = ref(false);
 const hasMore = ref(true);
 const page = ref(0);
-const pageRef = ref(null);
 const observerTarget = ref(null);
 
-const lastFetchTime = ref(0);
-const fetchCooldown = 150;
-const isThrottling = ref(false);
+const INITIAL_PAGE_SIZE = 11;
+const INFINITE_SCROLL_PAGE_SIZE = 12;
 
-const PAGE_SIZE = 8;
-const SORT_OPTION = 0;
+// myId computed - 사용자 ID 가져오기
+const myId = computed(() => {
+  const id = route.params.id;
+  console.log('현재 사용자 ID:', id); // 디버깅용
+  return id;
+});
 
-const myId = computed(() => route.params.id);
-const profilePk = window.history.state?.profilePk || route.params.id;
-const isUploader = JSON.parse(localStorage.getItem('userInfo'))?.email === route.params.id;
+const videos = ref([]);
 
-const videos = computed(() =>
-  videoStore.replays.map(v => ({
-    id: v.id,
-    name: v.originalFilename,
-    thumbnail: v.thumbnailDownloadUrl,
-    date: v.createdAt?.split('T')[0],
-    tags: (v.tags || []).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 3),
-    isNew: v.isNew || false
-  }))
-);
+// 내 영상만 가져오는 함수
+const fetchVideos = async (pageNum = 0) => {
+  if (loadingMore.value || !hasMore.value) return;
 
-const onAnimationEnd = (videoId) => {
-  const video = videoStore.replays.find(v => v.id === videoId);
-  if (video) video.isNew = false;
-};
-
-const fetchVideos = async (force = false) => {
-  const now = Date.now();
-
-  if (page.value > 0 && (loading.value || loadingMore.value || !hasMore.value)) return;
-
-  if (!force && (isThrottling.value || (now - lastFetchTime.value < fetchCooldown))) {
+  // myId가 유효하지 않으면 실행하지 않음
+  if (!myId.value || myId.value === 'undefined' || myId.value === null) {
+    console.error('유효하지 않은 사용자 ID:', myId.value);
+    loading.value = false;
     return;
   }
 
-  lastFetchTime.value = now;
-  isThrottling.value = true;
+  const pageSize = pageNum === 0 ? INITIAL_PAGE_SIZE : INFINITE_SCROLL_PAGE_SIZE;
 
-  if (page.value === 0) {
+  if (pageNum === 0) {
     loading.value = true;
   } else {
     loadingMore.value = true;
   }
 
   try {
-    const currentLength = videoStore.replays.length;
-    const data = await videoStore.fetchReplays(profilePk, page.value, PAGE_SIZE, SORT_OPTION);
+    console.log('요청할 memberId:', myId.value, 'page:', pageNum, 'size:', pageSize); // 디버깅용
 
-    await nextTick();
-    const newVideos = videoStore.replays.slice(currentLength);
-    newVideos.forEach(v => v.isNew = page.value > 0);
+    // API 요청 - 올바른 엔드포인트로 내 영상만 가져오기
+    const res = await commonApi.get(`profiles/${myId.value}/videos?page=${pageNum}&size=${pageSize}`);
 
-    if (newVideos.length === 0 || data.isLast === true) {
-      hasMore.value = false;
+    console.log('API 응답:', res.data); // 디버깅용
+
+    const newVideos = res.data.data?.videos || [];
+
+    if (pageNum === 0) {
+      videos.value = newVideos;
     } else {
-      hasMore.value = true;
+      videos.value.push(...newVideos);
     }
 
-    page.value++;
+    hasMore.value = res.data.data.isLast !== true;
+    page.value = pageNum + 1;
+
   } catch (err) {
     console.error('동영상 불러오기 실패:', err);
+    hasMore.value = false;
   } finally {
     loading.value = false;
     loadingMore.value = false;
-    setTimeout(() => {
-      isThrottling.value = false;
-    }, fetchCooldown);
   }
 };
 
-const goToReplay = (videoId) => {
-  router.push(`/replay/${videoId}`);
-};
+// 참고: 이제 올바른 API 엔드포인트를 사용합니다
+// /api/profiles/{memberId}/videos?page={pageNum}&size={pageSize}
 
-const handleDeleteVideo = async (video) => {
-  if (!confirm('정말로 이 영상을 삭제하시겠습니까?')) return;
+// 날짜 포맷팅
+const formatDate = (dateString) => {
   try {
-    await commonApi.delete(`/videos/${video.id}`);
-    const idx = videoStore.replays.findIndex(v => v.id === video.id);
-    if (idx > -1) videoStore.replays.splice(idx, 1);
-    alert('영상이 성공적으로 삭제되었습니다.');
-  } catch (error) {
-    console.error('영상 삭제 실패:', error);
-    alert('영상 삭제에 실패했습니다. 다시 시도해주세요.');
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now - date);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    if (diffDays === 1) return '오늘';
+    if (diffDays <= 7) return `${diffDays}일 전`;
+    if (diffDays <= 30) return `${Math.ceil(diffDays / 7)}주 전`;
+    if (diffDays <= 365) return `${Math.ceil(diffDays / 30)}개월 전`;
+    return `${Math.ceil(diffDays / 365)}년 전`;
+  } catch {
+    return '날짜 불명';
   }
 };
 
@@ -209,156 +215,39 @@ const handleImageError = (event) => {
   event.target.src = '/default-thumbnail.jpg';
 };
 
-const getScrollMetrics = () => {
-  const scrollElement = document.documentElement;
-  const scrollTop = Math.max(
-    scrollElement.scrollTop,
-    document.body.scrollTop,
-    window.pageYOffset || 0
-  );
-  const scrollHeight = Math.max(
-    scrollElement.scrollHeight,
-    document.body.scrollHeight
-  );
-  const clientHeight = window.innerHeight || document.documentElement.clientHeight;
-  const headerOffset = 60;
-  const footerOffset = 40;
-  const totalOffset = headerOffset + footerOffset;
-  return {
-    scrollTop,
-    scrollHeight,
-    clientHeight: clientHeight - totalOffset,
-    effectiveScrollHeight: scrollHeight - totalOffset
-  };
+const goToVideoDetail = (videoId) => {
+  router.push(`/replay/${videoId}`);
 };
 
-const checkScrollPosition = () => {
-  if (loading.value || loadingMore.value || !hasMore.value || isThrottling.value) return false;
-  const { scrollTop, scrollHeight, clientHeight, effectiveScrollHeight } = getScrollMetrics();
-  if (scrollHeight <= clientHeight + 200) {
-    return true;
+const handleDeleteVideo = async (video) => {
+  if (!confirm('정말로 이 영상을 삭제하시겠습니까?')) return;
+  try {
+    await commonApi.delete(`/videos/${video.id}`);
+    videos.value = videos.value.filter(v => v.id !== video.id);
+    alert('영상이 성공적으로 삭제되었습니다.');
+  } catch (error) {
+    console.error('영상 삭제 실패:', error);
+    alert('영상 삭제에 실패했습니다. 다시 시도해주세요.');
   }
-  const scrollPercentage = (scrollTop + clientHeight) / effectiveScrollHeight;
-  const remaining = effectiveScrollHeight - scrollTop - clientHeight;
-  return scrollPercentage >= 0.7 || remaining <= 1200;
 };
 
-let scrollTimeout = null;
-let rafId = null;
-let debounceTimeout = null;
-
-const handleScroll = () => {
-  if (scrollTimeout) clearTimeout(scrollTimeout);
-  if (rafId) cancelAnimationFrame(rafId);
-  if (debounceTimeout) clearTimeout(debounceTimeout);
-  rafId = requestAnimationFrame(() => {
-    if (checkScrollPosition()) {
-      fetchVideos();
-    }
-  });
-  scrollTimeout = setTimeout(() => {
-    if (checkScrollPosition()) {
-      fetchVideos();
-    }
-  }, 50);
-  debounceTimeout = setTimeout(() => {
-    if (checkScrollPosition()) {
-      fetchVideos();
-    }
-  }, 200);
-};
-
+let observer = null;
 const setupIntersectionObserver = () => {
   if (!observerTarget.value) return null;
-  return new IntersectionObserver(
+  observer = new IntersectionObserver(
     (entries) => {
       const entry = entries[0];
-      if (entry.isIntersecting && entry.intersectionRatio > 0) {
-        if (!loading.value && !loadingMore.value && hasMore.value && !isThrottling.value) {
-          fetchVideos();
-        }
+      if (entry.isIntersecting && hasMore.value) {
+        fetchVideos(page.value);
       }
     },
     {
       root: null,
-      rootMargin: '800px 0px 800px 0px',
-      threshold: [0, 0.1, 0.25, 0.5]
+      rootMargin: '800px 0px',
+      threshold: 0.1,
     }
   );
-};
-
-let observer = null;
-
-const setupInfiniteScroll = async () => {
-  await nextTick();
-  let retryCount = 0;
-  while (!observerTarget.value && retryCount < 10) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-    retryCount++;
-  }
-  if (!observerTarget.value) {
-    return;
-  }
-  observer = setupIntersectionObserver();
-  if (observer) {
-    observer.observe(observerTarget.value);
-  }
-  const scrollOptions = { passive: true, capture: false };
-  window.addEventListener('scroll', handleScroll, scrollOptions);
-  document.addEventListener('scroll', handleScroll, scrollOptions);
-  window.addEventListener('resize', () => {
-    setTimeout(() => {
-      if (checkScrollPosition()) {
-        fetchVideos();
-      }
-    }, 100);
-  }, { passive: true });
-  const fullscreenEvents = ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange'];
-  fullscreenEvents.forEach(event => {
-    document.addEventListener(event, () => {
-      setTimeout(() => {
-        if (checkScrollPosition()) {
-          fetchVideos();
-        }
-      }, 300);
-    });
-  });
-  window.addEventListener('popstate', () => {
-    setTimeout(() => {
-      if (checkScrollPosition()) {
-        fetchVideos();
-      }
-    }, 100);
-  });
-};
-
-const cleanupInfiniteScroll = () => {
-  if (observer) {
-    observer.disconnect();
-    observer = null;
-  }
-  const timers = [scrollTimeout, rafId, debounceTimeout];
-  timers.forEach(timer => {
-    if (timer) {
-      if (timer === rafId) {
-        cancelAnimationFrame(timer);
-      } else {
-        clearTimeout(timer);
-      }
-    }
-  });
-  scrollTimeout = null;
-  rafId = null;
-  debounceTimeout = null;
-  window.removeEventListener('scroll', handleScroll);
-  document.removeEventListener('scroll', handleScroll);
-  window.removeEventListener('resize', checkScrollPosition);
-  window.removeEventListener('popstate', checkScrollPosition);
-  const fullscreenEvents = ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange'];
-  fullscreenEvents.forEach(event => {
-    document.removeEventListener(event, checkScrollPosition);
-  });
-  isThrottling.value = false;
+  observer.observe(observerTarget.value);
 };
 
 const preventScrollRestore = () => {
@@ -367,31 +256,35 @@ const preventScrollRestore = () => {
   }
 };
 
-let initialCheckInterval = null;
+// route params가 변경되면 다시 로드
+watch(() => route.params.id, (newId) => {
+  if (newId) {
+    videos.value = [];
+    page.value = 0;
+    hasMore.value = true;
+    fetchVideos(0);
+  }
+});
 
 onMounted(async () => {
   preventScrollRestore();
-  await fetchVideos(true);
-  await setupInfiniteScroll();
-  let checkCount = 0;
-  initialCheckInterval = setInterval(() => {
-    checkCount++;
-    if (checkScrollPosition()) {
-      fetchVideos();
-      if (checkCount > 3) {
-        clearInterval(initialCheckInterval);
-      }
-    }
-    if (checkCount > 150) {
-      clearInterval(initialCheckInterval);
-    }
-  }, 200);
+
+  // myId가 유효한 경우에만 영상 로드
+  if (myId.value && myId.value !== 'undefined' && myId.value !== null) {
+    console.log('사용자 영상 로딩 시작:', myId.value);
+    await fetchVideos(0);
+  } else {
+    console.error('유효하지 않은 사용자 ID:', myId.value);
+    loading.value = false;
+  }
+
+  await nextTick();
+  setupIntersectionObserver();
 });
 
 onBeforeUnmount(() => {
-  cleanupInfiniteScroll();
-  if (initialCheckInterval) {
-    clearInterval(initialCheckInterval);
+  if (observer) {
+    observer.disconnect();
   }
 });
 </script>
@@ -401,7 +294,6 @@ onBeforeUnmount(() => {
   min-height: 100vh;
   background-size: cover;
   background-image: linear-gradient(rgba(11, 12, 16, 0.7), rgba(11, 12, 16, 0.7));
-  background-size: cover;
   background-position: center;
   display: flex;
   justify-content: center;
@@ -473,6 +365,7 @@ onBeforeUnmount(() => {
   text-align: left;
   font-weight: 700;
   color: #ffffff;
+  font-family: 'Pretendard', sans-serif !important;
 }
 
 .loading-container {
@@ -482,33 +375,35 @@ onBeforeUnmount(() => {
   min-height: 300px;
 }
 
-.loading-text {
-  font-size: 16px;
-  text-align: center;
-  margin-top: 20px;
-  color: rgba(255, 255, 255, 0.7);
-}
-
 .loading-spinner {
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
-  gap: 10px;
+  gap: 15px;
 }
 
 .spinner {
   border: 4px solid rgba(255, 255, 255, 0.2);
   border-top: 4px solid #fff;
   border-radius: 50%;
-  width: 30px;
-  height: 30px;
+  width: 40px;
+  height: 40px;
   animation: spin 1.1s linear infinite;
 }
 
+.loading-text {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.8);
+  text-align: center;
+}
+
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .empty-state {
@@ -558,7 +453,7 @@ onBeforeUnmount(() => {
 
 .video-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 24px;
   max-width: 100%;
   justify-content: center;
@@ -667,9 +562,45 @@ onBeforeUnmount(() => {
   padding-right: 10px;
 }
 
+.video-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.video-author {
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+}
+
+.video-date {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.video-stats {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.like-count {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+}
+
+.button-group {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.edit-button,
 .delete-button {
-  background-color: rgba(239, 68, 68, 0.9);
-  color: white;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
   border: none;
   border-radius: 50%;
   width: 32px;
@@ -681,45 +612,22 @@ onBeforeUnmount(() => {
   transition: all 0.3s ease;
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
-  opacity: 0;
 }
 
-.video-cell:hover .delete-button {
-  opacity: 1;
+.edit-button:hover {
+  background: rgba(0, 255, 255, 0.2);
   transform: scale(1.1);
+  color: #00ffff;
 }
 
-.video-meta {
-  display: flex;
-  justify-content: space-between;
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.6);
+.delete-button {
+  background: rgba(255, 0, 0, 0.1);
+  color: #ff4d4f;
 }
 
-.video-stats {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.tags-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.video-tag {
-  font-size: 12px;
-  color: #4ade80;
-  background: rgba(76, 175, 80, 0.15);
-  padding: 4px 8px;
-  border-radius: 8px;
-  white-space: nowrap;
-}
-
-.observer-target {
-  width: 100%;
-  height: 200px;
+.delete-button:hover {
+  background: rgba(255, 0, 0, 0.2);
+  transform: scale(1.1);
 }
 
 .fade-in {
@@ -727,38 +635,18 @@ onBeforeUnmount(() => {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@media (max-width: 1024px) {
-  .video-grid {
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 20px;
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-@media (max-width: 768px) {
-  .video-grid {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 16px;
-  }
-  .stars-background {
-    padding: 20px 24px;
-  }
-  .navigation-links {
-    font-size: 14px;
-    gap: 10px;
-  }
-}
-
-@media (max-width: 480px) {
-  .video-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-  .page {
-    padding: 20px 10px;
-  }
+.observer-target {
+  height: 10px;
+  margin-top: 20px;
 }
 </style>

@@ -5,11 +5,11 @@
     <div class="stars-background">
       <div class="px-4 pt-12 pb-6">
         <div class="navigation-links">
-          <RouterLink :to="{ name: 'MyVideoListView', params: { id: myId } }">
+          <RouterLink :to="{ name: 'MyVideoListView', params: { id: myId } }" >
             내 비디오
           </RouterLink>
           <span>|</span>
-          <RouterLink :to="{ name: 'MyLikedListView', params: { id: myId } }" class="active">
+          <RouterLink :to="{ name: 'MyLikedListView', params: { id: myId } }" >
             좋아요한 영상
           </RouterLink>
         </div>
