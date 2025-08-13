@@ -279,6 +279,8 @@ public class VideoServiceImpl implements VideoService {
 
         s3FileManager.delete(video.getVideoS3Key());
 
+        videoTagRepository.deleteAllByVideoId(videoId);
+
         String thumbnailKey = (video.getThumbnail() != null)
                 ? video.getThumbnail().getThumbnailS3Key()
                 : null;
