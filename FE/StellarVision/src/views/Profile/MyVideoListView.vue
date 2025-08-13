@@ -3,11 +3,13 @@
     <img :src="bg" alt="" class="bg-img" />
 
     <div class="stars-background">
-      <button @click="goBack" class="back-button">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M15 18l-6-6 6-6" />
-        </svg>
-      </button>
+        <div class="back-button">
+          <RouterLink :to="`/profile/${userInfo?.email}`" class="no-underline relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-[#f2f2f2] after:w-0 after:transition-all after:duration-300 hover:after:w-full font-pretendard">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </RouterLink>
+        </div>
 
       <div class="px-4 pt-12 pb-6">
         <div class="navigation-links">
@@ -133,11 +135,12 @@ import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router';
 import commonApi from '@/api/commonApi';
 import bg from '@/assets/pictures/stellabot/spaceBackground.avif';
+import { useAccountStore } from '@/stores/account';
 
 const route = useRoute();
 const router = useRouter();
-const memberEmail = computed(() => route.params.id);
-
+const accountStore = useAccountStore();
+const userInfo = computed(() => accountStore.userInfo)
 const loading = ref(true);
 const loadingMore = ref(false);
 const hasMore = ref(true);
@@ -154,11 +157,6 @@ const myId = computed(() => {
 });
 
 const videos = ref([]);
-
-const goBack = () => {
-  router.push({ name: 'profileView', params: { id: memberEmail.value } });
-}
-
 const fetchTagsForVideos = async (videosList) => {
   if (!videosList || videosList.length === 0) return videosList;
 

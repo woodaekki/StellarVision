@@ -2,12 +2,15 @@
   <div class="page" ref="pageRef">
     <img :src="bg" alt="우주 배경" class="bg-img" />
     <div class="stars-background">
-      <div class="header-and-back-container"> <div class="back-button-container">
-          <button @click="goBack" class="back-button-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M15 18l-6-6 6-6" />
-            </svg>
-          </button>
+      <div class="header-and-back-container">
+        <div class="back-button-container">
+          <div class="back-button-icon">  
+            <RouterLink :to="`/profile/${userInfo?.email}`" class="no-underline relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-[#f2f2f2] after:w-0 after:transition-all after:duration-300 hover:after:w-full font-pretendard">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
+            </RouterLink>
+          </div>
         </div>
         <div class="header-container">
           <h2 class="page-title">My Space Gallery</h2>
@@ -91,6 +94,7 @@ import bg from '@/assets/pictures/stellabot/spaceBackground.avif';
 import { useRouter, useRoute } from 'vue-router'
 
 const accountStore = useAccountStore();
+const userInfo = computed(() => accountStore .userInfo)
 const route = useRoute();
 const router = useRouter();
 const pageRef = ref(null);
