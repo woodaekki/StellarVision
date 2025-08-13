@@ -1,4 +1,3 @@
-<!-- profileheader -->
 <template>
   <div class="profile-header">
     <div class="profile-header-inner">
@@ -36,6 +35,7 @@
               type="text"
               class="desc-input"
               placeholder="자기소개를 입력하세요"
+              :maxlength="255"
             />
             <p v-else class="description">
               {{ profileInfo?.description || '해당 회원은 아직 자기소개를 작성하지 않았습니다.' }}
@@ -62,6 +62,7 @@
         <EditButton
           v-if="isOwner"
           :is-editing="editMode"
+          :disabled="editMode && isOverLimit"
           @click="toggleEditMode"
           class="btn"
         />
@@ -89,6 +90,7 @@ import FollowButton from './FollowButton.vue';
 import DeleteProfileImageButton from './DeleteProfileImageButton.vue';
 import UserListModal from './UserListModal.vue';
 import BadgeShelf from './BadgeShelf.vue';
+import { useProfileStore } from '@/stores/profile';
 import axios from 'axios';
 import axiosApi from '@/api/axiosApi';
 
@@ -111,24 +113,57 @@ const props = defineProps({
   }
 });
 
+const emit = defineEmits([
+  'updateProfileImageUrl',
+  'description-updated'
+]);
+
 const route = useRoute();
+const profileStore = useProfileStore();
 const isOwner = JSON.parse(localStorage.getItem('userInfo'))?.email === route.params.id;
 const memberId = computed(() => props.profileInfo?.memberId ?? null);
 
-// 편집 모드 전환
 const editMode = ref(false);
-const toggleEditMode = () => { editMode.value = !editMode.value };
 const canEdit = computed(() => isOwner && editMode.value);
 
 // 프로필 자기소개 수정
 const descriptionDraft = ref('');
+
 watch(editMode, (on) => {
   if (on) descriptionDraft.value = props.profileInfo?.description ?? '';
 });
 
-// 프로필 이미지 업데이트
+const isWhitespaceOnly = computed(() => /^\s*$/.test(descriptionDraft.value ?? ''));
+const isUnchanged = computed(() => (descriptionDraft.value ?? '') === (props.profileInfo?.description ?? ''));
+const isOverLimit = computed(() => (descriptionDraft.value?.length ?? 0) > 255);
+
+const toggleEditMode = async () => {
+  if (editMode.value) {
+    if (isOverLimit.value) return;
+
+    if (isUnchanged.value) {
+      editMode.value = false;
+      return;
+    }
+
+    if (isWhitespaceOnly.value) {
+      editMode.value = false;
+      return;
+    }
+
+    try {
+      await profileStore.updateDescription(descriptionDraft.value);
+      emit('description-updated', descriptionDraft.value);
+      editMode.value = false;
+    } catch (err) {
+      console.error('자기소개 수정 실패:', err);
+    }
+  } else {
+    editMode.value = true;
+  }
+};
+
 const profileImageInput = ref(null);
-const emit = defineEmits(['updateProfileImageUrl']);
 
 const triggerProfileImageUpload = async () => {
   if (!canEdit.value) return;
@@ -136,7 +171,6 @@ const triggerProfileImageUpload = async () => {
   profileImageInput.value.click();
 };
 
-// 프로필 이미지 업데이트
 const uploadProfileImage = async (e) => {
   if (!canEdit.value) return;
   const file = e.target.files[0];
@@ -149,17 +183,14 @@ const uploadProfileImage = async (e) => {
       originalFilename: file.name,
     });
 
-    const presignedData = data.data
-
+    const presignedData = data.data;
     if (!presignedData.uploadUrl || !presignedData.s3Key) {
       console.error('presignedUrl 또는 s3Key가 없습니다', data);
-      return
-    };
+      return;
+    }
 
     await axios.put(presignedData.uploadUrl, file, {
-      headers: {
-        'Content-Type': file.type
-      },
+      headers: { 'Content-Type': file.type },
       maxContentLength: Infinity,
       maxBodyLength: Infinity,
     });
@@ -171,35 +202,25 @@ const uploadProfileImage = async (e) => {
     });
 
     emit('updateProfileImageUrl');
-
   } catch (err) {
-    console.error('업로드 실패:', err)
+    console.error('업로드 실패:', err);
   }
-}
+};
 
 const deleteProfileImage = async () => {
   if (!canEdit.value) return;
-
   try {
     await axiosApi.delete('/profiles/image');
     emit('updateProfileImageUrl');
   } catch (err) {
-    console.error('프로필 이미지 삭제 실패: ', err)
+    console.error('프로필 이미지 삭제 실패: ', err);
   }
-}
-
-// 팔로잉 & 팔로워 목록 보여주기
-const showFollowModal = ref(false);
-const modalType = ref(null);
-
-const openModal = (type) => {
-  modalType.value = type;
-  showFollowModal.value = true;
 };
 
-const modalList = computed(() =>
-  modalType.value === 'following' ? props.profileFollowings : props.profileFollowers
-);
+const showFollowModal = ref(false);
+const modalType = ref(null);
+const openModal = (type) => { modalType.value = type; showFollowModal.value = true; };
+const modalList = computed(() => (modalType.value === 'following' ? props.profileFollowings : props.profileFollowers));
 </script>
 
 <style scoped>
@@ -207,7 +228,7 @@ const modalList = computed(() =>
   position: relative;
   width: 130px;
   height: 130px;
-  border-radius: 50%;  
+  border-radius: 50%;
   overflow: hidden;
   background: rgba(15, 20, 40, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.6);
@@ -245,8 +266,8 @@ const modalList = computed(() =>
 .profile-header-right {
   display: flex;
   align-items: center;
-  gap: 8px; 
-  margin-left: 30px; 
+  gap: 8px;
+  margin-left: 30px;
 }
 
 .profile-image img,
