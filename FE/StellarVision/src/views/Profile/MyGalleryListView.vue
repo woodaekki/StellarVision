@@ -1,15 +1,15 @@
 <template>
   <div class="page" ref="pageRef">
-    <img :src="bg" alt="" class="bg-img">
+    <img :src="bg" alt="우주 배경" class="bg-img" />
     <div class="stars-background">
-      <div class="px-4 pt-12 pb-6">
-        <h2 class="text-2xl mb-2 text-center font-pretendard">
+      <div class="header-container">
+        <h2 class="page-title">
           My Space Gallery
         </h2>
-        <hr class="border-t-2 border-neutral-200 w-full mt-2" />
+        <hr class="divider" />
       </div>
 
-      <div class="px-4 pb-12">
+      <div class="content-container">
         <div class="gallery-grid">
           <div class="upload-box" @click="triggerGalleryUpload">
             <span>+</span>
@@ -23,7 +23,7 @@
           </div>
 
           <div
-            v-for="(item, index) in photos"
+            v-for="item in photos"
             :key="item.id"
             class="photo-box"
             @click="viewPhoto(item.id)"
@@ -37,15 +37,18 @@
               @error="handleImageError"
             />
             <div class="photo-text">
-              <p>{{ item.name }}</p>
+              <p class="photo-title">{{ item.name }}</p>
               <p class="photo-date">{{ item.date }}</p>
               <div v-if="item.tags && item.tags.length" class="photo-tags">
                 <span
-                  v-for="tag in item.tags"
+                  v-for="tag in item.tags.slice(0, 3)"
                   :key="tag.tagId"
                   class="tag-chip"
                 >
-                  {{ tag.tagName }}
+                  #{{ tag.tagName }}
+                </span>
+                <span v-if="item.tags.length > 3" class="tag-chip tag-more">
+                  +{{ item.tags.length - 3 }}
                 </span>
               </div>
               <div v-else-if="loadingTags[item.id]" class="photo-tags">
@@ -61,7 +64,7 @@
           </div>
         </div>
 
-        <div v-if="loading" class="loading-spinner">
+        <div v-if="loading" class="loading-spinner-container">
           <div class="spinner"></div>
           <div class="loading-text">사진 불러오는 중...</div>
         </div>
@@ -74,59 +77,75 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
-import { useAccountStore } from '@/stores/account'
-import axios from 'axios'
-import axiosApi from '@/api/axiosApi'
-import bg from '@/assets/pictures/stellabot/spaceBackground.avif'
+import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue';
+import { useAccountStore } from '@/stores/account';
+import axios from 'axios';
+import axiosApi from '@/api/axiosApi';
+import bg from '@/assets/pictures/stellabot/spaceBackground.avif';
 
-const accountStore = useAccountStore()
+const accountStore = useAccountStore();
 
-const pageRef = ref(null)
-const galleryInput = ref(null)
-const observerTarget = ref(null)
+const pageRef = ref(null);
+const galleryInput = ref(null);
+const observerTarget = ref(null);
 
-const photos = ref([])
-const loading = ref(false)
-const page = ref(0)
-const hasMore = ref(true)
-const isScrolling = ref(false)
-const loadingTags = ref({})
-const lastFetchTime = ref(0)
-const fetchCooldown = 150
-const isNearBottom = ref(false)
-const lastScrollTop = ref(0)
-const scrollVelocity = ref(0)
-const isThrottling = ref(false)
+const photos = ref([]);
+const loading = ref(false);
+const page = ref(0);
+const hasMore = ref(true);
+const isScrolling = ref(false);
+const loadingTags = ref({});
+const lastFetchTime = ref(0);
+const fetchCooldown = 150;
+const isNearBottom = ref(false);
+const lastScrollTop = ref(0);
+const scrollVelocity = ref(0);
+const isThrottling = ref(false);
 
-const memberId = computed(() => accountStore.myProfile?.memberId)
-const canUpload = computed(() => accountStore.isLogin)
+const memberId = computed(() => accountStore.myProfile?.memberId);
+const canUpload = computed(() => accountStore.isLogin);
+
+const formatDate = (dateString) => {
+  try {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now - date);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    if (diffDays === 1) return '오늘';
+    if (diffDays <= 7) return `${diffDays}일 전`;
+    if (diffDays <= 30) return `${Math.ceil(diffDays / 7)}주 전`;
+    if (diffDays <= 365) return `${Math.ceil(diffDays / 30)}개월 전`;
+    return `${Math.ceil(diffDays / 365)}년 전`;
+  } catch {
+    return '날짜 불명';
+  }
+};
 
 const onImageLoad = (photoId) => {
-  const photo = photos.value.find(p => p.id === photoId)
+  const photo = photos.value.find(p => p.id === photoId);
   if (photo) {
-    photo.isLoaded = true
+    photo.isLoaded = true;
   }
-}
+};
 
 const handleImageError = (event) => {
-  event.target.src = '/default-thumbnail.jpg'
-}
+  event.target.src = '/default-thumbnail.jpg';
+};
 
 const fetchPhotos = async (force = false) => {
-  const now = Date.now()
+  const now = Date.now();
 
   if (loading.value || !hasMore.value) {
-    return
+    return;
   }
 
   if (!force && (isThrottling.value || (now - lastFetchTime.value < fetchCooldown))) {
-    return
+    return;
   }
 
-  lastFetchTime.value = now
-  isThrottling.value = true
-  loading.value = true
+  lastFetchTime.value = now;
+  isThrottling.value = true;
+  loading.value = true;
 
   try {
     const { data } = await axiosApi.get(`profiles/${memberId.value}/photos`, {
@@ -134,230 +153,230 @@ const fetchPhotos = async (force = false) => {
         page: page.value,
         size: 8,
       },
-    })
+    });
 
     const newPhotos = data.data.photos.map((p) => ({
       id: p.id,
       url: p.downloadUrl,
       name: p.originalFilename,
-      date: p.createdAt.split('T')[0],
+      date: formatDate(p.createdAt),
       tags: null,
       isNew: page.value > 0,
       isLoaded: false
-    }))
+    }));
 
-    photos.value = [...photos.value, ...newPhotos]
-    hasMore.value = !data.data.isLast
-    page.value++
+    photos.value = [...photos.value, ...newPhotos];
+    hasMore.value = !data.data.isLast;
+    page.value++;
   } catch (e) {
-    console.error('사진 불러오기 실패:', e)
+    console.error('사진 불러오기 실패:', e);
   } finally {
-    loading.value = false
+    loading.value = false;
     setTimeout(() => {
-      isThrottling.value = false
-    }, fetchCooldown)
+      isThrottling.value = false;
+    }, fetchCooldown);
   }
-}
+};
 
 const loadPhotoTags = async (photoId) => {
-  const photo = photos.value.find(p => p.id === photoId)
-  if (!photo || photo.tags !== null || loadingTags.value[photoId]) return
+  const photo = photos.value.find(p => p.id === photoId);
+  if (!photo || photo.tags !== null || loadingTags.value[photoId]) return;
 
-  loadingTags.value[photoId] = true
+  loadingTags.value[photoId] = true;
 
   try {
-    const response = await axiosApi.get(`/photos/${photoId}/tags`)
-    const { data } = response
-    const photoIndex = photos.value.findIndex(p => p.id === photoId)
+    const response = await axiosApi.get(`/photos/${photoId}/tags`);
+    const { data } = response;
+    const photoIndex = photos.value.findIndex(p => p.id === photoId);
     if (photoIndex !== -1) {
-      photos.value[photoIndex].tags = data?.data?.tags || []
+      photos.value[photoIndex].tags = data?.data?.tags || [];
     }
   } catch (e) {
-    const photoIndex = photos.value.findIndex(p => p.id === photoId)
+    const photoIndex = photos.value.findIndex(p => p.id === photoId);
     if (photoIndex !== -1) {
-      photos.value[photoIndex].tags = []
+      photos.value[photoIndex].tags = [];
     }
   } finally {
-    loadingTags.value[photoId] = false
+    loadingTags.value[photoId] = false;
   }
-}
+};
 
 const triggerGalleryUpload = async () => {
   if (!canUpload.value) {
-    alert('업로드 권한이 없습니다. 로그인 후 다시 시도해주세요.')
-    return
+    alert('업로드 권한이 없습니다. 로그인 후 다시 시도해주세요.');
+    return;
   }
   if (!memberId.value) {
-    await accountStore.fetchMyProfile()
+    await accountStore.fetchMyProfile();
   }
   if (!memberId.value) {
-    alert('프로필 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.')
-    return
+    alert('프로필 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
+    return;
   }
-  galleryInput.value.value = ''
-  galleryInput.value.click()
-}
+  galleryInput.value.value = '';
+  galleryInput.value.click();
+};
 
 const uploadGalleryImage = async (e) => {
-  const file = e.target.files[0]
-  if (!file || !memberId.value) return
+  const file = e.target.files[0];
+  if (!file || !memberId.value) return;
 
   try {
     const { data: presignedResponse } = await axiosApi.post('/photos/presignedUrl', {
       memberId: memberId.value,
       originalFilename: file.name,
       contentType: file.type,
-    })
-    const presignedData = presignedResponse.data
+    });
+    const presignedData = presignedResponse.data;
     if (!presignedData.uploadUrl || !presignedData.s3Key) {
-      console.error('presignedUrl 또는 s3Key가 없습니다', presignedResponse)
-      return
+      console.error('presignedUrl 또는 s3Key가 없습니다', presignedResponse);
+      return;
     }
     await axios.put(presignedData.uploadUrl, file, {
       headers: { 'Content-Type': file.type },
       maxContentLength: Infinity,
       maxBodyLength: Infinity,
-    })
+    });
     await axiosApi.post('/photos/complete', {
       memberId: memberId.value,
       originalFilename: file.name,
       s3Key: presignedData.s3Key,
-    })
-    page.value = 0
-    photos.value = []
-    hasMore.value = true
-    await fetchPhotos(true)
-    alert('사진 업로드가 완료되었습니다.')
+    });
+    page.value = 0;
+    photos.value = [];
+    hasMore.value = true;
+    await fetchPhotos(true);
+    alert('사진 업로드가 완료되었습니다.');
   } catch (err) {
-    console.error('업로드 실패:', err)
-    alert('사진 업로드에 실패했습니다. 다시 시도해주세요.')
+    console.error('업로드 실패:', err);
+    alert('사진 업로드에 실패했습니다. 다시 시도해주세요.');
   }
-}
+};
 
 const viewPhoto = async (photoId) => {
   try {
-    const { data } = await axiosApi.get(`/photos/${photoId}`)
-    const photoUrl = data.data.downloadUrl
+    const { data } = await axiosApi.get(`/photos/${photoId}`);
+    const photoUrl = data.data.downloadUrl;
     if (photoUrl) {
-      window.open(photoUrl, '_blank')
+      window.open(photoUrl, '_blank');
     }
   } catch (e) {
-    console.error(`사진(ID: ${photoId}) 조회 실패:`, e)
-    alert('사진 정보를 불러오는 데 실패했습니다.')
+    console.error(`사진(ID: ${photoId}) 조회 실패:`, e);
+    alert('사진 정보를 불러오는 데 실패했습니다.');
   }
-}
+};
 
 const deletePhoto = async (photoId) => {
   if (!canUpload.value) {
-    alert('삭제 권한이 없습니다. 로그인 후 다시 시도해주세요.')
-    return
+    alert('삭제 권한이 없습니다. 로그인 후 다시 시도해주세요.');
+    return;
   }
-  if (!confirm('정말로 이 사진을 삭제하시겠습니까?')) return
+  if (!confirm('정말로 이 사진을 삭제하시겠습니까?')) return;
   try {
-    await axiosApi.delete(`/photos/${photoId}`)
-    photos.value = photos.value.filter(p => p.id !== photoId)
-    alert('사진이 성공적으로 삭제되었습니다.')
+    await axiosApi.delete(`/photos/${photoId}`);
+    photos.value = photos.value.filter(p => p.id !== photoId);
+    alert('사진이 성공적으로 삭제되었습니다.');
   } catch (e) {
-    console.error(`사진(ID: ${photoId}) 삭제 실패:`, e)
-    alert('사진 삭제에 실패했습니다. 다시 시도해주세요.')
+    console.error(`사진(ID: ${photoId}) 삭제 실패:`, e);
+    alert('사진 삭제에 실패했습니다. 다시 시도해주세요.');
   }
-}
+};
 
 const getScrollMetrics = () => {
-  const scrollElement = document.documentElement
+  const scrollElement = document.documentElement;
   const scrollTop = Math.max(
     scrollElement.scrollTop,
     document.body.scrollTop,
     window.pageYOffset || 0
-  )
+  );
   const scrollHeight = Math.max(
     scrollElement.scrollHeight,
     document.body.scrollHeight
-  )
-  const clientHeight = window.innerHeight || document.documentElement.clientHeight
+  );
+  const clientHeight = window.innerHeight || document.documentElement.clientHeight;
 
-  const headerOffset = 60
-  const footerOffset = 40
-  const totalOffset = headerOffset + footerOffset
+  const headerOffset = 60;
+  const footerOffset = 40;
+  const totalOffset = headerOffset + footerOffset;
 
   return {
     scrollTop,
     scrollHeight,
     clientHeight: clientHeight - totalOffset,
     effectiveScrollHeight: scrollHeight - totalOffset
-  }
-}
+  };
+};
 
 const checkScrollPosition = () => {
-  if (loading.value || !hasMore.value || isThrottling.value) return false
+  if (loading.value || !hasMore.value || isThrottling.value) return false;
 
-  const { scrollTop, scrollHeight, clientHeight, effectiveScrollHeight } = getScrollMetrics()
+  const { scrollTop, scrollHeight, clientHeight, effectiveScrollHeight } = getScrollMetrics();
 
   if (scrollHeight <= clientHeight + 200) {
-    return true
+    return true;
   }
 
-  const scrollPercentage = (scrollTop + clientHeight) / effectiveScrollHeight
-  const remaining = effectiveScrollHeight - scrollTop - clientHeight
+  const scrollPercentage = (scrollTop + clientHeight) / effectiveScrollHeight;
+  const remaining = effectiveScrollHeight - scrollTop - clientHeight;
 
-  const shouldLoad = scrollPercentage >= 0.7 || remaining <= 1200
+  const shouldLoad = scrollPercentage >= 0.7 || remaining <= 1200;
 
-  return shouldLoad
-}
+  return shouldLoad;
+};
 
 const updateScrollVelocity = () => {
-  const { scrollTop } = getScrollMetrics()
-  const velocity = Math.abs(scrollTop - lastScrollTop.value)
-  scrollVelocity.value = velocity
-  lastScrollTop.value = scrollTop
+  const { scrollTop } = getScrollMetrics();
+  const velocity = Math.abs(scrollTop - lastScrollTop.value);
+  scrollVelocity.value = velocity;
+  lastScrollTop.value = scrollTop;
 
   if (velocity > 50 && checkScrollPosition()) {
-    fetchPhotos()
+    fetchPhotos();
   }
-}
+};
 
-let scrollTimeout = null
-let velocityTimeout = null
-let rafId = null
-let debounceTimeout = null
+let scrollTimeout = null;
+let velocityTimeout = null;
+let rafId = null;
+let debounceTimeout = null;
 
 const handleScroll = () => {
-  if (scrollTimeout) clearTimeout(scrollTimeout)
-  if (velocityTimeout) clearTimeout(velocityTimeout)
-  if (rafId) cancelAnimationFrame(rafId)
-  if (debounceTimeout) clearTimeout(debounceTimeout)
+  if (scrollTimeout) clearTimeout(scrollTimeout);
+  if (velocityTimeout) clearTimeout(velocityTimeout);
+  if (rafId) cancelAnimationFrame(rafId);
+  if (debounceTimeout) clearTimeout(debounceTimeout);
   rafId = requestAnimationFrame(() => {
-    updateScrollVelocity()
+    updateScrollVelocity();
 
     if (checkScrollPosition()) {
-      fetchPhotos()
+      fetchPhotos();
     }
-  })
+  });
 
   scrollTimeout = setTimeout(() => {
     if (checkScrollPosition()) {
-      fetchPhotos()
+      fetchPhotos();
     }
-  }, 50)
+  }, 50);
 
-  velocityTimeout = setTimeout(updateScrollVelocity, 16)
+  velocityTimeout = setTimeout(updateScrollVelocity, 16);
 
   debounceTimeout = setTimeout(() => {
     if (checkScrollPosition()) {
-      fetchPhotos()
+      fetchPhotos();
     }
-  }, 500)
-}
+  }, 500);
+};
 
 const setupIntersectionObserver = () => {
-  if (!observerTarget.value) return null
+  if (!observerTarget.value) return null;
 
   return new IntersectionObserver(
     (entries) => {
-      const entry = entries[0]
+      const entry = entries[0];
       if (entry.isIntersecting && entry.intersectionRatio > 0) {
         if (!loading.value && hasMore.value && !isThrottling.value) {
-          fetchPhotos()
+          fetchPhotos();
         }
       }
     },
@@ -366,66 +385,66 @@ const setupIntersectionObserver = () => {
       rootMargin: '800px 0px 800px 0px',
       threshold: [0, 0.1, 0.25, 0.5]
     }
-  )
-}
+  );
+};
 
-let observer = null
+let observer = null;
 
 const setupInfiniteScroll = async () => {
-  await nextTick()
+  await nextTick();
 
-  let retryCount = 0
+  let retryCount = 0;
   while (!observerTarget.value && retryCount < 10) {
-    await new Promise(resolve => setTimeout(resolve, 100))
-    retryCount++
+    await new Promise(resolve => setTimeout(resolve, 100));
+    retryCount++;
   }
 
   if (!observerTarget.value) {
-    console.warn('Observer target not found after retries')
-    return
+    console.warn('Observer target not found after retries');
+    return;
   }
 
-  observer = setupIntersectionObserver()
+  observer = setupIntersectionObserver();
   if (observer) {
-    observer.observe(observerTarget.value)
+    observer.observe(observerTarget.value);
   }
 
-  const scrollOptions = { passive: true, capture: false }
-  window.addEventListener('scroll', handleScroll, scrollOptions)
-  document.addEventListener('scroll', handleScroll, scrollOptions)
+  const scrollOptions = { passive: true, capture: false };
+  window.addEventListener('scroll', handleScroll, scrollOptions);
+  document.addEventListener('scroll', handleScroll, scrollOptions);
 
   window.addEventListener('resize', () => {
     setTimeout(() => {
       if (checkScrollPosition()) {
-        fetchPhotos()
+        fetchPhotos();
       }
-    }, 100)
-  }, { passive: true })
+    }, 100);
+  }, { passive: true });
 
-  const fullscreenEvents = ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange']
+  const fullscreenEvents = ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange'];
   fullscreenEvents.forEach(event => {
     document.addEventListener(event, () => {
       setTimeout(() => {
         if (checkScrollPosition()) {
-          fetchPhotos()
+          fetchPhotos();
         }
-      }, 300)
-    })
-  })
+      }, 300);
+    });
+  });
 
   window.addEventListener('popstate', () => {
     setTimeout(() => {
       if (checkScrollPosition()) {
-        fetchPhotos()
+        fetchPhotos();
       }
-    }, 100)
-  })
-}
+    }, 100);
+  });
+};
 
 const cleanupInfiniteScroll = () => {
   if (observer) {
-    observer.disconnect()
-    observer = null
+    observer.disconnect();
+    observer = null;
   }
 
   const timers = [scrollTimeout, velocityTimeout, rafId, debounceTimeout];
@@ -439,66 +458,66 @@ const cleanupInfiniteScroll = () => {
     }
   });
 
-  scrollTimeout = null
-  velocityTimeout = null
-  rafId = null
-  debounceTimeout = null
+  scrollTimeout = null;
+  velocityTimeout = null;
+  rafId = null;
+  debounceTimeout = null;
 
-  window.removeEventListener('scroll', handleScroll)
-  document.removeEventListener('scroll', handleScroll)
-  window.removeEventListener('resize', checkScrollPosition)
-  window.removeEventListener('popstate', checkScrollPosition)
+  window.removeEventListener('scroll', handleScroll);
+  document.removeEventListener('scroll', handleScroll);
+  window.removeEventListener('resize', checkScrollPosition);
+  window.removeEventListener('popstate', checkScrollPosition);
 
-  const fullscreenEvents = ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange']
+  const fullscreenEvents = ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange'];
   fullscreenEvents.forEach(event => {
-    document.removeEventListener(event, checkScrollPosition)
-  })
+    document.removeEventListener(event, checkScrollPosition);
+  });
 
-  isScrolling.value = false
-  isNearBottom.value = false
-  isThrottling.value = false
-}
+  isScrolling.value = false;
+  isNearBottom.value = false;
+  isThrottling.value = false;
+};
 
 const preventScrollRestore = () => {
   if ('scrollRestoration' in history) {
-    history.scrollRestoration = 'manual'
+    history.scrollRestoration = 'manual';
   }
-}
+};
 
-let initialCheckInterval = null
+let initialCheckInterval = null;
 
 onMounted(async () => {
-  preventScrollRestore()
-  await accountStore.fetchMyProfile()
+  preventScrollRestore();
+  await accountStore.fetchMyProfile();
 
   if (memberId.value) {
-    await fetchPhotos(true)
+    await fetchPhotos(true);
   }
 
-  await setupInfiniteScroll()
+  await setupInfiniteScroll();
 
-  let checkCount = 0
+  let checkCount = 0;
   initialCheckInterval = setInterval(() => {
-    checkCount++
+    checkCount++;
     if (checkScrollPosition()) {
-      fetchPhotos()
+      fetchPhotos();
       if (checkCount > 3) {
-        clearInterval(initialCheckInterval)
+        clearInterval(initialCheckInterval);
       }
     }
 
     if (checkCount > 150) {
-      clearInterval(initialCheckInterval)
+      clearInterval(initialCheckInterval);
     }
-  }, 200)
-})
+  }, 200);
+});
 
 onBeforeUnmount(() => {
-  cleanupInfiniteScroll()
+  cleanupInfiniteScroll();
   if (initialCheckInterval) {
-    clearInterval(initialCheckInterval)
+    clearInterval(initialCheckInterval);
   }
-})
+});
 </script>
 
 <style scoped>
@@ -548,13 +567,27 @@ onBeforeUnmount(() => {
     inset -6px -6px 14px rgba(0 0 0 / 0.2);
 }
 
-.stars-background h2 {
-  margin-top: 20px !important;
-  margin-bottom: 40px !important;
-  margin-left: 10px;
+.header-container {
+  padding: 0 10px 24px;
+}
+
+.page-title {
+  margin-top: 20px;
+  margin-bottom: 20px;
   text-align: left;
   font-weight: 700;
+  font-size: 1.5rem;
   color: #ffffff;
+}
+
+.divider {
+  border-top: 2px solid rgba(255, 255, 255, 0.2);
+  width: 100%;
+  margin: 0;
+}
+
+.content-container {
+  padding: 1rem 0;
 }
 
 .gallery-grid {
@@ -580,11 +613,9 @@ onBeforeUnmount(() => {
     transform 0.25s ease,
     box-shadow 0.25s ease,
     background-color 0.3s ease;
-  box-shadow:
-    inset 3px 3px 6px rgba(255 255 255 / 0.7),
-    inset -3px -3px 6px rgba(0 0 0 / 0.5);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   color: rgba(255, 255, 255, 0.7);
-  background: rgba(255 255 255 / 0.12);
+  background: rgba(255 255 255 / 0.1);
   contain: layout style;
 }
 
@@ -595,18 +626,13 @@ onBeforeUnmount(() => {
   font-weight: 300;
   color: rgba(255, 255, 255, 0.6);
   user-select: none;
-  box-shadow:
-    inset 6px 6px 12px rgba(255 255 255 / 0.4),
-    inset -6px -6px 12px rgba(0 0 0 / 0.25);
+  border: 2px dashed rgba(255, 255, 255, 0.3);
 }
 
 .upload-box:hover {
   background: rgba(255 255 255 / 0.15);
   color: rgba(255, 255, 255, 0.95);
   border-color: rgba(255, 255, 255, 0.6);
-  box-shadow:
-    inset 8px 8px 16px rgba(255 255 255 / 0.75),
-    inset -8px -8px 16px rgba(0 0 0 / 0.3);
 }
 
 .upload-box span {
@@ -615,8 +641,7 @@ onBeforeUnmount(() => {
 
 .photo-box:hover {
   transform: translateY(-8px);
-  box-shadow:
-    0 12px 35px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3);
   background: rgba(255, 255, 255, 0.12);
   z-index: 2;
 }
@@ -643,7 +668,7 @@ onBeforeUnmount(() => {
   width: 100%;
   background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(4px);
-  padding: 10px 12px;
+  padding: 12px;
   font-size: 0.85rem;
   color: #fff;
   font-weight: 600;
@@ -652,35 +677,46 @@ onBeforeUnmount(() => {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   user-select: none;
-  box-shadow: 0 0 12px rgba(255 255 255 / 0.3);
-  text-shadow: 0 0 6px rgba(0 0 0 / 0.8);
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.8);
 }
 
 .photo-box:hover .photo-text {
   transform: translateY(0);
 }
 
+.photo-title {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.photo-date {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 4px;
+}
+
 .photo-tags {
-  margin-top: 6px;
+  margin-top: 8px;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
 }
 
 .tag-chip {
-  background-color: #888888;
-  color: #f0f0f0;
-  padding: 3px 8px;
-  border-radius: 14px;
-  font-size: 0.7rem;
-  font-weight: 600;
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  backdrop-filter: blur(5px);
   user-select: none;
   box-shadow: none;
   transition: background-color 0.3s ease;
 }
 
 .tag-loading-text {
-  color: #3b82f6;
+  color: #00ffff;
   font-size: 0.75rem;
   font-style: italic;
   font-weight: 600;
@@ -691,7 +727,7 @@ onBeforeUnmount(() => {
   position: absolute;
   top: 10px;
   right: 10px;
-  background-color: rgba(255, 50, 50, 0.95);
+  background-color: rgba(255, 50, 50, 0.8);
   color: white;
   border: none;
   border-radius: 50%;
@@ -705,6 +741,8 @@ onBeforeUnmount(() => {
   transition: opacity 0.25s ease, transform 0.3s ease;
   z-index: 15;
   user-select: none;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 .photo-box:hover .delete-button {
@@ -712,20 +750,22 @@ onBeforeUnmount(() => {
   transform: scale(1.1);
 }
 
-.loading-spinner {
+.loading-spinner-container {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
+  min-height: 200px;
   margin: 2.5rem 0;
 }
 
 .spinner {
-  width: 36px;
-  height: 36px;
-  border: 4px solid rgba(255, 255, 255, 0.15);
-  border-top: 4px solid #3b82f6;
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(255, 255, 255, 0.2);
+  border-top: 4px solid #fff;
   border-radius: 50%;
-  animation: spin 1.2s linear infinite;
+  animation: spin 1.1s linear infinite;
   margin-bottom: 1.2rem;
 }
 
@@ -748,30 +788,4 @@ onBeforeUnmount(() => {
   margin: 40px 0;
 }
 
-@media (max-width: 1024px) {
-  .gallery-grid {
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 20px;
-  }
-}
-
-@media (max-width: 768px) {
-  .gallery-grid {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 16px;
-  }
-  .stars-background {
-    padding: 20px 24px;
-  }
-}
-
-@media (max-width: 480px) {
-  .gallery-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-  .page {
-    padding: 20px 10px;
-  }
-}
 </style>

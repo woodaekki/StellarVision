@@ -1,4 +1,3 @@
-<!-- MyGalleryView -->
 <template>
   <div class="profile-section-container">
     <div class="profile-section">
@@ -17,7 +16,7 @@
             :src="photo.url"
             :alt="photo.name"
           />
-          <p class="content-info photo-date">Date: {{ photo.date }}</p>
+          <p class="content-info photo-title">{{ photo.name }}</p>
         </div>
         <div v-if="recentPhotos.length === 0" class="empty-frame">
           <p class="empty-text">업로드한 사진이 없습니다.</p>
@@ -40,7 +39,8 @@ const router = useRouter()
 
 const memberId = computed(() => accountStore.myProfile?.memberId)
 
-const recentPhotos = computed(() => photos.value)
+// 최근 사진 3장만 표시
+const recentPhotos = computed(() => photos.value.slice(0, 3))
 
 const fetchPhotos = async () => {
   if (!memberId.value) {
@@ -50,7 +50,7 @@ const fetchPhotos = async () => {
   loading.value = true
   try {
     const { data } = await axiosApi.get(`profiles/${memberId.value}/photos`, {
-      params: { page: 0, size: 4 },
+      params: { page: 0, size: 3 }, // size를 3으로 수정
     })
     if (data.data?.photos) {
       photos.value = data.data.photos.map((p) => ({
@@ -115,12 +115,12 @@ onMounted(async () => {
   max-width: calc(100% - 70px);
   margin: 0 auto;
   display: flex;
-  gap: 15px;
+  justify-content: space-between;
+  gap: 20px;
   flex-wrap: wrap;
   padding-top: 5px;
   box-sizing: border-box;
 }
-
 
 .section-header {
   display: flex;
@@ -147,13 +147,6 @@ onMounted(async () => {
 }
 .detail-button:hover {
   background: rgba(255, 255, 255, 0.1);
-}
-
-.content-frames {
-  display: flex;
-  gap: 15px;
-  flex-wrap: wrap;
-  padding-top: 5px;
 }
 
 .photo-frame img {
@@ -203,8 +196,8 @@ onMounted(async () => {
 
 .content-frame {
   border-radius: 10px;
-  width: calc(25% - 12px);
-  max-width: 280px;
+  width: calc(33.333% - 14px);
+  max-width: 380px;
   aspect-ratio: 1.3;
   cursor: pointer;
   display: flex;
@@ -219,5 +212,4 @@ onMounted(async () => {
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.7);
   transform: translateY(-5px);
 }
-
 </style>
