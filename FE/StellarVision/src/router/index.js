@@ -90,7 +90,7 @@ const router = createRouter({
       component: MyGalleryListView
     },
     {
-      path: '/profile/:id/mygallery/liked',
+      path: '/profile/:id/myvideo/liked',
       name: 'MyLikedListView',
       component: MyLikedListView
     },

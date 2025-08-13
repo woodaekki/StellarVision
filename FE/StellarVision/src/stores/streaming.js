@@ -1,6 +1,8 @@
+// stores/streaming.js
 import { ref } from 'vue';
 import { defineStore } from 'pinia';
 import commonApi from '@/api/commonApi';
+import { Stream } from 'openvidu-browser';
 
 export const useStreamingStore = defineStore('streaming', () => {
   const liveStreams = ref([]);
