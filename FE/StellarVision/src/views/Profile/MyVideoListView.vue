@@ -98,6 +98,11 @@
                   </svg>
                   {{ video.likeCount }}
                 </span>
+                <div v-if="video.tags && video.tags.length > 0" class="video-tags">
+                  <span v-for="tag in video.tags.slice(0, 5)" :key="tag.tagId" class="tag-item">
+                    #{{ tag.tagName }}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -135,20 +140,35 @@ const observerTarget = ref(null);
 const INITIAL_PAGE_SIZE = 11;
 const INFINITE_SCROLL_PAGE_SIZE = 12;
 
-// myId computed - 사용자 ID 가져오기
 const myId = computed(() => {
   const id = route.params.id;
-  console.log('현재 사용자 ID:', id); // 디버깅용
+  console.log('현재 사용자 ID:', id);
   return id;
 });
 
 const videos = ref([]);
 
+// 각 비디오의 태그를 가져오는 함수
+const fetchTagsForVideos = async (videosList) => {
+  if (!videosList || videosList.length === 0) return videosList;
+
+  const tagPromises = videosList.map(async (video) => {
+    try {
+      const res = await commonApi.get(`/videos/${video.id}/tags`);
+      return { ...video, tags: res.data.data?.tags || [] };
+    } catch (err) {
+      console.error(`비디오 ${video.id}의 태그를 불러오는 데 실패했습니다:`, err);
+      return { ...video, tags: [] };
+    }
+  });
+
+  return Promise.all(tagPromises);
+};
+
 // 내 영상만 가져오는 함수
 const fetchVideos = async (pageNum = 0) => {
   if (loadingMore.value || !hasMore.value) return;
 
-  // myId가 유효하지 않으면 실행하지 않음
   if (!myId.value || myId.value === 'undefined' || myId.value === null) {
     console.error('유효하지 않은 사용자 ID:', myId.value);
     loading.value = false;
@@ -164,14 +184,14 @@ const fetchVideos = async (pageNum = 0) => {
   }
 
   try {
-    console.log('요청할 memberId:', myId.value, 'page:', pageNum, 'size:', pageSize); // 디버깅용
-
-    // API 요청 - 올바른 엔드포인트로 내 영상만 가져오기
+    console.log('요청할 memberId:', myId.value, 'page:', pageNum, 'size:', pageSize);
     const res = await commonApi.get(`profiles/${myId.value}/videos?page=${pageNum}&size=${pageSize}`);
+    console.log('API 응답:', res.data);
 
-    console.log('API 응답:', res.data); // 디버깅용
+    let newVideos = res.data.data?.videos || [];
 
-    const newVideos = res.data.data?.videos || [];
+    // 태그 정보 추가
+    newVideos = await fetchTagsForVideos(newVideos);
 
     if (pageNum === 0) {
       videos.value = newVideos;
@@ -257,7 +277,6 @@ const preventScrollRestore = () => {
   }
 };
 
-// route params가 변경되면 다시 로드
 watch(() => route.params.id, (newId) => {
   if (newId) {
     videos.value = [];
@@ -270,7 +289,6 @@ watch(() => route.params.id, (newId) => {
 onMounted(async () => {
   preventScrollRestore();
 
-  // myId가 유효한 경우에만 영상 로드
   if (myId.value && myId.value !== 'undefined' && myId.value !== null) {
     console.log('사용자 영상 로딩 시작:', myId.value);
     await fetchVideos(0);
@@ -633,6 +651,23 @@ onBeforeUnmount(() => {
 
 .fade-in {
   animation: fadeIn 0.8s ease-in forwards;
+}
+
+.video-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.tag-item {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-weight: 500;
+  backdrop-filter: blur(5px);
 }
 
 @keyframes fadeIn {
