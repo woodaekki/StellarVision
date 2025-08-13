@@ -1,34 +1,43 @@
 <template>
-  <div class="header-wrapper">
-    <h1 class="title">Special Space Day</h1>
-    <hr class="text-line" />
-  </div>
+  <div class="page">
+    <img :src="bg" alt="" class="bg-img" />
 
-  <div class="container">
-    <div v-if="loading" class="loading">데이터 불러오는 중...</div>
+    <div class="stars-background">
+      <div class="px-4 pt-3 pb-6">
+        <h2 class="text-2xl mb-2 text-center font-pretendard">Special Space Day</h2>
+        <hr class="border-t-2 border-neutral-100 w-full mt-2" />
+      </div>
 
-    <div v-else class="calendar-wrapper">
-      <vc-calendar
-        :attributes="highlightAttributes"
-        :masks="{ title: 'YYYY년 MMMM' }"
-        class="expanded-calendar"
-      >
-        <template #day-content="{ day }">
-          <div class="day-cell">
-            <div class="day-number">{{ day.day }}</div>
-            <div class="event-list">
-              <div
-                v-for="event in eventsByDate[formatDate(day.date)] || []"
-                :key="event.seq"
-                class="event"
-                :title="event.astroEvent"
-              >
-                <div class="event-text">{{ event.astroEvent }}</div>
+      <div v-if="loading" class="loading-container">
+        <div class="loading-spinner">
+          <div class="spinner"></div>
+          <span class="loading-text">데이터 불러오는 중...</span>
+        </div>
+      </div>
+
+      <div v-else class="calendar-wrapper">
+        <vc-calendar
+          :attributes="highlightAttributes"
+          :masks="{ title: 'YYYY년 MMMM' }"
+          class="expanded-calendar"
+        >
+          <template #day-content="{ day }">
+            <div class="day-cell">
+              <div class="day-number">{{ day.day }}</div>
+              <div class="event-list">
+                <div
+                  v-for="event in eventsByDate[formatDate(day.date)] || []"
+                  :key="event.seq"
+                  class="event"
+                  :title="event.astroEvent"
+                >
+                  <div class="event-text">{{ event.astroEvent }}</div>
+                </div>
               </div>
             </div>
-          </div>
-        </template>
-      </vc-calendar>
+          </template>
+        </vc-calendar>
+      </div>
     </div>
   </div>
 </template>
@@ -36,6 +45,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { getAstroEventInfoUrl } from '@/api/calenderApi.js'
+import bg from '@/assets/pictures/stellabot/spaceBackground.avif';
 
 const loading = ref(true)
 const astroEvents = ref([])
@@ -91,9 +101,9 @@ onMounted(async () => {
     String(currentYear - 2),
     String(currentYear - 1),
     String(currentYear),
-    String(currentYear + 1) // 미래 1년치 포함
+    String(currentYear + 1)
   ]
-  const months = ['01','02','03','04','05','06','07','08','09','10','11','12']
+  const months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
 
   try {
     const allData = await Promise.all(years.map((y) => fetchAstroEvents(y, months)))
@@ -107,87 +117,159 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.header-wrapper {
-  width: 75vw;
-  max-width: 1100px;
-  margin: 100px auto 0;
-  padding-left: 20px;
-  box-sizing: border-box;
-}
-
-.title {
-  margin: 0;
-  font-weight: 700;
-  font-size: 1.1rem;
-  text-align: left;
-}
-
-.text-line {
-  border-top: 2px solid rgb(229, 229, 229);
-  margin-top: 0.8rem;
-  margin-bottom: 0;
-  width: 100%;
-}
-
-.container {
-  background-color: #ffffff;
+.page {
   min-height: 100vh;
-  padding: 10px 15px;
+  background-size: cover;
+  background-image: linear-gradient(rgba(11, 12, 16, 0.7), rgba(11, 12, 16, 0.7));
+  background-position: center;
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px;
   box-sizing: border-box;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: #333;
+  color: rgba(255, 255, 255, 0.9);
   margin: 0 auto;
-  width: 75vw;
-  max-width: 1100px;
-  display: flex;
-  flex-direction: column;
 }
 
-.loading {
-  font-size: 1rem;
-  color: #888;
-  margin: 30px 0;
+.bg-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -1;
+}
+
+.stars-background {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  padding: 30px 40px;
+  max-width: 1200px;
+  width: 100%;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow:
+    inset 4px 4px 10px rgba(255 255 255 / 0.6),
+    inset -4px -4px 10px rgba(0 0 0 / 0.3),
+    8px 8px 30px rgba(0 0 0 / 0.4);
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.stars-background h2 {
+  margin-top: 20px !important;
+  margin-bottom: 40px !important;
+  margin-left: 10px;
+  text-align: left;
+  font-weight: 700;
+  color: #ffffff;
+  font-family: 'Pretendard', sans-serif !important;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+}
+
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.spinner {
+  border: 4px solid rgba(255, 255, 255, 0.2);
+  border-top: 4px solid #fff;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1.1s linear infinite;
+}
+
+.loading-text {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .calendar-wrapper {
-  width: 100%;
-  background-color: #fff;
   padding: 8px;
   margin: 0 auto;
   box-sizing: border-box;
 }
 
 :deep(.vc-container) {
-  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
   font-family: inherit;
   width: 100%;
   table-layout: fixed;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+:deep(.vc-header) {
+  padding: 20px 0;
+  color: #f2f2f2
 }
 
 :deep(.vc-title) {
   font-size: 1.3rem;
   font-weight: 600;
-  color: #2c3e50;
+  color: #ffffff;
   padding-bottom: 6px;
 }
 
+:deep(.vc-weekday) {
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
 :deep(.vc-day-content) {
-  height: 160px; 
-  padding: 6px 8px; 
-  background-color: #fafafa;
-  border: 1px solid #ddd;
+  height: 160px;
+  padding: 6px 8px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   box-sizing: border-box;
   overflow: hidden;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  color: #fff;
+}
+
+:deep(.vc-day-content:hover) {
+  background-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 :deep(.vc-day) {
-  height: 115px !important; 
+  height: 115px !important;
   flex: none !important;
+  padding: 4px;
 }
 
-:deep(.vc-day-content.is-today) {
-  background-color: #e6f7ff;
-  border-color: #66ccff;
+:deep(.vc-day.is-not-in-month .vc-day-content) {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+:deep(.vc-day-content.today-highlight) {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: #667eea;
+  box-shadow: 0 0 10px rgba(102, 126, 234, 0.4);
 }
 
 .day-number {
@@ -202,18 +284,36 @@ onMounted(async () => {
   gap: 2px;
   max-height: 105px;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.event-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.event-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.event-list::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
 }
 
 .event {
-  background-color: #f0f4f8;
-  color: #1e3a8a;
+  background: rgba(102, 126, 234, 0.6);
+  color: #ffffff;
   font-size: 0.75rem;
   font-weight: 500;
-  padding: 3px 5px; 
-  border: 1px solid #ccd6e0;
-  border-radius: 2px;
+  padding: 3px 5px;
+  border: 1px solid rgba(102, 126, 234, 0.8);
+  border-radius: 4px;
   white-space: normal;
   word-break: break-word;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .event-text {
@@ -223,18 +323,15 @@ onMounted(async () => {
 }
 
 @media (max-width: 768px) {
-  .header-wrapper,
-  .container {
-    width: 90vw;
-    padding-left: 10px;
-    padding-right: 10px;
+  .stars-background {
+    padding: 20px 24px;
   }
   :deep(.vc-title) {
     font-size: 1.1rem;
     padding-bottom: 4px;
   }
   :deep(.vc-day-content) {
-    height: 140px; 
+    height: 140px;
     padding: 4px 6px;
   }
   :deep(.vc-day) {
@@ -248,5 +345,4 @@ onMounted(async () => {
     padding: 2px 3px;
   }
 }
-
 </style>

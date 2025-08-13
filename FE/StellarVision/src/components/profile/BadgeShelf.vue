@@ -2,7 +2,7 @@
   <div
     v-if="archivedList.length > 0"
     class="badge-shelf"
-    :class="{ clickable: editMode }"
+    :class="{ 'clickable': editMode }"
     @click="handleOpen"
   >
     <div class="badge-shelf-row">
@@ -42,11 +42,11 @@ const props = defineProps({
   memberId: {
     type: Number,
     required: true
-},
+  },
   editMode: {
     type: Boolean,
     default: false
-}
+  }
 });
 
 const profileStore = useProfileStore();
@@ -54,8 +54,8 @@ const badgeStore = useBadgeStore();
 
 // 스토어에서 수집/전시 목록
 const collectedList = computed(() => badgeStore.collectedBadges ?? []);
-const archivedList  = computed(() => profileStore.archivedBadges ?? []);
-const archivedIds   = computed(() => archivedList.value.map(b => b.id));
+const archivedList = computed(() => profileStore.archivedBadges ?? []);
+const archivedIds = computed(() => archivedList.value.map(b => b.id));
 
 onMounted(async () => {
   if (props.memberId) {
@@ -85,18 +85,22 @@ async function handleSave(selectedIds) {
 
 <style scoped>
 .badge-shelf {
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  gap: 8px; /* 뱃지 간 간격 */
 }
 .badge-shelf-row {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr)); /* 한 줄 3개는 모달에서, 여기선 자유 */
+  display: flex;
+  gap: 8px;
 }
 .badge-empty {
   display: inline-block;
   margin-left: 8px;
-  font-size: 12px;
-  color: #9aa0a6;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
 }
-.clickable { cursor: pointer; }
+.clickable {
+  cursor: pointer;
+}
 </style>
