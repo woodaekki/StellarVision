@@ -61,7 +61,6 @@
           <div class="loading-text">사진 불러오는 중...</div>
         </div>
         <div v-if="!photos.length && !loading && !hasMore" class="loading-text">아직 사진이 없습니다.</div>
-        <div v-if="!loading && hasMore" class="loading-text">스크롤하여 더 많은 사진 보기</div>
 
         <!-- 더 큰 Intersection Observer 감지 요소 -->
         <div ref="observerTarget" class="observer-target"></div>
@@ -89,10 +88,8 @@ const page = ref(0)
 const hasMore = ref(true)
 const isScrolling = ref(false)
 const loadingTags = ref({})
-
-// 개선된 스크롤 관련 상태
 const lastFetchTime = ref(0)
-const fetchCooldown = 150 // 더 짧은 쿨다운
+const fetchCooldown = 150
 const isNearBottom = ref(false)
 const lastScrollTop = ref(0)
 const scrollVelocity = ref(0)
@@ -122,7 +119,6 @@ const fetchPhotos = async (force = false) => {
     return
   }
 
-  // 스로틀링 체크 (강제 호출이 아닌 경우)
   if (!force && (isThrottling.value || (now - lastFetchTime.value < fetchCooldown))) {
     return
   }
@@ -156,7 +152,7 @@ const fetchPhotos = async (force = false) => {
     console.error('사진 불러오기 실패:', e)
   } finally {
     loading.value = false
-    // 스로틀링 해제 지연
+
     setTimeout(() => {
       isThrottling.value = false
     }, fetchCooldown)
@@ -267,7 +263,6 @@ const deletePhoto = async (photoId) => {
   }
 }
 
-// 개선된 스크롤 메트릭 계산 (헤더/푸터 고려)
 const getScrollMetrics = () => {
   const scrollElement = document.documentElement
   const scrollTop = Math.max(
@@ -281,9 +276,8 @@ const getScrollMetrics = () => {
   )
   const clientHeight = window.innerHeight || document.documentElement.clientHeight
 
-  // 헤더/푸터 오프셋 고려 (일반적인 값들)
-  const headerOffset = 60  // 헤더 높이 추정
-  const footerOffset = 40  // 푸터 높이 추정
+  const headerOffset = 60
+  const footerOffset = 40
   const totalOffset = headerOffset + footerOffset
 
   return {
@@ -294,13 +288,11 @@ const getScrollMetrics = () => {
   }
 }
 
-// 개선된 스크롤 위치 체크
 const checkScrollPosition = () => {
   if (loading.value || !hasMore.value || isThrottling.value) return false
 
   const { scrollTop, scrollHeight, clientHeight, effectiveScrollHeight } = getScrollMetrics()
 
-  // 컨텐츠가 화면보다 작으면 바로 로드
   if (scrollHeight <= clientHeight + 200) {
     return true
   }
@@ -308,20 +300,17 @@ const checkScrollPosition = () => {
   const scrollPercentage = (scrollTop + clientHeight) / effectiveScrollHeight
   const remaining = effectiveScrollHeight - scrollTop - clientHeight
 
-  // 더 관대한 조건으로 변경
   const shouldLoad = scrollPercentage >= 0.7 || remaining <= 1200
 
   return shouldLoad
 }
 
-// 스크롤 속도 기반 예측 로딩
 const updateScrollVelocity = () => {
   const { scrollTop } = getScrollMetrics()
   const velocity = Math.abs(scrollTop - lastScrollTop.value)
   scrollVelocity.value = velocity
   lastScrollTop.value = scrollTop
 
-  // 빠른 스크롤 시 미리 로드
   if (velocity > 50 && checkScrollPosition()) {
     fetchPhotos()
   }
@@ -332,15 +321,11 @@ let velocityTimeout = null
 let rafId = null
 let debounceTimeout = null
 
-// 개선된 스크롤 핸들러
 const handleScroll = () => {
-  // 기존 타이머들 정리
   if (scrollTimeout) clearTimeout(scrollTimeout)
   if (velocityTimeout) clearTimeout(velocityTimeout)
   if (rafId) cancelAnimationFrame(rafId)
   if (debounceTimeout) clearTimeout(debounceTimeout)
-
-  // 즉시 실행 (requestAnimationFrame 사용)
   rafId = requestAnimationFrame(() => {
     updateScrollVelocity()
 
@@ -349,25 +334,22 @@ const handleScroll = () => {
     }
   })
 
-  // 빠른 체크 (50ms)
   scrollTimeout = setTimeout(() => {
     if (checkScrollPosition()) {
       fetchPhotos()
     }
   }, 50)
 
-  // 속도 업데이트 (16ms - 60fps)
   velocityTimeout = setTimeout(updateScrollVelocity, 16)
 
-  // 디바운스 체크 (200ms)
   debounceTimeout = setTimeout(() => {
     if (checkScrollPosition()) {
       fetchPhotos()
     }
-  }, 200)
+  }, 500)
 }
 
-// 개선된 Intersection Observer 설정
+// Intersection Observer 설정
 const setupIntersectionObserver = () => {
   if (!observerTarget.value) return null
 
@@ -382,7 +364,7 @@ const setupIntersectionObserver = () => {
     },
     {
       root: null,
-      rootMargin: '800px 0px 800px 0px', // 더 큰 마진
+      rootMargin: '800px 0px 800px 0px',
       threshold: [0, 0.1, 0.25, 0.5]
     }
   )
@@ -416,7 +398,6 @@ const setupInfiniteScroll = async () => {
   window.addEventListener('scroll', handleScroll, scrollOptions)
   document.addEventListener('scroll', handleScroll, scrollOptions)
 
-  // 리사이즈 이벤트
   window.addEventListener('resize', () => {
     setTimeout(() => {
       if (checkScrollPosition()) {
@@ -437,7 +418,6 @@ const setupInfiniteScroll = async () => {
     })
   })
 
-  // 브라우저 뒤로가기/앞으로가기 처리
   window.addEventListener('popstate', () => {
     setTimeout(() => {
       if (checkScrollPosition()) {
@@ -448,13 +428,11 @@ const setupInfiniteScroll = async () => {
 }
 
 const cleanupInfiniteScroll = () => {
-  // Observer 정리
   if (observer) {
     observer.disconnect()
     observer = null
   }
 
-  // 타이머들 정리
   const timers = [scrollTimeout, velocityTimeout, rafId, debounceTimeout]
   timers.forEach(timer => {
     if (timer) {
@@ -466,13 +444,11 @@ const cleanupInfiniteScroll = () => {
     }
   })
 
-  // 변수 초기화
   scrollTimeout = null
   velocityTimeout = null
   rafId = null
   debounceTimeout = null
 
-  // 이벤트 리스너 제거
   window.removeEventListener('scroll', handleScroll)
   document.removeEventListener('scroll', handleScroll)
   window.removeEventListener('resize', checkScrollPosition)
@@ -483,7 +459,6 @@ const cleanupInfiniteScroll = () => {
     document.removeEventListener(event, checkScrollPosition)
   })
 
-  // 상태 초기화
   isScrolling.value = false
   isNearBottom.value = false
   isThrottling.value = false
@@ -507,18 +482,16 @@ onMounted(async () => {
 
   await setupInfiniteScroll()
 
-  // 초기 상태 체크를 더 자주, 더 오래 실행
   let checkCount = 0
   initialCheckInterval = setInterval(() => {
     checkCount++
     if (checkScrollPosition()) {
       fetchPhotos()
-      if (checkCount > 3) { // 몇 번 성공하면 중단
+      if (checkCount > 3) {
         clearInterval(initialCheckInterval)
       }
     }
 
-    // 최대 30초 후 중단
     if (checkCount > 150) {
       clearInterval(initialCheckInterval)
     }
@@ -768,14 +741,10 @@ onBeforeUnmount(() => {
   user-select: none;
 }
 
-/* 개선된 Observer 타겟 - 더 크고 눈에 보이도록 */
 .observer-target {
-  height: 200px; /* 더 큰 감지 영역 */
+  height: 200px;
   width: 100%;
   margin: 40px 0;
-  /* 디버깅용 (배포시 제거 가능) */
-  /* background: rgba(255, 0, 0, 0.1); */
-  /* border: 1px dashed rgba(255, 255, 255, 0.3); */
 }
 
 @media (max-width: 768px) {
@@ -789,7 +758,6 @@ onBeforeUnmount(() => {
   }
 }
 
-/* 전체화면 모드 최적화 */
 :fullscreen .page,
 :-webkit-full-screen .page,
 :-moz-full-screen .page {
@@ -803,7 +771,6 @@ onBeforeUnmount(() => {
   padding: 20px 30px;
 }
 
-/* 스크롤 성능 최적화 */
 * {
   scroll-behavior: smooth;
 }
