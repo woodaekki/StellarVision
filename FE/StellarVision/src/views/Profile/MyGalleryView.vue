@@ -105,15 +105,14 @@ onMounted(async () => {
 .profile-section {
   width: 100%;
   max-width: 1200px;
-  padding: 10px 0;
 }
 
 .section-header {
-  padding: 0 35px; 
+  padding: 0 35px;
 }
 
 .content-frames {
-  max-width: calc(100% - 70px); 
+  max-width: calc(100% - 70px);
   margin: 0 auto;
   display: flex;
   gap: 15px;
@@ -215,4 +214,10 @@ onMounted(async () => {
   background: linear-gradient(145deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
   transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
+
+.content-frame:hover {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.7);
+  transform: translateY(-5px);
+}
+
 </style>

@@ -63,7 +63,7 @@
         <div v-if="!photos.length && !loading && !hasMore" class="loading-text">아직 사진이 없습니다.</div>
         <div v-if="!loading && hasMore" class="loading-text">스크롤하여 더 많은 사진 보기</div>
 
-        <!-- Intersection Observer 감지 요소 - 더 크게 만들어서 감지 향상 -->
+        <!-- 더 큰 Intersection Observer 감지 요소 -->
         <div ref="observerTarget" class="observer-target"></div>
       </div>
     </div>
@@ -90,11 +90,13 @@ const hasMore = ref(true)
 const isScrolling = ref(false)
 const loadingTags = ref({})
 
+// 개선된 스크롤 관련 상태
 const lastFetchTime = ref(0)
-const fetchCooldown = 200
+const fetchCooldown = 150 // 더 짧은 쿨다운
 const isNearBottom = ref(false)
 const lastScrollTop = ref(0)
 const scrollVelocity = ref(0)
+const isThrottling = ref(false)
 
 const memberId = computed(() => accountStore.myProfile?.memberId)
 const canUpload = computed(() => accountStore.isLogin)
@@ -113,26 +115,27 @@ const onImageLoad = (photoId) => {
   }
 }
 
-const fetchPhotos = async () => {
+const fetchPhotos = async (force = false) => {
   const now = Date.now()
-  
+
   if (loading.value || !hasMore.value) {
     return
   }
-  
-  if (isScrolling.value && (now - lastFetchTime.value < fetchCooldown)) {
+
+  // 스로틀링 체크 (강제 호출이 아닌 경우)
+  if (!force && (isThrottling.value || (now - lastFetchTime.value < fetchCooldown))) {
     return
   }
 
   lastFetchTime.value = now
-  isScrolling.value = true
+  isThrottling.value = true
   loading.value = true
 
   try {
     const { data } = await axiosApi.get(`profiles/${memberId.value}/photos`, {
       params: {
         page: page.value,
-        size: 7,
+        size: 8, // 한 번에 더 많이 로드
       },
     })
 
@@ -153,8 +156,9 @@ const fetchPhotos = async () => {
     console.error('사진 불러오기 실패:', e)
   } finally {
     loading.value = false
+    // 스로틀링 해제 지연
     setTimeout(() => {
-      isScrolling.value = false
+      isThrottling.value = false
     }, fetchCooldown)
   }
 }
@@ -226,7 +230,7 @@ const uploadGalleryImage = async (e) => {
     page.value = 0
     photos.value = []
     hasMore.value = true
-    await fetchPhotos()
+    await fetchPhotos(true)
     alert('사진 업로드가 완료되었습니다.')
   } catch (err) {
     console.error('업로드 실패:', err)
@@ -263,43 +267,62 @@ const deletePhoto = async (photoId) => {
   }
 }
 
+// 개선된 스크롤 메트릭 계산 (헤더/푸터 고려)
 const getScrollMetrics = () => {
   const scrollElement = document.documentElement
-  const scrollTop = Math.max(scrollElement.scrollTop, document.body.scrollTop, window.pageYOffset || 0)
-  const scrollHeight = Math.max(scrollElement.scrollHeight, document.body.scrollHeight)
+  const scrollTop = Math.max(
+    scrollElement.scrollTop,
+    document.body.scrollTop,
+    window.pageYOffset || 0
+  )
+  const scrollHeight = Math.max(
+    scrollElement.scrollHeight,
+    document.body.scrollHeight
+  )
   const clientHeight = window.innerHeight || document.documentElement.clientHeight
-  
-  return { scrollTop, scrollHeight, clientHeight }
-}
 
-const checkScrollPosition = () => {
-  if (loading.value || !hasMore.value) return false
-  
-  const { scrollTop, scrollHeight, clientHeight } = getScrollMetrics()
-  
-  if (scrollHeight <= clientHeight) return false
-  
-  const scrollPercentage = (scrollTop + clientHeight) / scrollHeight
-  const remaining = scrollHeight - scrollTop - clientHeight
-  
-  const shouldLoad = scrollPercentage >= 0.8 || remaining <= 800
-  
-  if (shouldLoad && !isNearBottom.value) {
-    isNearBottom.value = true
-    return true
-  } else if (!shouldLoad && isNearBottom.value) {
-    isNearBottom.value = false
+  // 헤더/푸터 오프셋 고려 (일반적인 값들)
+  const headerOffset = 60  // 헤더 높이 추정
+  const footerOffset = 40  // 푸터 높이 추정
+  const totalOffset = headerOffset + footerOffset
+
+  return {
+    scrollTop,
+    scrollHeight,
+    clientHeight: clientHeight - totalOffset,
+    effectiveScrollHeight: scrollHeight - totalOffset
   }
-  
-  return false
 }
 
+// 개선된 스크롤 위치 체크
+const checkScrollPosition = () => {
+  if (loading.value || !hasMore.value || isThrottling.value) return false
+
+  const { scrollTop, scrollHeight, clientHeight, effectiveScrollHeight } = getScrollMetrics()
+
+  // 컨텐츠가 화면보다 작으면 바로 로드
+  if (scrollHeight <= clientHeight + 200) {
+    return true
+  }
+
+  const scrollPercentage = (scrollTop + clientHeight) / effectiveScrollHeight
+  const remaining = effectiveScrollHeight - scrollTop - clientHeight
+
+  // 더 관대한 조건으로 변경
+  const shouldLoad = scrollPercentage >= 0.7 || remaining <= 1200
+
+  return shouldLoad
+}
+
+// 스크롤 속도 기반 예측 로딩
 const updateScrollVelocity = () => {
   const { scrollTop } = getScrollMetrics()
-  scrollVelocity.value = Math.abs(scrollTop - lastScrollTop.value)
+  const velocity = Math.abs(scrollTop - lastScrollTop.value)
+  scrollVelocity.value = velocity
   lastScrollTop.value = scrollTop
-  
-  if (scrollVelocity.value > 100 && checkScrollPosition()) {
+
+  // 빠른 스크롤 시 미리 로드
+  if (velocity > 50 && checkScrollPosition()) {
     fetchPhotos()
   }
 }
@@ -307,45 +330,60 @@ const updateScrollVelocity = () => {
 let scrollTimeout = null
 let velocityTimeout = null
 let rafId = null
+let debounceTimeout = null
 
+// 개선된 스크롤 핸들러
 const handleScroll = () => {
+  // 기존 타이머들 정리
   if (scrollTimeout) clearTimeout(scrollTimeout)
   if (velocityTimeout) clearTimeout(velocityTimeout)
   if (rafId) cancelAnimationFrame(rafId)
-  
+  if (debounceTimeout) clearTimeout(debounceTimeout)
+
+  // 즉시 실행 (requestAnimationFrame 사용)
   rafId = requestAnimationFrame(() => {
     updateScrollVelocity()
-    
+
     if (checkScrollPosition()) {
       fetchPhotos()
     }
   })
-  
+
+  // 빠른 체크 (50ms)
   scrollTimeout = setTimeout(() => {
     if (checkScrollPosition()) {
       fetchPhotos()
     }
   }, 50)
-  
+
+  // 속도 업데이트 (16ms - 60fps)
   velocityTimeout = setTimeout(updateScrollVelocity, 16)
+
+  // 디바운스 체크 (200ms)
+  debounceTimeout = setTimeout(() => {
+    if (checkScrollPosition()) {
+      fetchPhotos()
+    }
+  }, 200)
 }
 
+// 개선된 Intersection Observer 설정
 const setupIntersectionObserver = () => {
   if (!observerTarget.value) return null
-  
+
   return new IntersectionObserver(
     (entries) => {
       const entry = entries[0]
       if (entry.isIntersecting && entry.intersectionRatio > 0) {
-        if (!loading.value && hasMore.value) {
+        if (!loading.value && hasMore.value && !isThrottling.value) {
           fetchPhotos()
         }
       }
     },
-    { 
+    {
       root: null,
-      rootMargin: '500px 0px 500px 0px',
-      threshold: [0, 0.1, 0.25, 0.5, 0.75, 1.0]
+      rootMargin: '800px 0px 800px 0px', // 더 큰 마진
+      threshold: [0, 0.1, 0.25, 0.5]
     }
   )
 }
@@ -354,20 +392,31 @@ let observer = null
 
 const setupInfiniteScroll = async () => {
   await nextTick()
-  
+
+  // Observer 타겟 확인 및 재시도
+  let retryCount = 0
+  while (!observerTarget.value && retryCount < 10) {
+    await new Promise(resolve => setTimeout(resolve, 100))
+    retryCount++
+  }
+
   if (!observerTarget.value) {
-    setTimeout(setupInfiniteScroll, 100)
+    console.warn('Observer target not found after retries')
     return
   }
 
+  // Intersection Observer 설정
   observer = setupIntersectionObserver()
   if (observer) {
     observer.observe(observerTarget.value)
   }
 
-  window.addEventListener('scroll', handleScroll, { passive: true })
-  document.addEventListener('scroll', handleScroll, { passive: true })
-  
+  // 스크롤 이벤트 리스너 추가 (passive 옵션으로 성능 향상)
+  const scrollOptions = { passive: true, capture: false }
+  window.addEventListener('scroll', handleScroll, scrollOptions)
+  document.addEventListener('scroll', handleScroll, scrollOptions)
+
+  // 리사이즈 이벤트
   window.addEventListener('resize', () => {
     setTimeout(() => {
       if (checkScrollPosition()) {
@@ -375,53 +424,69 @@ const setupInfiniteScroll = async () => {
       }
     }, 100)
   }, { passive: true })
-  
-  document.addEventListener('fullscreenchange', () => {
-    setTimeout(() => {
-      if (checkScrollPosition()) {
-        fetchPhotos()
-      }
-    }, 300)
+
+  // 전체화면 변경 이벤트
+  const fullscreenEvents = ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange']
+  fullscreenEvents.forEach(event => {
+    document.addEventListener(event, () => {
+      setTimeout(() => {
+        if (checkScrollPosition()) {
+          fetchPhotos()
+        }
+      }, 300)
+    })
   })
-  
-  document.addEventListener('webkitfullscreenchange', () => {
+
+  // 브라우저 뒤로가기/앞으로가기 처리
+  window.addEventListener('popstate', () => {
     setTimeout(() => {
       if (checkScrollPosition()) {
         fetchPhotos()
       }
-    }, 300)
+    }, 100)
   })
 }
 
 const cleanupInfiniteScroll = () => {
+  // Observer 정리
   if (observer) {
     observer.disconnect()
     observer = null
   }
-  
-  if (scrollTimeout) {
-    clearTimeout(scrollTimeout)
-    scrollTimeout = null
-  }
-  
-  if (velocityTimeout) {
-    clearTimeout(velocityTimeout)
-    velocityTimeout = null
-  }
-  
-  if (rafId) {
-    cancelAnimationFrame(rafId)
-    rafId = null
-  }
-  
+
+  // 타이머들 정리
+  const timers = [scrollTimeout, velocityTimeout, rafId, debounceTimeout]
+  timers.forEach(timer => {
+    if (timer) {
+      if (timer === rafId) {
+        cancelAnimationFrame(timer)
+      } else {
+        clearTimeout(timer)
+      }
+    }
+  })
+
+  // 변수 초기화
+  scrollTimeout = null
+  velocityTimeout = null
+  rafId = null
+  debounceTimeout = null
+
+  // 이벤트 리스너 제거
   window.removeEventListener('scroll', handleScroll)
   document.removeEventListener('scroll', handleScroll)
   window.removeEventListener('resize', checkScrollPosition)
-  document.removeEventListener('fullscreenchange', checkScrollPosition)
-  document.removeEventListener('webkitfullscreenchange', checkScrollPosition)
-  
+  window.removeEventListener('popstate', checkScrollPosition)
+
+  const fullscreenEvents = ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange']
+  fullscreenEvents.forEach(event => {
+    document.removeEventListener(event, checkScrollPosition)
+  })
+
+  // 상태 초기화
   isScrolling.value = false
   isNearBottom.value = false
+  isThrottling.value = false
 }
 
 const preventScrollRestore = () => {
@@ -435,26 +500,29 @@ let initialCheckInterval = null
 onMounted(async () => {
   preventScrollRestore()
   await accountStore.fetchMyProfile()
-  
+
   if (memberId.value) {
-    await fetchPhotos()
+    await fetchPhotos(true)
   }
-  
+
   await setupInfiniteScroll()
-  
+
+  // 초기 상태 체크를 더 자주, 더 오래 실행
+  let checkCount = 0
   initialCheckInterval = setInterval(() => {
+    checkCount++
     if (checkScrollPosition()) {
       fetchPhotos()
+      if (checkCount > 3) { // 몇 번 성공하면 중단
+        clearInterval(initialCheckInterval)
+      }
+    }
+
+    // 최대 30초 후 중단
+    if (checkCount > 150) {
       clearInterval(initialCheckInterval)
     }
   }, 200)
-  
-  setTimeout(() => {
-    if (initialCheckInterval) {
-      clearInterval(initialCheckInterval)
-      initialCheckInterval = null
-    }
-  }, 3000)
 })
 
 onBeforeUnmount(() => {
@@ -488,7 +556,7 @@ onBeforeUnmount(() => {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  z-index: -1; 
+  z-index: -1;
 }
 
 .stars-background {
@@ -592,7 +660,6 @@ onBeforeUnmount(() => {
   transition: filter 0.45s ease;
   border-radius: 18px;
   opacity: 0.95;
-
 }
 
 .photo-img.loaded {
@@ -630,14 +697,14 @@ onBeforeUnmount(() => {
 }
 
 .tag-chip {
-  background-color: #888888; 
+  background-color: #888888;
   color: #f0f0f0;
   padding: 3px 8px;
   border-radius: 14px;
   font-size: 0.7rem;
   font-weight: 600;
   user-select: none;
-  box-shadow: none; 
+  box-shadow: none;
   transition: background-color 0.3s ease;
 }
 
@@ -701,15 +768,24 @@ onBeforeUnmount(() => {
   user-select: none;
 }
 
+/* 개선된 Observer 타겟 - 더 크고 눈에 보이도록 */
 .observer-target {
-  height: 100px; 
+  height: 200px; /* 더 큰 감지 영역 */
   width: 100%;
-  margin: 20px 0;
+  margin: 40px 0;
+  /* 디버깅용 (배포시 제거 가능) */
+  /* background: rgba(255, 0, 0, 0.1); */
+  /* border: 1px dashed rgba(255, 255, 255, 0.3); */
 }
 
 @media (max-width: 768px) {
   .gallery-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .observer-target {
+    height: 150px;
+    margin: 30px 0;
   }
 }
 
@@ -725,5 +801,18 @@ onBeforeUnmount(() => {
 :-moz-full-screen .stars-background {
   max-width: 95vw;
   padding: 20px 30px;
+}
+
+/* 스크롤 성능 최적화 */
+* {
+  scroll-behavior: smooth;
+}
+
+.page {
+  will-change: scroll-position;
+}
+
+.photo-box {
+  will-change: transform;
 }
 </style>
