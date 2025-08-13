@@ -5,40 +5,40 @@
     <div class="stars-background">
       <div class="px-4 pt-12 pb-6">
         <div class="navigation-links">
-          <RouterLink :to="{ name: 'MyVideoListView', params: { id: myId } }" class="active">
+          <RouterLink :to="{ name: 'MyVideoListView', params: { id: myId } }" >
             내 비디오
           </RouterLink>
           <span>|</span>
-          <RouterLink :to="{ name: 'MyLikedListView', params: { id: myId } }">
+          <RouterLink :to="{ name: 'MyLikedListView', params: { id: myId } }" >
             좋아요한 영상
           </RouterLink>
         </div>
 
         <h2 class="text-2xl mb-2 text-center font-pretendard">
-          My Space Video
+          My Liked Video
         </h2>
         <hr class="border-t-2 border-neutral-200 w-full mt-2" />
       </div>
 
-      <div v-if="loading" class="loading-container">
+      <div v-if="isLoading" class="loading-container">
         <div class="loading-spinner">
           <div class="spinner"></div>
-          <span class="loading-text">내 영상을 불러오는 중...</span>
+          <span class="loading-text">좋아요한 영상을 불러오는 중...</span>
         </div>
       </div>
 
-      <div v-else-if="!loading && (!videos || videos.length === 0)" class="empty-state">
-        <div class="empty-icon">🎥</div>
-        <h3>아직 업로드한 영상이 없습니다.</h3>
-        <p>나만의 멋진 영상을 업로드해보세요!</p>
+      <div v-else-if="!isLoading && (!likedVideos || likedVideos.length === 0)" class="empty-state">
+        <div class="empty-icon">⭐</div>
+        <h3>좋아요한 영상이 없습니다</h3>
+        <p>마음에 드는 영상에 좋아요를 눌러보세요!</p>
         <RouterLink :to="{ name: 'MainView' }" class="browse-button">
           영상 둘러보기
         </RouterLink>
       </div>
 
-      <div v-else-if="videos && videos.length > 0" class="video-grid">
+      <div v-else-if="likedVideos && likedVideos.length > 0" class="video-grid">
         <div
-          v-for="video in videos"
+          v-for="video in likedVideos"
           :key="video.id"
           class="video-cell fade-in"
         >
@@ -62,28 +62,17 @@
             <div class="video-info">
               <div class="video-header">
                 <h3 class="video-title">{{ video.originalFilename }}</h3>
-                <div class="button-group">
-                  <button
-                    @click.stop="handleEditVideo(video)"
-                    class="edit-button"
-                    title="영상 수정"
-                  >
-                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a.996.996 0 000-1.41l-2.34-2.34a.996.996 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
-                    </svg>
-                  </button>
-                  <button
-                    @click.stop="handleDeleteVideo(video)"
-                    class="delete-button"
-                    title="영상 삭제"
-                  >
-                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
-                      <path
-                        d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"
-                      />
-                    </svg>
-                  </button>
-                </div>
+                <button
+                  @click.stop="handleUnlike(video.id)"
+                  class="unlike-button"
+                  title="좋아요 취소"
+                >
+                  <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                    <path
+                      d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+                    />
+                  </svg>
+                </button>
               </div>
               <div class="video-meta">
                 <span class="video-author">{{ video.nickname }}</span>
@@ -103,99 +92,52 @@
           </div>
         </div>
       </div>
-
-      <div v-if="loadingMore" class="loading-spinner">
-        <div class="spinner"></div>
-        <span class="loading-text">더 많은 영상 로딩 중...</span>
-      </div>
-
-      <div v-if="!loading && !loadingMore && videos.length > 0 && !hasMore" class="loading-text">
-        모든 영상을 불러왔습니다.
-      </div>
-      <div ref="observerTarget" class="observer-target"></div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useStreamingStore } from '@/stores/streaming.js';
 import commonApi from '@/api/commonApi';
 import bg from '@/assets/pictures/stellabot/spaceBackground.avif';
 
 const route = useRoute();
 const router = useRouter();
+const streamingStore = useStreamingStore();
 
-const loading = ref(true);
-const loadingMore = ref(false);
-const hasMore = ref(true);
-const page = ref(0);
-const observerTarget = ref(null);
+const pageRef = ref(null);
+const allVideos = ref([]);
+const likedVideos = ref([]);
+const isLoading = ref(false);
 
-const INITIAL_PAGE_SIZE = 11;
-const INFINITE_SCROLL_PAGE_SIZE = 12;
-
-// myId computed - 사용자 ID 가져오기
 const myId = computed(() => {
   const id = route.params.id;
-  console.log('현재 사용자 ID:', id); // 디버깅용
   return id;
 });
 
-const videos = ref([]);
-
-// 내 영상만 가져오는 함수
-const fetchVideos = async (pageNum = 0) => {
-  if (loadingMore.value || !hasMore.value) return;
-
-  // myId가 유효하지 않으면 실행하지 않음
-  if (!myId.value || myId.value === 'undefined' || myId.value === null) {
-    console.error('유효하지 않은 사용자 ID:', myId.value);
-    loading.value = false;
-    return;
-  }
-
-  const pageSize = pageNum === 0 ? INITIAL_PAGE_SIZE : INFINITE_SCROLL_PAGE_SIZE;
-
-  if (pageNum === 0) {
-    loading.value = true;
-  } else {
-    loadingMore.value = true;
-  }
-
+const fetchUserVideos = async (userId) => {
   try {
-    console.log('요청할 memberId:', myId.value, 'page:', pageNum, 'size:', pageSize); // 디버깅용
-
-    // API 요청 - 올바른 엔드포인트로 내 영상만 가져오기
-    const res = await commonApi.get(`profiles/${myId.value}/videos?page=${pageNum}&size=${pageSize}`);
-
-    console.log('API 응답:', res.data); // 디버깅용
-
-    const newVideos = res.data.data?.videos || [];
-
-    if (pageNum === 0) {
-      videos.value = newVideos;
-    } else {
-      videos.value.push(...newVideos);
-    }
-
-    hasMore.value = res.data.data.isLast !== true;
-    page.value = pageNum + 1;
-
+    isLoading.value = true;
+    const res = await commonApi.get(`/videos/search?userId=${userId}`);
+    const videos = res.data.data?.videos || [];
+    allVideos.value = videos;
+    return videos;
   } catch (err) {
-    console.error('동영상 불러오기 실패:', err);
-    hasMore.value = false;
+    allVideos.value = [];
+    return [];
   } finally {
-    loading.value = false;
-    loadingMore.value = false;
+    isLoading.value = false;
   }
 };
 
-const handleEditVideo = (video) => {
-  router.push({ name: 'UpdateTagView', params: { id: video.id } });
+const filterLikedVideos = (videos) => {
+  const filtered = videos.filter(video => video.liked === true);
+  likedVideos.value = filtered;
+  return filtered;
 };
 
-// 날짜 포맷팅
 const formatDate = (dateString) => {
   try {
     const date = new Date(dateString);
@@ -217,75 +159,28 @@ const handleImageError = (event) => {
 };
 
 const goToVideoDetail = (videoId) => {
-  router.push(`/replay/${videoId}`);
+  router.push({ name: 'MyVideoListView', params: { id: videoId } });
 };
 
-const handleDeleteVideo = async (video) => {
-  if (!confirm('정말로 이 영상을 삭제하시겠습니까?')) return;
+const handleUnlike = async (videoId) => {
   try {
-    await commonApi.delete(`/videos/${video.id}`);
-    videos.value = videos.value.filter(v => v.id !== video.id);
-    alert('영상이 성공적으로 삭제되었습니다.');
-  } catch (error) {
-    console.error('영상 삭제 실패:', error);
-    alert('영상 삭제에 실패했습니다. 다시 시도해주세요.');
-  }
-};
-
-let observer = null;
-const setupIntersectionObserver = () => {
-  if (!observerTarget.value) return null;
-  observer = new IntersectionObserver(
-    (entries) => {
-      const entry = entries[0];
-      if (entry.isIntersecting && hasMore.value) {
-        fetchVideos(page.value);
+    const res = await commonApi.delete(`/videos/${videoId}/likes`);
+    if (res.status === 200) {
+      const originalVideo = allVideos.value.find(v => v.id === videoId);
+      if (originalVideo) {
+        originalVideo.liked = false;
       }
-    },
-    {
-      root: null,
-      rootMargin: '800px 0px',
-      threshold: 0.1,
+      likedVideos.value = likedVideos.value.filter(v => v.id !== videoId);
     }
-  );
-  observer.observe(observerTarget.value);
-};
-
-const preventScrollRestore = () => {
-  if ('scrollRestoration' in history) {
-    history.scrollRestoration = 'manual';
+  } catch (error) {
+    alert('좋아요 취소 중 오류가 발생했습니다.');
   }
 };
-
-// route params가 변경되면 다시 로드
-watch(() => route.params.id, (newId) => {
-  if (newId) {
-    videos.value = [];
-    page.value = 0;
-    hasMore.value = true;
-    fetchVideos(0);
-  }
-});
 
 onMounted(async () => {
-  preventScrollRestore();
-
-  // myId가 유효한 경우에만 영상 로드
-  if (myId.value && myId.value !== 'undefined' && myId.value !== null) {
-    console.log('사용자 영상 로딩 시작:', myId.value);
-    await fetchVideos(0);
-  } else {
-    console.error('유효하지 않은 사용자 ID:', myId.value);
-    loading.value = false;
-  }
-
-  await nextTick();
-  setupIntersectionObserver();
-});
-
-onBeforeUnmount(() => {
-  if (observer) {
-    observer.disconnect();
+  if (myId.value) {
+    const videos = await fetchUserVideos(myId.value);
+    filterLikedVideos(videos);
   }
 });
 </script>
@@ -395,7 +290,6 @@ onBeforeUnmount(() => {
 .loading-text {
   font-size: 16px;
   color: rgba(255, 255, 255, 0.8);
-  text-align: center;
 }
 
 @keyframes spin {
@@ -454,7 +348,7 @@ onBeforeUnmount(() => {
 
 .video-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 24px;
   max-width: 100%;
   justify-content: center;
@@ -592,14 +486,7 @@ onBeforeUnmount(() => {
   font-size: 13px;
 }
 
-.button-group {
-  display: flex;
-  gap: 8px;
-  margin-left: auto;
-}
-
-.edit-button,
-.delete-button {
+.unlike-button {
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
   border: none;
@@ -613,21 +500,11 @@ onBeforeUnmount(() => {
   transition: all 0.3s ease;
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
+  margin-left: auto;
 }
 
-.edit-button:hover {
-  background: rgba(0, 255, 255, 0.2);
-  transform: scale(1.1);
-  color: #00ffff;
-}
-
-.delete-button {
-  background: rgba(255, 0, 0, 0.1);
-  color: #ff4d4f;
-}
-
-.delete-button:hover {
-  background: rgba(255, 0, 0, 0.2);
+.unlike-button:hover {
+  background: rgba(255, 255, 255, 0.2);
   transform: scale(1.1);
 }
 
@@ -646,8 +523,31 @@ onBeforeUnmount(() => {
   }
 }
 
-.observer-target {
-  height: 10px;
-  margin-top: 20px;
+@media (max-width: 1024px) {
+  .video-grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .video-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+  }
+  .stars-background {
+    padding: 20px 24px;
+  }
+  .navigation-links {
+    font-size: 14px;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .video-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
 }
 </style>

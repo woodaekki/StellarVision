@@ -3,7 +3,7 @@ import axios from "axios";
 
 const commonApi = axios.create({
   baseURL: 'https://i13c106.p.ssafy.io/api',
-  timeout: 100000, // 타임아웃 증가
+  timeout: 50000, // 타임아웃 증가
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
