@@ -3,7 +3,7 @@
     <p>Loading profile...</p>
   </div>
   <div v-else class="profile-wrapper bg-stone-800">
-    <img :src="bg" alt="배경 이미지" class="bg-img">
+    <img :src="bg" alt="배경 이미지" class="bg-img backdrop-blur">
     <main class="main-content">
 
       <div class="white-jelly-panel">

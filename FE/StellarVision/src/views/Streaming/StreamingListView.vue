@@ -108,6 +108,8 @@ import router from '@/router';
 import { CornerDownLeft } from 'lucide-vue-next';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import bgImage from '@/assets/pictures/stellabot/noResult.png';
+import streamingService from '@/services/streamingService';
+import { useAccountStore } from '@/stores/account';
 
 const props = defineProps({
   isSidebar: {
@@ -119,6 +121,10 @@ const props = defineProps({
 const activeTab = ref('live');
 const search = ref('');
 const loading = ref(true);
+
+const userStore = useAccountStore()
+const userName = userStore.userInfo?.name
+
 
 const streamingStore = useStreamingStore();
 const { fetchLiveStreams, fetchReplayStreams } = streamingStore;
@@ -159,7 +165,17 @@ const filteredVideos = computed(() => {
 // 썸네일 클릭 핸들러
 const handleThumbnailClick = async (video, type) => {
   if (type === 'live') {
-    router.push({ name: 'RoomView', params: { sessionId: video.sessionId } });
+    try {
+      // join API 호출
+      await streamingService.join(video.sessionId, {
+        role: 'SUBSCRIBER',
+        userName: userName
+      });
+      console.log('현재 유저의 이름: ', userName)
+      router.push({name:'RoomView', params:{id:video.sessionId}})
+    }catch(err){
+      console.error('방 참여 실패: ', err)
+    }
   } else if (type === 'vod') {
     router.push(`/replay/${video.id}`);
   }
