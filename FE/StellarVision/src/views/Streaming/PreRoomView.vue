@@ -6,6 +6,7 @@ import streamingService from '@/services/streamingService'
 import openviduService from '@/services/openviduService'
 import { useAccountStore } from '@/stores/account'
 import preroomImg from '@/assets/pictures/stellabot/preroom.png'
+import bgImg from '@/assets/pictures/wallpaper/space2.jpg'
 
 const { create } = streamingService
 const router = useRouter()
@@ -81,25 +82,22 @@ const createRoom = async () => {
 
 <template>
 
-  <div class="min-h-[60vch] bg-zinc-50 flex items-center justify-center px-4 py-12">
-    <section class="w-full max-w-5xl rounded-2xl overflow-hidden shadow-md ring-1 ring-black/5">
+  <div class="profile-wrapper flex items-center justify center min-h-[calc(100vh-58px)] relative">
+    <img :src="bgImg"alt="배경 이미지" class="bg-img backdrop-blur"/>
+    <section class=" white-jelly-panel w-full min-h-[calc(100vh-58px) max-w-5xl rounded-2xl overflow-hidden shadow-md ring-1 ring-black/5">
       <!-- 좌우 2열 나누기 -->
-       <div class="grid grid-cols-1 md:grid-cols-2">
+       <div class="grid grid-cols-1 md:grid-cols-2 min-h-[calc(100vh-58px)">
         <!-- 왼쪽 영역 -->
-         <div class="relative bg-[#101A63]">
-          <!-- 장식용 패턴(옵션) -->
-            <div class="absolute inset-0 opacity-20 pointer-events-none"
-               style="background: radial-gradient(60% 50% at 60% 40%, white, transparent);"></div>
-
+         <div class="relative bg-[#101A63] rounded-xl">
             <!-- 일러스트 이미지 -->
             <img
               :src=preroomImg
               alt="방 일러스트"
-              class="relative z-10 w-full h-full object-contain p-10 md:p-14"
+              class="relative z-10 w-full h-full object-cover rounded-xl"
             />
           </div>
           <!-- 오른쪽 영역 -->
-        <div class="bg-white p-8 md:p-12 flex flex-col justify-center">
+        <div class="bg-white p-8 md:p-12 flex flex-col justify-center rounded-xl">
           <header class="mb-8">
             <h1 class="text-3xl font-semibold text-zinc-900">방 이름을 정해주세요!</h1>
           </header>
@@ -152,4 +150,62 @@ input, button {
 hr {
   margin: 1.5rem 0;
 }
+
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.profile-header-wrapper {
+  margin-bottom: 30px;
+}
+
+.white-jelly-panel {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 35px 40px;
+  margin: 25px auto;
+  max-width: 1140px;
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  box-shadow:
+    inset 3px 3px 6px rgba(255 255 255 / 0.5),
+    inset -3px -3px 6px rgba(0 0 0 / 0.1);
+
+  border: 1.2px solid rgba(255, 255, 255, 0.2);
+
+  color: rgba(30, 30, 30, 0.7);
+
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  letter-spacing: 0.02em;
+
+  transition: box-shadow 0.3s ease;
+  cursor: default;
+}
+
+.white-jelly-panel:hover {
+  box-shadow:
+    inset 5px 5px 10px rgba(255 255 255 / 0.7),
+    inset -5px -5px 10px rgba(0 0 0 / 0.15);
+}
+
+.bg-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -1;
+}
+
 </style>
