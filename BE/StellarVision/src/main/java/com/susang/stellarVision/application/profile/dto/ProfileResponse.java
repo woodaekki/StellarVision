@@ -17,5 +17,6 @@ public class ProfileResponse {
     private boolean isCollectionPublic;
     private Long followerCount;
     private Long followingCount;
+    private  String name;
 }
 
