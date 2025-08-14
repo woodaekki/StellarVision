@@ -29,27 +29,36 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAccountStore } from '@/stores/account'
 import axiosApi from '@/api/axiosApi'
 
-const accountStore = useAccountStore()
 const photos = ref([])
 const loading = ref(false)
 const router = useRouter()
 
-const memberId = computed(() => accountStore.myProfile?.memberId)
+const props = defineProps({
+  profilePk: {
+    type: Number,
+    required: true
+  },
+  profileEmail: {
+      type: String,
+      required: false
+  }
+})
+
+const memberId = props.profilePk
 
 // 최근 사진 3장만 표시
 const recentPhotos = computed(() => photos.value.slice(0, 3))
 
 const fetchPhotos = async () => {
-  if (!memberId.value) {
+  if (!memberId) {
     loading.value = false
     return
   }
   loading.value = true
   try {
-    const { data } = await axiosApi.get(`profiles/${memberId.value}/photos`, {
+    const { data } = await axiosApi.get(`profiles/${memberId}/photos`, {
       params: { page: 0, size: 3 }, // size를 3으로 수정
     })
     if (data.data?.photos) {
@@ -76,14 +85,15 @@ const handlePhotoClick = (photo) => {
 }
 
 const goGalleryList = () => {
-  router.push({ name: 'MyGalleryListView', params: { id: memberId.value } })
+  router.push(
+    { name: 'MyGalleryListView', 
+    params: { id: props.profileEmail },
+    state: { profilePk: memberId } 
+  })
 }
 
 onMounted(async () => {
-  if (!accountStore.myProfile) {
-    await accountStore.fetchMyProfile()
-  }
-  if (memberId.value) {
+  if (memberId) {
     fetchPhotos()
   }
 })

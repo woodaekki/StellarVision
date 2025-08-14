@@ -5,7 +5,7 @@
       <div class="header-and-back-container">
         <div class="back-button-container">
           <div class="back-button-icon">  
-            <RouterLink :to="`/profile/${userInfo?.email}`" class="no-underline relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-[#f2f2f2] after:w-0 after:transition-all after:duration-300 hover:after:w-full font-pretendard">
+            <RouterLink :to="`/profile/${memberEmail}`" class="no-underline relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-[#f2f2f2] after:w-0 after:transition-all after:duration-300 hover:after:w-full font-pretendard">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M15 18l-6-6 6-6" />
                 </svg>
@@ -94,9 +94,7 @@ import bg from '@/assets/pictures/stellabot/spaceBackground.avif';
 import { useRouter, useRoute } from 'vue-router'
 
 const accountStore = useAccountStore();
-const userInfo = computed(() => accountStore .userInfo)
 const route = useRoute();
-const router = useRouter();
 const pageRef = ref(null);
 const galleryInput = ref(null);
 const observerTarget = ref(null);
@@ -114,13 +112,8 @@ const lastScrollTop = ref(0);
 const scrollVelocity = ref(0);
 const isThrottling = ref(false);
 const memberEmail = computed(() => route.params.id);
-const memberId = computed(() => accountStore.myProfile?.memberId);
+const memberId = ref(window.history.state?.profilePk);
 const canUpload = computed(() => accountStore.isLogin);
-
-const goBack = () => {
-  router.push({ name: 'profileView', params: { id: memberEmail.value } });
-};
-
 
 const formatDate = (dateString) => {
   try {

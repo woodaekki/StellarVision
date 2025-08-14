@@ -29,7 +29,7 @@
 
         <div class="profile-text">
           <div class="email-row">
-            <span class="email">{{ profileEmail || 'null' }}</span>
+            <span class="email">{{ profileInfo?.name || '닉네임' }}</span>
             <BadgeShelf
               :memberId="memberId"
               :editMode="editMode"

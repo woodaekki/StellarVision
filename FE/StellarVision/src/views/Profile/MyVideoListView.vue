@@ -13,11 +13,11 @@
 
       <div class="px-4 pt-12 pb-6">
         <div class="navigation-links">
-          <RouterLink :to="{ name: 'MyVideoListView', params: { id: myId } }" class="active">
+          <RouterLink :to="{ name: 'MyVideoListView', params: { id: userInfo?.email } }" class="active">
             내 비디오
           </RouterLink>
           <span>|</span>
-          <RouterLink :to="{ name: 'MyLikedListView', params: { id: myId } }">
+          <RouterLink :to="{ name: 'MyLikedListView', params: { id: userInfo?.email } }">
             좋아요한 영상
           </RouterLink>
         </div>
@@ -214,10 +214,7 @@ const getVideoThumbnail = (video) => {
   return defaultImg;
 };
 
-const myId = computed(() => {
-  const id = route.params.id;
-  return id;
-});
+const memberId = ref(window.history.state?.profilePk);
 
 const videos = ref([]);
 
@@ -240,8 +237,8 @@ const fetchTagsForVideos = async (videosList) => {
 const fetchVideos = async (pageNum = 0) => {
   if (loadingMore.value || !hasMore.value) return;
 
-  if (!myId.value || myId.value === 'undefined' || myId.value === null) {
-    console.error('유효하지 않은 사용자 ID:', myId.value);
+  if (!memberId.value || memberId.value === 'undefined' || memberId.value === null) {
+    console.error('유효하지 않은 사용자 ID:', memberId.value);
     loading.value = false;
     return;
   }
@@ -255,8 +252,8 @@ const fetchVideos = async (pageNum = 0) => {
   }
 
   try {
-    console.log('요청할 memberId:', myId.value, 'page:', pageNum, 'size:', pageSize);
-    const res = await commonApi.get(`profiles/${myId.value}/videos?page=${pageNum}&size=${pageSize}`);
+    console.log('요청할 memberId:', memberId.value, 'page:', pageNum, 'size:', pageSize);
+    const res = await commonApi.get(`profiles/${memberId.value}/videos?page=${pageNum}&size=${pageSize}`);
     console.log('API 응답:', res.data);
 
     let newVideos = res.data.data?.videos || [];
@@ -358,10 +355,10 @@ watch(() => route.params.id, (newId) => {
 onMounted(async () => {
   preventScrollRestore();
 
-  if (myId.value && myId.value !== 'undefined' && myId.value !== null) {
+  if (memberId.value && memberId.value !== 'undefined' && memberId.value !== null) {
     await fetchVideos(0);
   } else {
-    console.error('유효하지 않은 사용자 ID:', myId.value);
+    console.error('유효하지 않은 사용자 ID:', memberId.value);
     loading.value = false;
   }
 

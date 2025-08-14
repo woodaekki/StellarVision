@@ -147,6 +147,7 @@ export const useAccountStore = defineStore('account', () => {
     try {
       const res = await commonApi.get('/profiles/me')
       myProfile.value = res.data.data
+      console.log(myProfile.value)
     } catch (err) {
       // error handling omitted for brevity
     }
