@@ -58,6 +58,7 @@ public class VideoServiceImpl implements VideoService {
                 .thumbnailDownloadUrl(getThumbnailUrl(v.getThumbnail() != null ? v.getThumbnail().getThumbnailS3Key() : null))
                 .memberId(v.getMember().getId())
                 .nickname(v.getMember().getName())
+                .email(v.getMember().getEmail())
                 .likeCount(v.getLikeCount())
                 .liked(currentMemberId != null && likedIds.contains(v.getId()))
                 .build());
