@@ -60,7 +60,6 @@ export function useUpscale({ upscaleService, startDownloadToast }) {
 
       const url = URL.createObjectURL(upscaledBlob)
       upscaledUrl.value = url
-      window.open(url, '_blank', 'noopener')
     } finally {
       isUpscaling.value = false
     }

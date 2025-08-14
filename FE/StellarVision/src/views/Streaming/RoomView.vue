@@ -25,6 +25,7 @@
   import { useUpscale } from '@/composables/streaming/useUpscale'
   import { makeSoftBoxRenderer } from '@/composables/streaming/renderers/softBoxRenderer'
   import { CONSTELLATION_KO } from '@/constants/constellations'
+  import UpscalePreviewComponent from '@/components/streaming/UpscalePreviewComponent.vue'
 
   // ai 분석 결과를 담을 store
   const aiTagStore = useAITagStore();
@@ -55,6 +56,24 @@
   // ai 버튼 및 기능
   const aiOn = ref(false)
   const toggleAI = () => { aiOn.value = !aiOn.value }
+
+  const {
+    upscaledUrl,
+    isDownloading,
+    isUpscaling,
+    hasUpscaled,
+    resetUpscaled,
+    captureAndUpscale,
+    downloadUpscaled,
+    makeOnCaptureOrDownload
+  } = useUpscale({ upscaleService, startDownloadToast })
+
+  // 모달의 상태 변수
+  const previewOpen = ref(false)
+    watch(upscaledUrl, (v) => {
+      if (v) previewOpen.value = true
+  })
+
 
   // 컴포저블에서 필요한 것들 모두 꺼냄 (isPublish, role 추가)
   const { session, publisher, subscribers, leave, setPublisherEl, attachSubEl, isPublish, endRoom } = openviduService(
@@ -135,16 +154,7 @@
       }, 300)
   }
 
-  const {
-    isDownloading,
-    isUpscaling,
-    hasUpscaled,
-    resetUpscaled,
-    makeOnCaptureOrDownload,
-  } = useUpscale({
-    upscaleService,
-    startDownloadToast, // 진행 토스트 콜백 주입
-  })
+
 
   watch([localVideo, overlayLocal], ([v, ov]) => {
     if (v && ov) {
@@ -453,6 +463,14 @@
         </div>
       </section>
     </div>
+    
+    
+    <UpscalePreviewComponent
+      v-model="previewOpen"
+      :src="upscaledUrl || ''"
+      @download="downloadUpscaled(toast, interval, visible)"
+      @closed="resetUpscaled"
+    />
 <!--  -->
 
   </div>
