@@ -6,7 +6,7 @@ import { Minimize, Minimize2, Users } from 'lucide-vue-next'
 import { Session } from 'openvidu-browser'
 import { computed, onBeforeMount, onBeforeUnmount, onMounted, ref } from 'vue'
 import bgTex from '@/assets/pictures/stellabot/chatPanel.png'
-import { nextTick } from 'vue'
+import { nextTick } from 'vue' //데이터 변경 -> 화면 반영 -> 그 다음 작업 실행의 순서를 보장해주는 기능
 
 const {userInfo} = useAccountStore()
 const props = defineProps({
