@@ -126,7 +126,7 @@
     if (interval.value) clearInterval(interval.value)
     interval.value = setInterval(()=>{
       if (progress.value <= 100) {
-        progress.value +=4.4
+        progress.value +=4
       }
       if (progress.value >=100) {
         progress.value = 100
