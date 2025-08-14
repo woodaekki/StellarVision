@@ -90,6 +90,7 @@ public class ProfileServiceImpl implements ProfileService {
                 .isVideoPublic(profile.isVideoPublic())
                 .isCollectionPublic(profile.isCollectionPublic())
                 .followerCount(member.getFollowerCount()).followingCount(member.getFollowingCount())
+                .name(member.getName())
                 .build();
 
         return response;
