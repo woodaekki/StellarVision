@@ -53,7 +53,7 @@
           <div @click="goToVideoDetail(video.id)" class="video-clickable-area">
             <div class="video-thumbnail-wrapper">
               <img
-                :src="video.thumbnailDownloadUrl"
+                :src="getVideoThumbnail(video)"
                 :alt="video.originalFilename"
                 class="video-thumbnail"
                 @error="handleImageError"
@@ -107,8 +107,11 @@
                   {{ video.likeCount }}
                 </span>
                 <div v-if="video.tags && video.tags.length > 0" class="video-tags">
-                  <span v-for="tag in video.tags.slice(0, 5)" :key="tag.tagId" class="tag-item">
+                  <span v-for="tag in video.tags.slice(0, 3)" :key="tag.tagId" class="tag-item">
                     #{{ tag.tagName }}
+                  </span>
+                  <span v-if="video.tags.length > 3" class="tag-count">
+                    +{{ video.tags.length - 3 }}
                   </span>
                 </div>
               </div>
@@ -135,6 +138,7 @@ import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router';
 import commonApi from '@/api/commonApi';
 import bg from '@/assets/pictures/stellabot/spaceBackground.avif';
+import defaultBg from '@/assets/pictures/stellabot/nova.png';
 import { useAccountStore } from '@/stores/account';
 
 const route = useRoute();
@@ -150,13 +154,73 @@ const observerTarget = ref(null);
 const INITIAL_PAGE_SIZE = 11;
 const INFINITE_SCROLL_PAGE_SIZE = 12;
 
+// 별자리 썸네일 자동 매핑
+let STAR_IMAGES = {};
+let STAR_BY_KEY = {};
+
+try {
+  // import.meta.glob을 사용하여 동적으로 이미지 로드
+  STAR_IMAGES = import.meta.glob('@/assets/pictures/stars/*.{png,jpg,jpeg,webp}', {
+    eager: true,
+    import: 'default'
+  });
+} catch (error) {
+  STAR_IMAGES = {};
+}
+
+// 태그 없을 시 기본 썸네일
+const defaultImg = defaultBg;
+
+// 공백제거, 소문자화, xx자리에서 '자리'를 삭제
+function normalizeKoConstellation(s) {
+  const normalized = s.replace(/\s+/g, '').replace(/자리$/u, '').toLowerCase();
+  return normalized;
+}
+
+// 별 이름 앞자리로 찾기, 파일명 기준으로 매핑 테이블 구성
+for (const path in STAR_IMAGES) {
+  const filename = path.split('/').pop().replace(/\.(png|jpg|jpeg|webp)$/i, '');
+  const normalizedKey = normalizeKoConstellation(filename);
+  STAR_BY_KEY[normalizedKey] = STAR_IMAGES[path];
+}
+
+// 별자리 딕셔너리
+const ALIASES = {
+  // '큰곰': '큰곰자리',
+};
+
+function pickStarThumbByTags(tagList, fallback) {
+  for (const t of tagList || []) {
+    const raw = typeof t === 'string' ? t : (t.tagName || '');
+    if (!raw) continue;
+
+    let key = normalizeKoConstellation(raw);
+    if (ALIASES[key]) {
+      key = ALIASES[key];
+    }
+  }
+  return fallback;
+}
+
+// 비디오 썸네일 결정 함수
+const getVideoThumbnail = (video) => {
+  // 태그가 있는 경우 별자리 이미지 우선 사용
+  if (video.tags && video.tags.length > 0) {
+    const starThumbnail = pickStarThumbByTags(video.tags, null);
+    if (starThumbnail) {
+      return starThumbnail;
+    }
+  }
+  return defaultImg;
+};
+
 const myId = computed(() => {
   const id = route.params.id;
-  console.log('현재 사용자 ID:', id);
   return id;
 });
 
 const videos = ref([]);
+
 const fetchTagsForVideos = async (videosList) => {
   if (!videosList || videosList.length === 0) return videosList;
 
@@ -237,7 +301,8 @@ const formatDate = (dateString) => {
 };
 
 const handleImageError = (event) => {
-  event.target.src = '/default-thumbnail.jpg';
+  // 이미지 로드 실패 시 기본 이미지로 대체
+  event.target.src = defaultImg;
 };
 
 const goToVideoDetail = (videoId) => {
@@ -294,7 +359,6 @@ onMounted(async () => {
   preventScrollRestore();
 
   if (myId.value && myId.value !== 'undefined' && myId.value !== null) {
-    console.log('사용자 영상 로딩 시작:', myId.value);
     await fetchVideos(0);
   } else {
     console.error('유효하지 않은 사용자 ID:', myId.value);
@@ -695,6 +759,16 @@ onBeforeUnmount(() => {
   padding: 4px 8px;
   border-radius: 12px;
   font-weight: 500;
+  backdrop-filter: blur(5px);
+}
+
+.tag-count {
+  background-color: rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-weight: 600;
   backdrop-filter: blur(5px);
 }
 

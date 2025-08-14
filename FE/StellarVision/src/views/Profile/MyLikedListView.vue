@@ -3,7 +3,7 @@
     <img :src="bg" alt="" class="bg-img" />
 
     <div class="stars-background">
-      <div class="back-button">  
+      <div class="back-button">
         <RouterLink :to="`/profile/${userInfo?.email}`" class="no-underline relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-[#f2f2f2] after:w-0 after:transition-all after:duration-300 hover:after:w-full font-pretendard">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M15 18l-6-6 6-6" />
@@ -53,17 +53,15 @@
           <div @click="goToVideoDetail(video.id)" class="video-clickable-area">
             <div class="video-thumbnail-wrapper">
               <img
-                :src="video.thumbnailDownloadUrl"
+                :src="getVideoThumbnail(video)"
                 :alt="video.originalFilename"
                 class="video-thumbnail"
                 @error="handleImageError"
               />
               <div class="video-overlay">
                 <div class="play-button">
-                  <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
-                    <path
-                      d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"
-                    />
+                  <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z" />
                   </svg>
                 </div>
               </div>
@@ -97,6 +95,14 @@
                   </svg>
                   {{ video.likeCount }}
                 </span>
+                <div v-if="video.tags && video.tags.length > 0" class="video-tags">
+                  <span v-for="tag in video.tags.slice(0, 3)" :key="tag.tagId" class="tag-item">
+                    #{{ tag.tagName }}
+                  </span>
+                  <span v-if="video.tags.length > 3" class="tag-count">
+                    +{{ video.tags.length - 3 }}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -112,6 +118,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useStreamingStore } from '@/stores/streaming.js';
 import commonApi from '@/api/commonApi';
 import bg from '@/assets/pictures/stellabot/spaceBackground.avif';
+import defaultBg from '@/assets/pictures/stellabot/nova.png';
 import { useAccountStore } from '@/stores/account';
 
 const route = useRoute();
@@ -126,16 +133,92 @@ const allVideos = ref([]);
 const likedVideos = ref([]);
 const isLoading = ref(false);
 
+// 별자리 썸네일 자동 매핑
+let STAR_IMAGES = {};
+let STAR_BY_KEY = {};
+
+try {
+  // Vite의 import.meta.glob을 사용하여 동적으로 이미지 로드
+  STAR_IMAGES = import.meta.glob('@/assets/pictures/stars/*.{png,jpg,jpeg,webp}', {
+    eager: true,
+    import: 'default'
+  });
+} catch (error) {
+  STAR_IMAGES = {};
+}
+
+// 태그 없을 시 기본 썸네일
+const defaultImg = defaultBg;
+
+// 공백제거, 소문자화, xx자리에서 '자리'를 삭제
+function normalizeKoConstellation(s) {
+  const normalized = s.replace(/\s+/g, '').replace(/자리$/u, '').toLowerCase();
+  console.log(`🔄 정규화: "${s}" -> "${normalized}"`);
+  return normalized;
+}
+
+// 별 이름 앞자리로 찾기, 파일명 기준으로 매핑 테이블 구성
+for (const path in STAR_IMAGES) {
+  const filename = path.split('/').pop().replace(/\.(png|jpg|jpeg|webp)$/i, '');
+  const normalizedKey = normalizeKoConstellation(filename);
+  STAR_BY_KEY[normalizedKey] = STAR_IMAGES[path];
+}
+
+// 별자리 딕셔너리
+const ALIASES = {
+  // '큰곰': '큰곰자리',
+};
+
+function pickStarThumbByTags(tagList, fallback) {
+  for (const t of tagList || []) {
+    const raw = typeof t === 'string' ? t : (t.tagName || '');
+    if (!raw) continue;
+  }
+  return fallback;
+}
+
+// 비디오 썸네일 결정하는 함수
+const getVideoThumbnail = (video) => {
+  // 태그가 있는 경우 별자리 이미지 사용
+  if (video.tags && video.tags.length > 0) {
+    const starThumbnail = pickStarThumbByTags(video.tags, null);
+    if (starThumbnail) {
+      return starThumbnail;
+    }
+  }
+  return defaultImg;
+};
+
 const myId = computed(() => {
   const id = route.params.id;
   return id;
 });
 
+const fetchTagsForVideos = async (videosList) => {
+  if (!videosList || videosList.length === 0) return videosList;
+
+  const tagPromises = videosList.map(async (video) => {
+    try {
+      const res = await commonApi.get(`/videos/${video.id}/tags`);
+      return { ...video, tags: res.data.data?.tags || [] };
+    } catch (err) {
+      console.error(`비디오 ${video.id}의 태그를 불러오는 데 실패했습니다:`, err);
+      return { ...video, tags: [] };
+    }
+  });
+
+  return Promise.all(tagPromises);
+};
+
 const fetchUserVideos = async (userId) => {
   try {
     isLoading.value = true;
     const res = await commonApi.get(`/videos/search?userId=${userId}`);
-    const videos = res.data.data?.videos || [];
+    let videos = res.data.data?.videos || [];
+
+    // 태그 정보를 추가로 불러오기
+    videos = await fetchTagsForVideos(videos);
+
     allVideos.value = videos;
     return videos;
   } catch (err) {
@@ -168,12 +251,13 @@ const formatDate = (dateString) => {
   }
 };
 
+// asset 폴더에 없는 사진일 경우
 const handleImageError = (event) => {
-  event.target.src = '/default-thumbnail.jpg';
+  event.target.src = defaultImg;
 };
 
 const goToVideoDetail = (videoId) => {
-  router.push({ name: 'MyVideoListView', params: { id: videoId } });
+  router.push(`/replay/${videoId}`);
 };
 
 const handleUnlike = async (videoId) => {
@@ -391,7 +475,7 @@ onMounted(async () => {
 
 .video-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 24px;
   max-width: 100%;
   justify-content: center;
@@ -551,6 +635,33 @@ onMounted(async () => {
   transform: scale(1.1);
 }
 
+.video-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.tag-item {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-weight: 500;
+  backdrop-filter: blur(5px);
+}
+
+.tag-count {
+  background-color: rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-weight: 600;
+  backdrop-filter: blur(5px);
+}
+
 .fade-in {
   animation: fadeIn 0.8s ease-in forwards;
 }
@@ -566,31 +677,4 @@ onMounted(async () => {
   }
 }
 
-@media (max-width: 1024px) {
-  .video-grid {
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 20px;
-  }
-}
-
-@media (max-width: 768px) {
-  .video-grid {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 16px;
-  }
-  .stars-background {
-    padding: 20px 24px;
-  }
-  .navigation-links {
-    font-size: 14px;
-    gap: 10px;
-  }
-}
-
-@media (max-width: 480px) {
-  .video-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-}
 </style>
