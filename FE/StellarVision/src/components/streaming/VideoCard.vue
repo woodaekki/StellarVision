@@ -87,9 +87,19 @@ import 'dayjs/locale/ko'
 import commonApi from '@/api/commonApi';
 import { Star } from 'lucide-vue-next';
 import { useStreamingStore } from '@/stores/streaming';
+import defaultBg from '@/assets/pictures/stellabot/nova.png'
+import swan from '@/assets/pictures/stars/백조자리.jpg'
+import scorpion from '@/assets/pictures/stars/전갈자리.jpg'
 
 const store = useStreamingStore()
 const processing = ref(false)  // 중복 방지
+
+// 별자리 매핑 (북반구/남반구) 라이브 전용, 그냥 이분법으로 했음 일단, 어우 시차 + 대륙별 위도 경도 + 계절 포함할려면 데이터 세분화가 너무 깊음
+const HEMISPHERE_CONSTELLATIONS = {
+  north: swan,   // 백조자리가 제일 이뻐서 대표로 함
+  south: scorpion,     // 예시: 남십자자리
+}
+
 
 dayjs.extend(relativeTime) // 플러그인 적용 (시간설정)
 dayjs.locale('ko') // 한국어로 적용
@@ -108,10 +118,18 @@ const props = defineProps({
 });
 
 // 썸네일
-const thumbnail = computed(() =>
-  props.type === 'live'
-    ? defaultLogo
-    : props.video.thumbnailDownloadUrl || '/pictures/wallpaper/3.jpg'
+const thumbnail = computed(() =>{
+  if (props.type === 'live') {
+    if (props.video.latitude != null) {
+      const hemisphere = props.video.latitude >=0 ? 'north' : 'south'
+      return HEMISPHERE_CONSTELLATIONS[hemisphere] || defaultImg
+    }
+    return defaultImg
+  } else {
+    return pickStarThumbByTags(tags.value, defaultBg)
+
+    }
+  } 
 );
 
 
@@ -195,7 +213,46 @@ const onLikeClick = async () => {
   }
 }
 
+// ==================== 다시보기 전용 ==============
+// 별자리 썸네일 자동 매핑 
+// 폴더에 있는 이미지들을 전부 가져와서 파일명 -> 이미지 URL 매핑을 만든다.
+// ex 백조자리 -> 백조 로 접근
+const STAR_IMAGES = import.meta.glob('@/assets/pictures/stars/*.{png,jpg,jpeg,webp}', {
+  eager:true,
+  import: 'default'
+}) 
+//태그 없을 시 기본 썸네일
+const defaultImg = defaultBg
 
+// 공백제거, 소문자화, xx자리에서 '자리'를 삭제
+function normalizeKoConstellation(s) {
+  return s.replace(/\s+/g, '').replace(/자리$/u, '').toLowerCase()
+}
+// 별 이름 앞자리로 찾기, 파일명 기준으로 매핑 테이블 구성
+const STAR_BY_KEY = {}
+for (const path in STAR_IMAGES) {
+  const filename = path.split('/').pop().replace(/\.(png|jpg|jpeg|webp)$/i, '')
+  STAR_BY_KEY[normalizeKoConstellation(filename)] = STAR_IMAGES[path]
+}
+
+// 저장할 딕셔너리 
+const ALIASES = {
+
+}
+
+function pickStarThumbByTags(tagList, fallback) {
+  for (const t of tagList || []) {
+    const raw = typeof t === 'string' ? t : (t.tagName || '')
+    if (!raw) continue
+
+    let key = normalizeKoConstellation(raw)
+    if (ALIASES[key]) key = ALIASES[key]
+
+    if (STAR_BY_KEY[key]) return STAR_BY_KEY[key]
+  }
+  return fallback
+}
+// =========================다시 보기 끝 =====================
 
 onMounted(()=>{
   if(props.type === 'vod') loadVideoTags()
