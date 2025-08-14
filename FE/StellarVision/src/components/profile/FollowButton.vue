@@ -30,7 +30,6 @@ const viewer = JSON.parse(localStorage.getItem('userInfo') || 'null');
 const viewerName = viewer?.name ?? null;
 const targetId = computed(() => props.profileInfo?.memberId ?? null);
 
-
 watch(
   () => props.profileFollowers,
   (list) => {

@@ -66,6 +66,17 @@ const router = useRouter()
 const route = useRoute()
 const accountStore = useAccountStore()
 
+const props = defineProps({
+  profilePk: {
+    type: Number,
+    required: true
+  },
+  profileEmail: {
+      type: String,
+      required: false
+  }
+})
+
 const loading = ref(false)
 const recentVideos = ref([])
 
@@ -131,7 +142,7 @@ const getVideoThumbnail = (video) => {
   return defaultImg
 }
 
-const memberId = computed(() => accountStore.myProfile?.memberId)
+const memberId = props.profilePk
 
 const fetchTagsForVideos = async (videosList) => {
   if (!videosList || videosList.length === 0) return videosList
@@ -157,7 +168,7 @@ const fetchVideos = async () => {
   }
   loading.value = true
   try {
-    const { data } = await axiosApi.get(`profiles/${memberId.value}/videos`, {
+    const { data } = await axiosApi.get(`profiles/${memberId}/videos`, {
       params: { page: 0, size: 3 },
     })
     if (data.data?.videos) {
@@ -190,7 +201,8 @@ const handleImageError = (event) => {
 const goVideoList = () => {
   router.push({
     name: 'MyVideoListView',
-    params: { id: memberId.value },
+    params: { id: props.profileEmail },
+    state: { memberId: memberId }
   })
 }
 
@@ -202,10 +214,7 @@ const goToReplayRoom = (videoId) => {
 }
 
 onMounted(async () => {
-  if (!accountStore.myProfile) {
-    await accountStore.fetchMyProfile()
-  }
-  if (memberId.value) {
+  if (memberId) {
     fetchVideos()
   }
 })

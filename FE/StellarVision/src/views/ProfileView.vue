@@ -1,6 +1,6 @@
 <template>
   <div v-if="loading">
-    <p>Loading profile...</p>
+    <LoadingSpinner />
   </div>
   <div v-else class="profile-wrapper bg-stone-800">
     <img :src="bg" alt="배경 이미지" class="bg-img backdrop-blur">
@@ -25,7 +25,10 @@
 
         <!-- My Gallery Section -->
         <section class="section-wrapper">
-          <MyGalleryView />
+          <MyGalleryView 
+            :profile-email="profileEmail"
+            :profilePk="profilePk"
+          />
         </section>
 
         <hr class="inner-divider" />
@@ -33,6 +36,7 @@
         <!-- My Video Section -->
         <section class="section-wrapper">
           <MyVideoView
+            :profile-email="profileEmail"
             :profilePk="profilePk"
             :recentVideos="recentVideos"
             @select="goToReplay"
@@ -51,6 +55,7 @@ import { useRoute, useRouter } from 'vue-router';
 import ProfileHeader from '@/components/profile/ProfileHeader.vue';
 import MyGalleryView from '@/views/Profile/MyGalleryView.vue';
 import MyVideoView from '@/views/Profile/MyVideoView.vue';
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import { useAccountStore } from '@/stores/account';
 import { useVideoStore } from '@/stores/video';
 import { useProfileStore } from '@/stores/profile';
@@ -63,7 +68,7 @@ const profileStore = useProfileStore();
 const route = useRoute();
 const router = useRouter();
 
-const profilePk = ref(window.history.state?.memberPk);
+const profilePk = ref(window.history.state?.profilePk);
 const profileInfo = ref(null);
 const profileEmail = route.params.id;
 const profileFollowers = computed(() => profileStore.followers);
