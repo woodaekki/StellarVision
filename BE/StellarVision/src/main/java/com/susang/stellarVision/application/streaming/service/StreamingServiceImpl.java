@@ -123,22 +123,7 @@ public class StreamingServiceImpl implements StreamingService {
     @Override
     @Transactional(readOnly = true)
     public List<StreamingRoomDTO> getStreamingRoomList() {
-        List<StreamingRoom> streamingRooms = streamingRepository.findAllWithMember();
-
-        return streamingRooms.stream()
-                .map(room -> {
-                    Member member = room.getMember();
-                    return new StreamingRoomDTO(
-                            room.getId(),
-                            room.getSessionId(),
-                            room.getTitle(),
-                            room.getLatitude(),
-                            room.getLongitude(),
-                            member.getId(),
-                            member.getName()
-                    );
-                })
-                .toList();
+        return streamingRepository.findStreamingRooms();
     }
 
     @Override
