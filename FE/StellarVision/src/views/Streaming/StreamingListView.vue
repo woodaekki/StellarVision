@@ -166,13 +166,15 @@ const filteredVideos = computed(() => {
 const handleThumbnailClick = async (video, type) => {
   if (type === 'live') {
     try {
-      // join API 호출
-      await streamingService.join(video.sessionId, {
-        role: 'SUBSCRIBER',
-        userName: userName
-      });
-      console.log('현재 유저의 이름: ', userName)
-      router.push({name:'RoomView', params:{id:video.sessionId}})
+
+      router.push({
+        name:'RoomView',
+        params:{id:video.sessionId},
+        query: {
+          title : video.title,
+          streamerName: video.ownerMemberName
+        }}
+        )
     }catch(err){
       console.error('방 참여 실패: ', err)
     }

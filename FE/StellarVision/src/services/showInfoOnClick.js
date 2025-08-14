@@ -72,7 +72,11 @@ export function showInfoOnClick({ engineRef, cameraRef, sceneRef }) {
     if (sessionId) {
       router.push({
         name: 'RoomView',
-        params: { id: sessionId }
+        params: { id: sessionId },
+        query: {
+          title : activePin.value.metadata?.title,
+          streamerName : activePin.value.metadata?.ownerMemberName
+        }
       })
     };
   };

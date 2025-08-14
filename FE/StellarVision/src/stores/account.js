@@ -120,7 +120,7 @@ export const useAccountStore = defineStore('account', () => {
 
       const { accessToken, refreshToken, memberInfo } = res.data.data
       setToken(accessToken, refreshToken, memberInfo)
-      router.push({ name: 'LandingView' })
+      router.push({ name: 'MainView' })
 
     } catch (err) {
       throw err
