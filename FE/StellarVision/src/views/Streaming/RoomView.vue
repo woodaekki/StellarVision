@@ -1,3 +1,4 @@
+<!-- RoomView.vue -->
 <script setup>
   import { onMounted, onUnmounted, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
@@ -35,9 +36,9 @@
   const router = useRouter()
   // 세션관련 객체
   const sessionId = route.params.id
-  const userName = route.query.userName || 'Host'
+  const userName = route.query.userName || route.query.streamerName ||  'Host'
   const roomTitle = route.query.title
-
+  console.log('route.query', route.query)
   // 알림창 전용 객체
   const toast = useToast()
   const visible = ref(false);
@@ -463,8 +464,8 @@
         </div>
       </section>
     </div>
-    
-    
+
+
     <UpscalePreviewComponent
       v-model="previewOpen"
       :src="upscaledUrl || ''"

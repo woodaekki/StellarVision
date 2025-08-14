@@ -1,3 +1,4 @@
+<!-- UserCell.vue -->
 <template>
   <div class="user-cell" @click="goToUser">
     <img

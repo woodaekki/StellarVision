@@ -11,17 +11,6 @@ export default {
     )
   },
 
-  // 2) 스트리밍 참여하기
-  join(streamId, { role, userName }) {
-    // form-data 로 보내야 한다면:
-    const form = new FormData()
-    form.append('role', role)
-    form.append('userName', userName)
-    return streamingApi.post(
-      `/streamings/${streamId}/connection`, form, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    })
-  },
 
   // 3) 녹화 시작
   startRecording(sessionId) {

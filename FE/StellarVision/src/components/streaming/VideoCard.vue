@@ -4,11 +4,10 @@
   <article
     class ="group relative rounded-xl overflow-hidden
      hover:ring-white/20 hover:-translate-y-0.5  cursor-pointer"
-    @click="onThumbnailClick"
     :aria-label="title"
     role="button"
     tabindex="0"
-    @keydown.enter="onThumbnailClick"
+
   >
 
     <!-- 썸네일 -->
@@ -21,6 +20,8 @@
         class="h-full w-full object-cover [filter:drop-shadow(0_4px_8px_rgba(0,0,0,0.15))]"
         loading="lazy"
         alt="썸네일"
+        @click="onThumbnailClick"
+        @keydown.enter="onThumbnailClick"
       />
       <!-- 우측 상단에 라이브 아이콘 -->
       <span v-if="type === 'live'"
@@ -53,7 +54,8 @@
        line-clamp-1 ">
         {{ title }}
       </h3>
-      <p class="mt-0.5 text-[18px] text-zinc-100 line-clamp-1">
+      <p class="mt-0.5 text-[18px] text-zinc-100 line-clamp-1 z-10"
+        @click.stop.prevent="goToUserProfile">
         {{ user }}
       </p>
         <!-- <div class="text-base text-zinc-400 mb-2 truncate">{{ video.tags }}</div> 태그는 나중에 -->
@@ -90,6 +92,7 @@ import { useStreamingStore } from '@/stores/streaming';
 import defaultBg from '@/assets/pictures/stellabot/nova.png'
 import swan from '@/assets/pictures/stars/백조자리.jpg'
 import scorpion from '@/assets/pictures/stars/전갈자리.jpg'
+import router from '@/router';
 
 const store = useStreamingStore()
 const processing = ref(false)  // 중복 방지
@@ -116,7 +119,7 @@ const props = defineProps({
     type: Function,
      required: true }
 });
-
+console.log('비디오 목록', props.video)
 // 썸네일
 const thumbnail = computed(() =>{
   if (props.type === 'live') {
@@ -129,7 +132,7 @@ const thumbnail = computed(() =>{
     return pickStarThumbByTags(tags.value, defaultBg)
 
     }
-  } 
+  }
 );
 
 
@@ -177,6 +180,29 @@ const loadVideoTags = async () => {
 const liked = ref(!!props.video.liked)
 const likeCount = ref(props.video.likeCount ?? 0)
 
+
+const goToUserProfile = async() =>{
+  try {
+      const userEmail = props.type === 'live'
+  ? props.video.ownerMemberEmail
+  : props.video.email
+
+  const memberId = props.type === 'live'
+  ? props.video.ownerMemberId
+  : props.video.memberId
+
+  if(userEmail) {
+    router.push({
+      path: `/profile/${userEmail}`,
+      state: {profilePk: memberId}
+    })
+  }
+  } catch(err){
+    console.error('프로필 이동 실패', err)
+  }
+}
+
+
 // 비디오 동기화
 watch(() => props.video, (v) => {
     liked.value = !!v.liked
@@ -214,13 +240,13 @@ const onLikeClick = async () => {
 }
 
 // ==================== 다시보기 전용 ==============
-// 별자리 썸네일 자동 매핑 
+// 별자리 썸네일 자동 매핑
 // 폴더에 있는 이미지들을 전부 가져와서 파일명 -> 이미지 URL 매핑을 만든다.
 // ex 백조자리 -> 백조 로 접근
 const STAR_IMAGES = import.meta.glob('@/assets/pictures/stars/*.{png,jpg,jpeg,webp}', {
   eager:true,
   import: 'default'
-}) 
+})
 //태그 없을 시 기본 썸네일
 const defaultImg = defaultBg
 
@@ -235,7 +261,7 @@ for (const path in STAR_IMAGES) {
   STAR_BY_KEY[normalizeKoConstellation(filename)] = STAR_IMAGES[path]
 }
 
-// 저장할 딕셔너리 
+// 저장할 딕셔너리
 const ALIASES = {
 
 }
