@@ -16,4 +16,5 @@ public class StreamingRoomDTO {
     private BigDecimal longitude;
     private Long ownerMemberId;
     private String ownerMemberName;
+    private String ownerMemberEmail;
 }
