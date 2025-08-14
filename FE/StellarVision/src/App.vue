@@ -49,4 +49,27 @@ main {
   flex-grow: 1;
 }
 
+// ------ 스크롤바 스타일링 코드 ------
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+// 스크롤바 전체 색상
+::-webkit-scrollbar-track {
+  background-color: rgba(23, 23, 23, 0.6);
+}
+
+// 현재 스크롤 위치 색상
+::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.359);
+  border-radius:30px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  transition: background-color 0.3s ease;
+}
+
+/* 호버 시 */
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.6);
+}
+
 </style>

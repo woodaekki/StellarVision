@@ -98,8 +98,8 @@ function handleScroll() {
 </script>
 
 <template>
-  <aside 
-    :style="{ 
+  <aside
+    :style="{
       backgroundImage: `linear-gradient(rgba(255,255,255,0.15), rgba(255,255,255,0.15)), url(${bgTex})`,
       backgroundSize: '460px',        // 크기 (예: 가로 280px)
       backgroundRepeat: 'no-repeat',       // 한 장만
@@ -124,7 +124,7 @@ function handleScroll() {
 
     <!-- 메시지 리스트 -->
     <!-- 08.13 12:34 분 listRef 추가 -->
-    <ul ref="listRef" class="chat-messages flex-1 overflow-y-auto p-3 space-y-2 min-h-0">          
+    <ul ref="listRef" class="chat-messages flex-1 overflow-y-auto p-3 space-y-2 min-h-0">
       <li v-for="(msg, i) in messages" :key="i"
           class="flex"
           :class="msg.user === myName ? 'justify-end' : 'justify-start'">
