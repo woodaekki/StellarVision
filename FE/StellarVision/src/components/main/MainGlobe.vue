@@ -1,4 +1,3 @@
-<!-- MainGlobe.vue -->
 <template>
   <div class="globe-wrapper">
     <div class="globe-container">
@@ -6,12 +5,14 @@
 
       <div class="tooltip" :style="tooltip.style" v-if="tooltip.title || tooltip.owner">
         <div class="speech-bubble">
-          <p class="room-title">{{ tooltip.title }}</p>
+          <div class="speech-bubble-header">
+            <p class="room-title">{{ tooltip.title }}</p>
+            <button class="close-button" @click="closeTooltip">×</button>
+          </div>
           <p>{{ tooltip.owner }}</p>
           <button class="go-button" @click="handleWatchClick">참여하기</button>
         </div>
       </div>
-
     </div>
   </div>
 
@@ -182,7 +183,7 @@ watch(
     } else if (newest.id > prev) {
       // 신규 방 등장
       flyUpdate();
-      pushToast(newest.title);;
+      pushToast(newest.title);
     }
   },
   { immediate: true, deep: false, flush: 'post' }
@@ -196,6 +197,11 @@ onBeforeUnmount(() => {
   scene.value?.dispose();
   engine.value?.dispose();
 });
+
+// 말풍선 닫기 버튼을 위한 함수 추가
+const closeTooltip = () => {
+  hideTooltip();
+};
 </script>
 
 <style scoped>
@@ -244,16 +250,14 @@ canvas:focus {
 
 .speech-bubble {
   pointer-events: auto;
-  background: rgba(18, 20, 24, 0.78);   /* 살짝 투명한 다크 */
-  backdrop-filter: blur(6px);           /* 글라스 효과 */
-  -webkit-backdrop-filter: blur(6px);
+  background: rgba(73, 77, 86, 0.78);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: inset 2px 2px 8px rgba(227, 227, 227, 0.6), inset -4px -4px 10px rgba(106, 106, 106, 0.15);
+  border: 1px solid rgba(171, 171, 171, 0.25);
   color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
   padding: 10px 14px;
-  box-shadow:
-    0 6px 24px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -261,37 +265,46 @@ canvas:focus {
   line-height: 1.35;
   max-width: clamp(220px, 28vw, 320px);
   user-select: none;
-  animation: tt-pop 140ms cubic-bezier(.2,.9,.2,1) both;
+  animation: tt-pop 140ms cubic-bezier(0.2, 0.9, 0.2, 1) both;
+  position: relative;
 }
 
-/* 꼬리(아래 삼각형) — 중앙 정렬 */
 .speech-bubble::after {
   content: "";
   position: absolute;
   bottom: -10px;
   left: 50%;
   transform: translateX(-50%);
-  width: 0; height: 0;
-  border-width: 10px 10px 0 10px;
+  width: 0;
+  height: 0;
+  border-width: 8px 8px 0 8px;
   border-style: solid;
-  border-color: rgba(18, 20, 24, 0.78) transparent transparent transparent;
-  filter: drop-shadow(0 2px 2px rgba(0,0,0,0.25));
+  border-color: rgba(63, 70, 85, 0.78) transparent transparent transparent;
+  filter: drop-shadow(0 2px 2px rgba(192, 192, 192, 0.25));
+}
+
+.speech-bubble-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2px;
 }
 
 .room-title {
   font-size: 16px;
   font-weight: 600;
-  letter-spacing: .2px;
-  margin: 0 0 2px 0;
+  letter-spacing: 0.2px;
+  margin: 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  word-break: break-word;
 }
 
 .speech-bubble p:not(.room-title) {
   margin: 0;
-  opacity: .9;
+  opacity: 0.9;
   font-size: 13px;
   white-space: nowrap;
   overflow: hidden;
@@ -303,33 +316,66 @@ canvas:focus {
   margin-top: 6px;
   padding: 6px 10px;
   border-radius: 10px;
-  border: 1px solid rgba(255,255,255,.16);
-  background: linear-gradient(to bottom, #ffffff, #e9eef9);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: linear-gradient(to bottom, #f2f2f2, #e9eef9);
   color: #0b1020;
   font-weight: 600;
   font-size: 13px;
   cursor: pointer;
-  transition: transform .08s ease, box-shadow .12s ease, background .12s ease;
+  transition: transform 0.08s ease, box-shadow 0.12s ease, background 0.12s ease;
 }
 
 .go-button:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(0,0,0,.25);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
 }
 
 .go-button:active {
   transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(0,0,0,.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .go-button:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(77, 148, 255, .55);
+  box-shadow: 0 0 0 3px rgba(77, 148, 255, 0.55);
 }
 
 @keyframes tt-pop {
-  from { transform: scale(.96); opacity: 0; }
-  to   { transform: scale(1);   opacity: 1; }
+  from {
+    transform: scale(0.96);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.close-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.close-button:hover {
+  opacity: 1;
+}
+
+.close-button:focus-visible {
+  outline: none;
+  opacity: 1;
+  box-shadow: 0 0 0 2px rgba(77, 148, 255, 0.55);
+  border-radius: 4px;
 }
 
 /* 여기서부터 알림창 스타일링 */
@@ -343,8 +389,15 @@ canvas:focus {
   gap: 10px;
   pointer-events: none;
 }
-.toast-enter-from, .toast-leave-to { opacity: 0; transform: translateY(-8px) scale(.98); }
-.toast-enter-active, .toast-leave-active { transition: all .18s ease; }
+.toast-enter-from,
+.toast-leave-to {
+  opacity: 0;
+  transform: translateY(-8px) scale(0.98);
+}
+.toast-enter-active,
+.toast-leave-active {
+  transition: all 0.18s ease;
+}
 
 .toast.ship {
   pointer-events: auto;
@@ -357,17 +410,13 @@ canvas:focus {
   border-radius: 12px;
 
   /* 글라스+우주 느낌 배경 */
-  background:
-    radial-gradient(120% 180% at 120% -10%, rgba(142,162,255,.25), rgba(179,136,255,.1) 60%, transparent 70%),
+  background: radial-gradient(120% 180% at 120% -10%, rgba(142, 162, 255, 0.25), rgba(179, 136, 255, 0.1) 60%, transparent 70%),
     rgba(16, 18, 28, 0.85);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
 
-  border: 1px solid rgba(255,255,255,0.12);
-  box-shadow:
-    0 8px 28px rgba(0,0,0,.35),
-    inset 0 1px 0 rgba(255,255,255,.06),
-    0 0 0 1px rgba(142,162,255,.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 0 0 1px rgba(142, 162, 255, 0.08);
 
   position: relative;
   overflow: hidden;
@@ -377,33 +426,43 @@ canvas:focus {
   content: "";
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,.45), transparent 50%),
-    radial-gradient(1px 1px at 70% 60%, rgba(255,255,255,.35), transparent 50%),
-    radial-gradient(1px 1px at 40% 80%, rgba(255,255,255,.25), transparent 50%);
-  opacity: .35;
+  background: radial-gradient(1px 1px at 20% 30%, rgba(255, 255, 255, 0.45), transparent 50%),
+    radial-gradient(1px 1px at 70% 60%, rgba(255, 255, 255, 0.35), transparent 50%),
+    radial-gradient(1px 1px at 40% 80%, rgba(255, 255, 255, 0.25), transparent 50%);
+  opacity: 0.35;
   pointer-events: none;
 }
 
 .ship-icon {
-  width: 28px; height: 28px;
-  display: grid; place-items: center;
-  filter: drop-shadow(0 0 6px rgba(153, 171, 255, .4));
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  filter: drop-shadow(0 0 6px rgba(153, 171, 255, 0.4));
   position: relative;
 }
 .ship-icon::after {
   content: "";
   position: absolute;
-  bottom: -2px; left: 50%;
-  width: 6px; height: 10px;
+  bottom: -2px;
+  left: 50%;
+  width: 6px;
+  height: 10px;
   transform: translateX(-50%);
-  background: radial-gradient(50% 60% at 50% 0%, #ffd180, rgba(255,140,0,.0));
+  background: radial-gradient(50% 60% at 50% 0%, #ffd180, rgba(255, 140, 0, 0));
   filter: blur(0.5px);
-  animation: thruster .5s ease-in-out infinite alternate;
+  animation: thruster 0.5s ease-in-out infinite alternate;
 }
+
 @keyframes thruster {
-  from { opacity: .55; transform: translateX(-50%) translateY(0) scaleY(1); }
-  to   { opacity: .9;  transform: translateX(-50%) translateY(1px) scaleY(1.15); }
+  from {
+    opacity: 0.55;
+    transform: translateX(-50%) translateY(0) scaleY(1);
+  }
+  to {
+    opacity: 0.9;
+    transform: translateX(-50%) translateY(1px) scaleY(1.15);
+  }
 }
 
 .ship-body {
@@ -414,16 +473,16 @@ canvas:focus {
 .ship-sub {
   font-size: 12px;
   color: #cfd2e8;
-  letter-spacing: .2px;
-  opacity: .9;
+  letter-spacing: 0.2px;
+  opacity: 0.9;
 }
 .ship-title {
   margin-top: 2px;
   font-size: 14px;
   font-weight: 700;
   color: #ffffff;
-  letter-spacing: .2px;
-  text-shadow: 0 0 8px rgba(142,162,255,.2);
+  letter-spacing: 0.2px;
+  text-shadow: 0 0 8px rgba(142, 162, 255, 0.2);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -431,8 +490,16 @@ canvas:focus {
 
 /* 모바일 대응 */
 @media (max-width: 640px) {
-  .toast-wrap { top: 12px; right: 12px; }
-  .toast.ship { min-width: 220px; padding: 10px 12px; }
-  .ship-title { font-size: 13px; }
+  .toast-wrap {
+    top: 12px;
+    right: 12px;
+  }
+  .toast.ship {
+    min-width: 220px;
+    padding: 10px 12px;
+  }
+  .ship-title {
+    font-size: 13px;
+  }
 }
 </style>

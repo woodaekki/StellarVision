@@ -14,7 +14,6 @@ import 'v-calendar/style.css'
 import { ToastService } from 'primevue'
 import Primevue from 'primevue/config'
 
-
 const app = createApp(App)
 
 app.use(VCalendar, {
