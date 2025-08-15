@@ -10,7 +10,7 @@
           <RouterLink to="/pre" class="live-button-container no-underline relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-[#f2f2f2] after:w-0 after:transition-all after:duration-300 hover:after:w-full font-Poppins">
             <Video class="live-icon" :stroke-width="1" />
           </RouterLink>
-          <RouterLink to="/calender" class="live-button-container no-underline relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-[#f2f2f2] after:w-0 after:transition-all after:duration-300 hover:after:w-full font-Poppins">
+          <RouterLink to="/calender" class="calender-button-container no-underline relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-[#f2f2f2] after:w-0 after:transition-all after:duration-300 hover:after:w-full font-Poppins">
             <img :src="calender" alt="천문일정" class="calender-icon" width="28px" height="28px">
           </RouterLink>
         </div>
@@ -58,27 +58,64 @@ const handleLogout = () => {
 }
 </script>
 
-<style>
+<style scoped>
 .icon-container {
   display: flex;
 }
-
 .live-icon {
   width: 28px;
-  height: 28px
+  height: 28px;
 }
-
 .live-button-container {
   display: flex;
   align-items: center;
   text-decoration: none;
   font-weight: bold;
   transition: color 0.3s ease;
+  position: relative;
 }
-
+.live-button-container:hover::before {
+  content: '은하 라이브관';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  background-color: #333;
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.3s ease;
+}
 .calender-icon {
   width: 20px;
-  height: 20px
+  height: 20px;
 }
-
+.calender-button-container {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  font-weight: bold;
+  transition: color 0.3s ease;
+  position: relative;
+}
+.calender-button-container:hover::before {
+  content: '은하 달력관';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  background-color: #333;
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.3s ease;
+}
 </style>

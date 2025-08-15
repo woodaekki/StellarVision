@@ -13,7 +13,7 @@
           </div>
         </div>
         <div class="header-container">
-          <h2 class="page-title">My Space Gallery</h2>
+          <h2 class="page-title">은하 사진관</h2>
         </div>
       </div>
       <hr class="divider" />
