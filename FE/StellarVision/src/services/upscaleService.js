@@ -7,7 +7,7 @@ const UPSCALE_URL = 'https://susang-fastapi.my/api/upscale/photo'
 export function createUpscaleService() {
   const client = axios.create({
     baseURL: UPSCALE_URL,
-    timeout: 30000,
+    timeout: 120000,
   })
 
   return {

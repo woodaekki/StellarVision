@@ -68,6 +68,16 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.nova-overlay {
+  position: fixed;       /* ✅ 뷰포트 기준 고정 */
+  inset: 0;              /* top/right/bottom/left: 0 */
+  z-index: 9999;         /* ✅ 무엇보다 위로 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,.55); /* 배경 딤 */
+}
+
 .nova-header {
   display: flex;
   align-items: center;
@@ -150,9 +160,10 @@ onMounted(() => {
 .white-jelly-panel {
   background: rgba(255, 255, 255, 0.08);
   border-radius: 20px;
-  padding: 35px 40px;
-  margin: 25px auto;
-  max-width: 1140px;
+  padding: 20px 24px;
+  max-width: 800px;    /* ✅ 최대 가로 폭 */
+  max-height: 100vh;    /* ✅ 최대 세로 높이 */
+  overflow: auto;      /* 내용 넘치면 스크롤 */
 
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);

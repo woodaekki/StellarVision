@@ -10,6 +10,7 @@
   import { createAIAnalyzeService } from '@/services/AIAnalyzeService'
   import { useAITagStore } from '@/stores/aiTags'
   import { createUpscaleService } from '@/services/upscaleService'
+  import { createScreenShareService } from '@/services/screenShareService'
   import { useToast } from 'primevue/usetoast'
   import Toast from 'primevue/toast'
   import ProgressBar from 'primevue/progressbar'
@@ -303,11 +304,39 @@
     wireSessionEvents()
   })
 
+  
+  // 화면공유 서비스 (시스템 오디오 공유 ON, 마이크 유지)
+  const screenShare = createScreenShareService(
+    { sessionRef: session, publisherRef: publisher },
+    { shareSystemAudio: true, keepMic: true }
+  )
+  async function onToggleScreenShare() {
+    if (!isPublish.value) {
+      alert('스트리머만 화면공유가 가능합니다.')
+      return
+    }
+    try {
+      await screenShare.toggle()
+    } catch (e) {
+      console.error('[ScreenShare] toggle failed', e)
+      alert('화면공유에 실패했습니다. 브라우저 권한/설정을 확인해주세요.')
+    }
+  }
+
+  watch(screenShare.isScreenSharing, (sharing) => {
+    const el = localVideo.value
+    if (!el) return
+    // 혹시 남아있을 수 있는 OpenVidu 미러 클래스 제거
+    el.classList.remove('OV_mirrored')
+
+    // 인라인 스타일로 최종 강제 (inline이 가장 셈)
+    el.style.transform = sharing ? 'none' : 'scaleX(-1)' // 공유중엔 해제, 웹캠일 땐 거울
+  }, { immediate: true })
+
   onUnmounted(() => {
     destroy();  // AI/overlay 정리
-
     resetUpscaled() // 업스케일 blob 정리
-
+    screenShare.destroy()
     // 알림창 해소
     if (interval.value) {
       clearInterval(interval.value);
@@ -351,6 +380,8 @@
           :showChat="showChat"
           :onToggleChat="() => showChat = !showChat"
           :handleEndRoom="handleEndRoom"
+          :isScreenSharing="screenShare.isScreenSharing.value"
+          :toggleScreenShare="onToggleScreenShare"
         />
 
         <!-- 시청자 화면 -->
@@ -495,5 +526,4 @@
 }
 
 .chat-slide-enter-active, .chat-slide-leave-active { will-change: transform; }
-
 </style>
