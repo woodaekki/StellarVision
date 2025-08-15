@@ -4,16 +4,16 @@
     <div class="stars-background">
       <div class="header-and-back-container">
         <div class="back-button-container">
-          <div class="back-button-icon">  
+          <div class="back-button-icon">
             <RouterLink :to="`/profile/${memberEmail}`" class="no-underline relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-[#f2f2f2] after:w-0 after:transition-all after:duration-300 hover:after:w-full font-pretendard">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M15 18l-6-6 6-6" />
-                </svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
             </RouterLink>
           </div>
         </div>
         <div class="header-container">
-          <h2 class="page-title">My Space Gallery</h2>
+          <h2 class="page-title">은하 사진관</h2>
         </div>
       </div>
       <hr class="divider" />
@@ -51,7 +51,7 @@
                 <span v-for="tag in item.tags.slice(0, 3)" :key="tag.tagId" class="tag-chip">
                   #{{ tag.tagName }}
                 </span>
-                <span v-if="item.tags.length > 3" class="tag-chip tag-more">
+                <span v-if="item.tags.length > 3" class="tag-chip tag-more" @click.stop="openTagModal(item.tags, item.name)">
                   +{{ item.tags.length - 3 }}
                 </span>
               </div>
@@ -82,22 +82,51 @@
         <div ref="observerTarget" class="observer-target"></div>
       </div>
     </div>
+
+    <div v-if="isBadgeModalVisible" class="modal-backdrop">
+      <div class="modal-content">
+        <div class="stars"></div>
+        <div class="stars2"></div>
+        <div class="stars3"></div>
+        <div class="badge-title-container">
+          <img :src="icon" alt="획득한 뱃지 이미지" class="badge-image"/>
+          <h2 class="title">별조각을 찾았어요!</h2>
+        </div>
+        <p class="message">새로운 뱃지를 획득하셨습니다.<br>은하 수집관에서 확인해보세요!</p>
+        <button @click="isBadgeModalVisible = false" class="close-button">확인</button>
+      </div>
+    </div>
+
+    <div v-if="isTagModalVisible" class="modal-backdrop" @click="closeTagModal">
+      <div class="tag-modal-content" @click.stop>
+        <h3 class="tag-modal-title">{{ currentPhotoName }}의 모든 태그</h3>
+        <div class="tag-list-container">
+          <span v-for="tag in currentTags" :key="tag.tagId" class="tag-chip-full">
+            #{{ tag.tagName }}
+          </span>
+        </div>
+        <button @click="closeTagModal" class="tag-modal-close-button">닫기</button>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import { useAccountStore } from '@/stores/account';
+import { useBadgeStore } from '@/stores/badge';
 import axios from 'axios';
 import axiosApi from '@/api/axiosApi';
 import bg from '@/assets/pictures/stellabot/spaceBackground.avif';
 import { useRouter, useRoute } from 'vue-router'
-
+import icon from '@/assets/pictures/stellabot/nova.png';
 const accountStore = useAccountStore();
+const badgeStore = useBadgeStore();
 const route = useRoute();
 const pageRef = ref(null);
 const galleryInput = ref(null);
 const observerTarget = ref(null);
+const isBadgeModalVisible = ref(false);
 
 const photos = ref([]);
 const loading = ref(false);
@@ -114,6 +143,10 @@ const isThrottling = ref(false);
 const memberEmail = computed(() => route.params.id);
 const memberId = ref(window.history.state?.profilePk);
 const canUpload = computed(() => accountStore.isLogin);
+
+const isTagModalVisible = ref(false);
+const currentTags = ref([]);
+const currentPhotoName = ref('');
 
 const formatDate = (dateString) => {
   try {
@@ -211,6 +244,19 @@ const loadPhotoTags = async (photoId) => {
   }
 };
 
+const openTagModal = (tags, photoName) => {
+  currentTags.value = tags;
+  currentPhotoName.value = photoName;
+  isTagModalVisible.value = true;
+};
+
+const closeTagModal = () => {
+  isTagModalVisible.value = false;
+  currentTags.value = [];
+  currentPhotoName.value = '';
+};
+
+
 const triggerGalleryUpload = async () => {
   if (!canUpload.value) {
     alert('업로드 권한이 없습니다. 로그인 후 다시 시도해주세요.');
@@ -232,6 +278,9 @@ const uploadGalleryImage = async (e) => {
   if (!file || !memberId.value) return;
 
   try {
+    await badgeStore.fetchCollectedBadges(memberId.value);
+    const initialBadgeCount = badgeStore.collectedBadges.length;
+
     const { data: presignedResponse } = await axiosApi.post('/photos/presignedUrl', {
       memberId: memberId.value,
       originalFilename: file.name,
@@ -252,11 +301,20 @@ const uploadGalleryImage = async (e) => {
       originalFilename: file.name,
       s3Key: presignedData.s3Key
     });
+
+    await badgeStore.fetchCollectedBadges(memberId.value);
+    const newBadgeCount = badgeStore.collectedBadges.length;
+
+    if (newBadgeCount > initialBadgeCount) {
+      isBadgeModalVisible.value = true;
+    } else {
+      alert('사진 업로드가 완료되었습니다.');
+    }
+    
     page.value = 0;
     photos.value = [];
     hasMore.value = true;
     await fetchPhotos(true);
-    alert('사진 업로드가 완료되었습니다.');
   } catch (err) {
     console.error('업로드 실패:', err);
     alert('사진 업로드에 실패했습니다. 다시 시도해주세요.');
@@ -546,7 +604,6 @@ onBeforeUnmount(() => {
   color: rgba(255, 255, 255, 0.9);
   margin: 0 auto;
 }
-
 .bg-img {
   position: absolute;
   top: 0;
@@ -556,7 +613,6 @@ onBeforeUnmount(() => {
   object-fit: cover;
   z-index: -1;
 }
-
 .stars-background {
   position: relative;
   background: rgba(255, 255, 255, 0.12);
@@ -566,31 +622,23 @@ onBeforeUnmount(() => {
   width: 100%;
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  box-shadow:
-    inset 4px 4px 10px rgba(255 255 255 / 0.6),
-    inset -4px -4px 10px rgba(0 0 0 / 0.15);
+  box-shadow: inset 4px 4px 10px rgba(255 255 255 / 0.6), inset -4px -4px 10px rgba(0 0 0 / 0.15);
   border: 1.5px solid rgba(255 255 255 / 0.25);
   transition: box-shadow 0.3s ease;
 }
-
 .stars-background:hover {
-  box-shadow:
-    inset 6px 6px 14px rgba(255 255 255 / 0.85),
-    inset -6px -6px 14px rgba(0 0 0 / 0.2);
+  box-shadow: inset 6px 6px 14px rgba(255 255 255 / 0.85), inset -6px -6px 14px rgba(0 0 0 / 0.2);
 }
-
 .header-and-back-container {
   margin-top: 20px;
   display: flex;
   align-items: center;
   padding: 0 10px 24px;
-  gap: 15px; 
+  gap: 15px;
 }
-
 .back-button-container {
-  flex-shrink: 0; 
+  flex-shrink: 0;
 }
-
 .back-button-icon {
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
@@ -605,38 +653,32 @@ onBeforeUnmount(() => {
   transition: all 0.3s ease;
   backdrop-filter: blur(8px);
 }
-
 .back-button-icon:hover {
   background: rgba(255, 255, 255, 0.2);
   transform: scale(1.1);
 }
-
 .header-container {
-  flex: 1; 
+  flex: 1;
   display: flex;
-  align-items: center; 
+  align-items: center;
 }
-
 .page-title {
-  margin: 0; 
+  margin: 0;
   text-align: left;
   font-weight: 700;
   font-size: 1.5rem;
   color: #ffffff;
-  line-height: 1.2; 
+  line-height: 1.2;
 }
-
 .divider {
   border-top: 2px solid rgba(255, 255, 255, 0.2);
   width: 100%;
   margin: 0;
 }
-
 .content-container {
   margin-top: 20px;
   padding: 1rem 0;
 }
-
 .gallery-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -644,7 +686,6 @@ onBeforeUnmount(() => {
   max-width: 100%;
   justify-content: center;
 }
-
 .upload-box,
 .photo-box {
   position: relative;
@@ -656,16 +697,12 @@ onBeforeUnmount(() => {
   flex-direction: column;
   cursor: pointer;
   transform: scale(1);
-  transition:
-    transform 0.25s ease,
-    box-shadow 0.25s ease,
-    background-color 0.3s ease;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background-color 0.3s ease;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   color: rgba(255, 255, 255, 0.7);
   background: rgba(255 255 255 / 0.1);
   contain: layout style;
 }
-
 .upload-box {
   justify-content: center;
   align-items: center;
@@ -675,24 +712,20 @@ onBeforeUnmount(() => {
   user-select: none;
   border: 2px dashed rgba(255, 255, 255, 0.3);
 }
-
 .upload-box:hover {
   background: rgba(255 255 255 / 0.15);
   color: rgba(255, 255, 255, 0.95);
   border-color: rgba(255, 255, 255, 0.6);
 }
-
 .upload-box span {
   user-select: none;
 }
-
 .photo-box:hover {
   transform: translateY(-8px);
   box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3);
   background: rgba(255, 255, 255, 0.12);
   z-index: 2;
 }
-
 .photo-img {
   width: 100%;
   height: 100%;
@@ -704,11 +737,9 @@ onBeforeUnmount(() => {
   opacity: 0.95;
   will-change: filter;
 }
-
 .photo-img.loaded {
   filter: blur(0);
 }
-
 .photo-text {
   position: absolute;
   bottom: 0;
@@ -726,29 +757,24 @@ onBeforeUnmount(() => {
   user-select: none;
   text-shadow: 0 0 6px rgba(0, 0, 0, 0.8);
 }
-
 .photo-box:hover .photo-text {
   transform: translateY(0);
 }
-
 .photo-title {
   margin: 0;
   font-size: 1rem;
 }
-
 .photo-date {
   font-size: 0.8rem;
   color: rgba(255, 255, 255, 0.7);
   margin-top: 4px;
 }
-
 .photo-tags {
   margin-top: 8px;
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
-
 .tag-chip {
   background-color: rgba(255, 255, 255, 0.2);
   color: #ffffff;
@@ -761,7 +787,6 @@ onBeforeUnmount(() => {
   box-shadow: none;
   transition: background-color 0.3s ease;
 }
-
 .tag-loading-text {
   color: #00ffff;
   font-size: 0.75rem;
@@ -769,7 +794,6 @@ onBeforeUnmount(() => {
   font-weight: 600;
   user-select: none;
 }
-
 .delete-button {
   position: absolute;
   top: 10px;
@@ -791,12 +815,15 @@ onBeforeUnmount(() => {
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
 }
-
 .photo-box:hover .delete-button {
   opacity: 1;
   transform: scale(1.1);
 }
-
+.badge-image {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+}
 .loading-spinner-container {
   display: flex;
   flex-direction: column;
@@ -805,7 +832,6 @@ onBeforeUnmount(() => {
   min-height: 200px;
   margin: 2.5rem 0;
 }
-
 .spinner {
   width: 40px;
   height: 40px;
@@ -815,7 +841,6 @@ onBeforeUnmount(() => {
   animation: spin 1.1s linear infinite;
   margin-bottom: 1.2rem;
 }
-
 @keyframes spin {
   0% {
     transform: rotate(0deg);
@@ -824,7 +849,6 @@ onBeforeUnmount(() => {
     transform: rotate(360deg);
   }
 }
-
 .loading-text {
   text-align: center;
   margin-top: 2rem;
@@ -832,10 +856,204 @@ onBeforeUnmount(() => {
   font-weight: 600;
   user-select: none;
 }
-
 .observer-target {
   height: 200px;
   width: 100%;
   margin: 40px 0;
+}
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  backdrop-filter: blur(5px);
+}
+.modal-content {
+  position: relative;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 40px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: fadeIn 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+  overflow: hidden;
+}
+.badge-title-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 10px;
+}
+.stars,
+.stars2,
+.stars3 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  background-image: radial-gradient(2px 2px at 20px 30px, #eee, rgba(0, 0, 0, 0)),
+    radial-gradient(2px 2px at 40px 70px, #fff, rgba(0, 0, 0, 0)),
+    radial-gradient(2px 2px at 50px 150px, #ddd, rgba(0, 0, 0, 0));
+  background-repeat: repeat;
+  animation: move-twinkle-back 200s linear infinite;
+  opacity: 0.8;
+}
+.stars2 {
+  background-image: radial-gradient(2px 2px at 30px 40px, #fff, rgba(0, 0, 0, 0)),
+    radial-gradient(2px 2px at 60px 80px, #fff, rgba(0, 0, 0, 0));
+  animation: move-twinkle-back 100s linear infinite;
+}
+.stars3 {
+  background-image: radial-gradient(2px 2px at 70px 80px, #fff, rgba(0, 0, 0, 0)),
+    radial-gradient(2px 2px at 90px 100px, #fff, rgba(0, 0, 0, 0));
+  animation: move-twinkle-back 50s linear infinite;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8) translateY(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+@keyframes move-twinkle-back {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: -10000px 5000px;
+  }
+}
+.badge-icon {
+  width: 30px;
+  height: 60px;
+  animation: pulse 1s infinite alternate;
+  margin-bottom: 20px;
+}
+@keyframes pulse {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.1);
+  }
+}
+.title {
+  font-size: 1.7rem;
+  font-weight: 700;
+  margin: 0;
+  color: #ffd700;
+  text-shadow: none;
+}
+.message {
+  font-size: 1rem;
+  line-height: 1.5;
+  margin-bottom: 30px;
+  color: rgba(255, 255, 255, 0.9);
+}
+.close-button {
+  background: #2a9df4;
+  color: #fff;
+  border: 1px solid #2a9df4;
+  padding: 12px 30px;
+  border-radius: 25px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(42, 157, 244, 0.4);
+}
+.close-button:hover {
+  background: #4ab1f8;
+  border: 1px solid #4ab1f8;
+  box-shadow: 0 6px 16px rgba(42, 157, 244, 0.6);
+  transform: translateY(-2px);
+}
+.tag-modal-content {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  padding: 30px;
+  max-width: 450px;
+  width: 90%;
+  text-align: center;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(15px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  animation: fadeIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.tag-modal-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: #ffffff;
+  text-shadow: none;
+}
+.tag-list-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 25px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+.tag-list-container::-webkit-scrollbar {
+  width: 6px;
+}
+.tag-list-container::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+}
+.tag-list-container::-webkit-scrollbar-track {
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+}
+.tag-chip-full {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 500;
+  backdrop-filter: blur(5px);
+  user-select: none;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+.tag-modal-close-button {
+  background: #2a9df4;
+  color: #fff;
+  border: 1px solid #2a9df4;
+  padding: 10px 25px;
+  border-radius: 20px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(42, 157, 244, 0.4);
+}
+.tag-modal-close-button:hover {
+  background: #4ab1f8;
+  border: 1px solid #4ab1f8;
+  box-shadow: 0 6px 16px rgba(42, 157, 244, 0.6);
 }
 </style>

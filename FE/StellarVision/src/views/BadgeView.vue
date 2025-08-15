@@ -1,11 +1,11 @@
 <template>
   <div class="badge-dex-page">
-    <div class="badge-header">
-      <h2>Badge Page</h2>
-      <hr class="divider"/>
-    </div>
-
     <div class="badge-wrapper" ref="wrapperRef">
+      <div class="badge-header">
+        <h2>은하 수집관</h2>
+        <hr class="divider"/>
+      </div>
+
       <div class="badge-collection-info">
         <p>획득한 뱃지: {{ collectedCount }}/{{ badgeList.length }}</p>
       </div>
@@ -165,7 +165,7 @@ async function handleBadgeClick(event, badge) {
   left: 0;
   width: 100%;
   height: 100%;
-  background-image: url('@/assets/pictures/stellabot/cosmos.png');
+  background-image: url('@/assets/pictures/stellabot/milkyway.jpg');
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border: 1.5px solid rgba(255 255 255 / 0.25);
@@ -187,8 +187,11 @@ async function handleBadgeClick(event, badge) {
   text-align: left;
   font-weight: 700;
   font-size: 1.5rem;
-  color: #ffffffe1;
+  color: #ffffff;
   line-height: 1.2;
+  margin-top: 20px;
+  margin-bottom: 34px;
+  margin-left: 10px;
 }
 
 .divider {
@@ -196,7 +199,7 @@ async function handleBadgeClick(event, badge) {
   width: 100%;
   margin: 0;
   margin-top: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 14px;
 }
 
 /* 뱃지 보유 현황 */

@@ -2,7 +2,7 @@
   <div class="profile-section-container">
     <div class="profile-section">
       <div class="section-header">
-        <h2 class="section-title">My Gallery</h2>
+        <h2 class="section-title">은하 사진관</h2>
         <button @click="goGalleryList" class="detail-button">더보기</button>
       </div>
       <div class="content-frames">

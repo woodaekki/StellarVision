@@ -14,16 +14,16 @@
       <div class="px-4 pt-12 pb-6">
         <div class="navigation-links">
           <RouterLink :to="{ name: 'MyVideoListView', params: { id: userInfo?.email } }" class="active">
-            내 비디오
+            아카이브
           </RouterLink>
           <span>|</span>
           <RouterLink :to="{ name: 'MyLikedListView', params: { id: userInfo?.email } }">
-            좋아요한 영상
+            즐겨찾기
           </RouterLink>
         </div>
 
         <h2 class="text-2xl mb-2 text-center font-pretendard">
-          My Space Video
+          은하 영상관
         </h2>
         <hr class="border-t-2 border-neutral-200 w-full mt-2" />
       </div>
@@ -138,7 +138,7 @@ import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router';
 import commonApi from '@/api/commonApi';
 import bg from '@/assets/pictures/stellabot/spaceBackground.avif';
-import defaultBg from '@/assets/pictures/stellabot/nova.png';
+import defaultBg from '@/assets/pictures/stellabot/novaStar2.png';
 import { useAccountStore } from '@/stores/account';
 
 const route = useRoute();
@@ -154,18 +154,28 @@ const observerTarget = ref(null);
 const INITIAL_PAGE_SIZE = 11;
 const INFINITE_SCROLL_PAGE_SIZE = 12;
 
-// 별자리 썸네일 자동 매핑
+// 별자리 썸네일 자동 매핑 - 수정된 부분
 let STAR_IMAGES = {};
 let STAR_BY_KEY = {};
 
+// 안전하게 이미지 로드
 try {
-  // import.meta.glob을 사용하여 동적으로 이미지 로드
   STAR_IMAGES = import.meta.glob('@/assets/pictures/stars/*.{png,jpg,jpeg,webp}', {
     eager: true,
     import: 'default'
   });
+  
+  // 파일명 기준으로 매핑 테이블 구성
+  for (const path in STAR_IMAGES) {
+    const filename = path.split('/').pop().replace(/\.(png|jpg|jpeg|webp)$/i, '');
+    const normalizedKey = normalizeKoConstellation(filename);
+    STAR_BY_KEY[normalizedKey] = STAR_IMAGES[path];
+  }
+  
 } catch (error) {
+  console.error('별자리 이미지 로드 실패:', error);
   STAR_IMAGES = {};
+  STAR_BY_KEY = {};
 }
 
 // 태그 없을 시 기본 썸네일
@@ -173,44 +183,56 @@ const defaultImg = defaultBg;
 
 // 공백제거, 소문자화, xx자리에서 '자리'를 삭제
 function normalizeKoConstellation(s) {
+  if (!s || typeof s !== 'string') return '';
   const normalized = s.replace(/\s+/g, '').replace(/자리$/u, '').toLowerCase();
   return normalized;
 }
 
-// 별 이름 앞자리로 찾기, 파일명 기준으로 매핑 테이블 구성
-for (const path in STAR_IMAGES) {
-  const filename = path.split('/').pop().replace(/\.(png|jpg|jpeg|webp)$/i, '');
-  const normalizedKey = normalizeKoConstellation(filename);
-  STAR_BY_KEY[normalizedKey] = STAR_IMAGES[path];
-}
-
-// 별자리 딕셔너리
+// 별자리 딕셔너리 (별칭 처리)
 const ALIASES = {
-  // '큰곰': '큰곰자리',
+  '큰곰': '큰곰'
 };
 
+// 수정된 pickStarThumbByTags 함수
 function pickStarThumbByTags(tagList, fallback) {
-  for (const t of tagList || []) {
+  if (!tagList || !Array.isArray(tagList) || tagList.length === 0) {
+    return fallback;
+  }
+
+  for (const t of tagList) {
     const raw = typeof t === 'string' ? t : (t.tagName || '');
     if (!raw) continue;
-
+    
     let key = normalizeKoConstellation(raw);
     if (ALIASES[key]) {
       key = ALIASES[key];
     }
+
+    // STAR_BY_KEY에서 해당 키로 이미지 찾기
+    if (STAR_BY_KEY[key]) {
+      console.log(`🌟 태그 "${raw}"에 대해 별자리 이미지 발견: ${key}`);
+      return STAR_BY_KEY[key];
+    }
   }
+  
+  console.log('🔍 태그에 매칭되는 별자리 이미지 없음:', tagList.map(t => typeof t === 'string' ? t : t.tagName));
   return fallback;
 }
 
-// 비디오 썸네일 결정 함수
+// 비디오 썸네일 결정하는 함수 - 수정됨
 const getVideoThumbnail = (video) => {
-  // 태그가 있는 경우 별자리 이미지 우선 사용
+  console.log('🎬 비디오 썸네일 결정:', video.id, video.tags);
+  
+  // 태그가 있는 경우 별자리 이미지 사용
   if (video.tags && video.tags.length > 0) {
     const starThumbnail = pickStarThumbByTags(video.tags, null);
     if (starThumbnail) {
+      console.log('✅ 별자리 썸네일 사용:', starThumbnail);
       return starThumbnail;
     }
   }
+  
+  console.log('📷 기본 썸네일 사용');
   return defaultImg;
 };
 
@@ -299,6 +321,7 @@ const formatDate = (dateString) => {
 
 const handleImageError = (event) => {
   // 이미지 로드 실패 시 기본 이미지로 대체
+  console.log('기본 이미지로 대체');
   event.target.src = defaultImg;
 };
 
