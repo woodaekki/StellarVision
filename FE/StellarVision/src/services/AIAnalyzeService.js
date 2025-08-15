@@ -5,6 +5,8 @@ import axios from 'axios'
  * createAIAnalyzeService
  * - 비디오 프레임을 주기적으로 캡처해 AI 서버로 전송
  * - 응답 bbox를 오버레이 캔버스에 렌더링
+ * - 최근 예측을 보관하고, class별 그룹으로 제공
+ * - 선택된 class만 오버레이로 그릴 수 있는 필터 기능
  */
 export function createAIAnalyzeService({
   endpoint,                 // 필수: 'https://ai.example.com/api/detect/streaming'
@@ -26,6 +28,10 @@ export function createAIAnalyzeService({
   let inFlight = false
   let timer = null
 
+  // 최근 예측 & 선택된 클래스 코드(약어/라벨)
+  let lastPredictions = []
+  let selectedCode = null
+
   const api = axios.create()
 
   function _ensureCanvas(w, h) {
@@ -44,24 +50,24 @@ export function createAIAnalyzeService({
     }
   }
 
-  function _defaultDrawOverlay(preds = []) {
+  // 기본 드로잉(필터 적용 전용)
+  function _drawDefault(preds = []) {
     if (!overlayCtx || !overlayEl) return
     overlayCtx.clearRect(0, 0, overlayEl.width, overlayEl.height)
-
-    const filtered = preds.filter(p => (p.confidence ?? 0) >= minConfidence)
 
     overlayCtx.lineWidth = 2
     overlayCtx.font = '14px sans-serif'
 
-    for (const p of filtered) {
-      const [x1, y1, x2, y2] = p.bbox
+    for (const p of preds) {
+      const [x1, y1, x2, y2] = p.bbox || []
+      if (x1 == null || y1 == null || x2 == null || y2 == null) continue
       const w = Math.max(0, x2 - x1)
       const h = Math.max(0, y2 - y1)
 
       overlayCtx.strokeStyle = 'lime'
       overlayCtx.strokeRect(x1, y1, w, h)
 
-      const label = `${p.class} ${(p.confidence * 100).toFixed(1)}%`
+      const label = `${p.class} ${((p.confidence ?? 0) * 100).toFixed(1)}%`
       const pad = 4
       const tw = overlayCtx.measureText(label).width
       const tx = x1
@@ -72,6 +78,36 @@ export function createAIAnalyzeService({
       overlayCtx.fillStyle = 'white'
       overlayCtx.fillText(label, tx, ty)
     }
+  }
+
+  // 현재 선택/신뢰도 기준으로 필터링 후 그리기
+  function _drawFiltered(preds = []) {
+    if (!overlayEl || !overlayCtx) return
+    // 항상 먼저 캔버스 비움
+    overlayCtx.clearRect(0, 0, overlayEl.width, overlayEl.height)
+    // ❗선택 전(null)에는 아무것도 그리지 않음 = “리스트에서 클릭해야만 그림”
+    if (selectedCode == null) return
+
+    const byConf = preds.filter(p => (p.confidence ?? 0) >= minConfidence)
+    const final = byConf.filter(p => p.class === selectedCode)
+    if (renderer) { renderer(final, overlayCtx, overlayEl, { minConfidence }) } else { _drawDefault(final) }
+  }
+
+  // class별 그룹핑
+  function _groupPredictions(preds = []) {
+    const groups = new Map() // code -> { code, items: [], count, maxConf }
+    for (const p of preds) {
+      const code = p?.class
+      if (!code) continue
+      const g = groups.get(code) || { code, items: [], count: 0, maxConf: 0 }
+      g.items.push(p)
+      g.count += 1
+      g.maxConf = Math.max(g.maxConf, Number(p.confidence ?? 0))
+      groups.set(code, g)
+    }
+    return Array.from(groups.values()).sort(
+      (a, b) => b.maxConf - a.maxConf || b.count - a.count
+    )
   }
 
   async function analyzeOnce() {
@@ -91,7 +127,7 @@ export function createAIAnalyzeService({
           const form = new FormData()
           form.append('file', blob, 'frame.jpg')
 
-          const headers = { }
+          const headers = {}
           if (getAuthToken) headers.Authorization = getAuthToken()
 
           const { data } = await api.post(
@@ -99,12 +135,11 @@ export function createAIAnalyzeService({
             form,
             { headers, timeout: timeoutMs, withCredentials: false }
           )
-          const predictions = data?.predictions ?? []
-          if(renderer && overlayCtx && overlayEl) {
-            renderer(predictions, overlayCtx, overlayEl, { minConfidence })
-          } else {
-            _defaultDrawOverlay(predictions)
-          }
+
+          // [CHANGED] 예측 결과 보관 + 필터렌더
+          lastPredictions = data?.predictions ?? []
+          _drawFiltered(lastPredictions)
+
           resolve(data)
         } catch (e) {
           // 실패해도 앱 끊기지 않게 조용히
@@ -130,11 +165,11 @@ export function createAIAnalyzeService({
     /**
      * 비디오/오버레이 엘리먼트 연결
      * - overlayEl은 null 가능(그냥 추론만 하고 싶을 때)
-     * - CSS는 같은 컨테이너에 비디오/캔버스 둘 다 absolute로 겹치고 object-contain 권장
      */
     attach({ video, overlay }) {
       videoEl = video
       overlayEl = overlay || null
+      // overlayCtx는 _ensureCanvas에서 크기 맞출 때 생성
     },
 
     start() {
@@ -157,6 +192,8 @@ export function createAIAnalyzeService({
 
     setMinConfidence(v) {
       minConfidence = v
+      // 신뢰도 변경 시 즉시 재렌더
+      _drawFiltered(lastPredictions)
     },
 
     setTargetFps(fps) {
@@ -167,6 +204,27 @@ export function createAIAnalyzeService({
       }
     },
 
+    // 최근 결과 반환(필요 시 외부에서 직접 접근)
+    getLastPredictions() {
+      return Array.isArray(lastPredictions) ? lastPredictions.slice() : []
+    },
+
+    // class별 그룹 리스트 반환 (패널에 사용)
+    getGroups() {
+      return _groupPredictions(lastPredictions)
+    },
+
+    // 선택한 class만 오버레이로 그리기 (null이면 전체)
+    select(code /* string|null */) {
+      selectedCode = code || null
+      _drawFiltered(lastPredictions)
+    },
+
+    // 오버레이 수동 초기화
+    clearOverlay() {
+      if (overlayCtx && overlayEl) overlayCtx.clearRect(0, 0, overlayEl.width, overlayEl.height)
+    },
+
     destroy() {
       this.stop()
       videoEl = null
@@ -175,6 +233,10 @@ export function createAIAnalyzeService({
       offscreen = null
       offctx = null
       inFlight = false
+
+      // [ADDED] 상태도 정리
+      lastPredictions = []
+      selectedCode = null
     },
   }
 }

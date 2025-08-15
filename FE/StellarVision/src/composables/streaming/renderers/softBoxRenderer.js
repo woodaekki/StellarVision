@@ -7,7 +7,7 @@ export function makeSoftBoxRenderer(userOpts = {}) {
     radius: 0,                       // 0 = 완전 네모
     minBoxPx: 10,
     showLabel: true,
-    font: '12px Inter',
+    font: '20px Inter',
     labelYOffset: 6,                 // 박스 위로 띄우는 간격(px)
     bboxFormat: 'auto',              // 'tlwh' | 'xyxy' | 'cxcywh' | 'auto'
     labelMap: (cls) => cls || 'Object',
@@ -115,7 +115,7 @@ export function makeSoftBoxRenderer(userOpts = {}) {
       roundRect(ctx, x, y, w, h, opts.radius);
 
       if (opts.showLabel) {
-        const text = `${opts.labelMap(p.class)}${Number.isFinite(conf) ? `  ${(conf*100|0)}%` : ''}`;
+        const text = `${opts.labelMap(p.class)}`;
         drawLabel(ctx, W, text, x, y, w);
       }
     }
