@@ -61,4 +61,8 @@ function goToUser() {
   border: 1px solid #e5e7eb;
   flex-shrink: 0;
 }
+
+.user-name {
+  color: #fff
+}
 </style>

@@ -46,73 +46,75 @@ function close() {
   display: flex;
   justify-content: center;
   align-items: center;
+  backdrop-filter: blur(5px);
 }
 
 .user-list-wrapper {
-  padding: 20px;
-  padding-top: 48px; /* 👈 버튼이 차지하는 공간만큼 위쪽 여백 추가 */
-  border-radius: 12px;
-  width: min(300px, calc(100% - 32px));
+  padding: 40px;
+  padding-top: 60px;
+  border-radius: 20px;
+  width: min(400px, calc(100% - 40px));
   min-height: 200px;
   max-height: 80vh;
   overflow-y: auto;
   box-sizing: border-box;
-
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -120%);
-  background-color: #FAFAFA;
+  background: rgba(255, 255, 255, 0.2); 
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: inset 4px 4px 10px rgba(255 255 255 / 0.6), inset -4px -4px 10px rgba(0 0 0 / 0.15), 0 8px 32px 0 rgba(0, 0, 0, 0.37); 
+  border: 1.5px solid rgba(255 255 255 / 0.4);  
+  animation: fadeIn 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
 }
 
 .close-button-wrapper {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 15px;
+  right: 15px;
 }
 
 .close-button {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   border: none;
-  border-radius: 4px;
-  font-size: 14px;
+  border-radius: 50%;
+  font-size: 18px;
   font-weight: bold;
   cursor: pointer;
-
-  background-color: #111827;
+  background-color: rgba(255, 255, 255, 0.1);
   color: #FAFAFA;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .close-button:hover {
   background-color: #FAFAFA;
   color: #111827;
-  border: 1px solid #111827;
+  transform: scale(1.1);
+  border-color: #FAFAFA;
 }
 
 .no-user {
   display: flex;
-  flex-direction: column;
   justify-content: center;
-  align-items: center;
-
-  min-height: 25vh;
-  padding: 16px;
+  min-height: 10vh;
   text-align: center;
-  font-size: 14px;
-  color: #6B7280;
-  background-color: #F9FAFB;
-  border-radius: 8px;
-  border: 1px dashed #D1D5DB;
+  font-size: 16px;
+  color: #fff;
 }
 
 .no-user p {
-  margin: 8px 0 0;
-  font-size: 14px;
-  line-height: 1.4;
+  margin: 12px 0 0;
+  font-size: 16px;
+  line-height: 1.6;
+  font-weight: 500;
+  text-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
 }
 </style>
