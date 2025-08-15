@@ -117,7 +117,7 @@ const createRoom = async () => {
                 autocomplete="off"
                 required/>
              </div>
-             <p v-if="titleInvalid" class="pt-2 text-xs text-red-500">제목은 2~50자 사이여야 합니다</p>
+             <p v-if="titleInvalid" class="pt-2 text-xs text-red-500">제목은 2~50자 사이 영문이어야 합니다</p>
             </div>
             <button
               type="submit"
