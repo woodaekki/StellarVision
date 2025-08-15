@@ -1,6 +1,6 @@
 <!-- RoomView.vue -->
 <script setup>
-  import { onMounted, onUnmounted, ref, watch } from 'vue'
+  import { onMounted, onUnmounted, ref, watch, computed } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import openviduService from '@/services/openviduService'
   import streamingService from '@/services/streamingService'
@@ -28,6 +28,7 @@
   import { makeSoftBoxRenderer } from '@/composables/streaming/renderers/softBoxRenderer'
   import { CONSTELLATION_KO } from '@/constants/constellations'
   import UpscalePreviewComponent from '@/components/streaming/UpscalePreviewComponent.vue'
+  import ConstellationListPanel from '@/components/streaming/ConstellationListPanel.vue'
 
   // ai 분석 결과를 담을 store
   const aiTagStore = useAITagStore();
@@ -105,6 +106,10 @@
     clearAllOverlays,             // 오버레이 지우기(overlayLocal 인자로)
     onStreamDestroyed,            // 구독 스트림 파괴 시 정리
     destroy,                      // 전체 정리
+    selectedClass,
+    setSelectedClass,
+    detectedGroups,
+    runOnceAll,
   } = useAIAnalysis({
     createAIAnalyzeService,
     endpoint: 'https://i13c106.p.ssafy.io/api/detect/streaming',
@@ -113,6 +118,16 @@
     aiTagStore,
     renderer: boxRenderer,
   })
+
+ const detectedList = computed(() =>
+   (detectedGroups.value || []).map(item => ({
+     ...item,
+     // getDetectedList()가 반환하는 식별자 키는 'code'
+     code: item.code,
+     nameKo: CONSTELLATION_KO[item.code] || item.code,
+     confPct: Math.round((item.maxConf ?? 0) * 100),
+   }))
+ )
 
   // useOpenViduBindings
   const {
@@ -272,9 +287,18 @@
   }
 
   // 토글에 따라 실행/정지
-  watch(aiOn, () => {
-    watchAI(aiOn, () => clearAllOverlays(overlayLocal))
-  })
+ watch(aiOn, () => {
+   watchAI(aiOn, () => clearAllOverlays(overlayLocal))
+   if (aiOn.value) {
+     // 켜지자마자 한 프레임 추론하여 패널을 바로 채움
+     // runOnceAll는 useAIAnalysis에서 이미 노출됨
+     // (만약 import 누락이면 위 구조분해에서 runOnceAll 추가)
+     try { runOnceAll?.(aiOn) } catch {}
+   } else {
+     // 끌 때 선택 해제(선택 유지 원하면 이 줄 삭제)
+     setSelectedClass(null)
+   }
+ })
 
 
   // 환영 알림창
@@ -405,6 +429,16 @@
           :onToggleChat="() => showChat = !showChat"
           :leave="leave"
         />
+
+        <transition name="fade">
+          <ConstellationListPanel
+            v-if="aiOn"
+            :items="detectedList"
+            class="absolute top-16 right-3 z-50"
+            :selectedCode="selectedClass"
+            @select="setSelectedClass"
+          />
+        </transition>
 
       </div>
       <!-- 채팅 창 -->

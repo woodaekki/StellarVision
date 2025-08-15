@@ -1,5 +1,7 @@
 // src/composables/streaming/useAIAnalysis.js
 
+// [ADDED] 선택 상태/계산을 위해 ref 사용
+import { ref } from 'vue'
 
 // AI 분석(로컬/구독자), 주기 실행, 오버레이 클리어, 정리까지 모두 캡슐화
 export function useAIAnalysis({ createAIAnalyzeService, endpoint, isPublish, sessionId, aiTagStore, renderer }) {
@@ -19,11 +21,22 @@ export function useAIAnalysis({ createAIAnalyzeService, endpoint, isPublish, ses
   let intervalId = null
   let inFlight = false
 
+  // [ADDED] 현재 선택된 별자리 코드(예: 'Ori'). null이면 전체
+  const selectedClass = ref(null)
+  const detectedGroups = ref([])
+
+  function refreshDetectedGroups() {
+    const g = localAnalyzer.getGroups?.()
+    detectedGroups.value = Array.isArray(g) ? g : []
+  }
+
   /** 로컬 비디오/오버레이 붙이기 (loadedmetadata 보장) */
   function attachLocal(videoEl, overlayEl) {
     if (!videoEl) return
     const attach = () => {
       localAnalyzer.attach({ video: videoEl, overlay: overlayEl }) // 내부 그리기끄기 옵션 있으면 활용
+      // [ADDED] attach 시 현재 선택 상태를 즉시 반영
+      localAnalyzer.select?.(selectedClass.value || null)
     }
     if (videoEl.readyState >= 1 && videoEl.videoWidth) attach()
     else videoEl.addEventListener('loadedmetadata', attach, { once: true })
@@ -52,6 +65,9 @@ export function useAIAnalysis({ createAIAnalyzeService, endpoint, isPublish, ses
           renderer,
         })
         svc.attach({ video: el, overlay: canvas })
+        // [ADDED] 구독자 분석기에도 현재 선택 상태를 즉시 반영
+        svc.select?.(selectedClass.value || null)
+
         subAnalyzers.set(streamId, { svc, canvas })
       }
       if (el.readyState >= 1 && el.videoWidth) start()
@@ -60,23 +76,23 @@ export function useAIAnalysis({ createAIAnalyzeService, endpoint, isPublish, ses
   }
 
   /** (디버깅용) 예쁘게 로깅 */
-    function prettyLog(prefix, data) {
-        try {
-        const preds = data?.predictions ?? []
-        console.group(prefix)
-        console.log('총 개수:', preds.length)
-        for (const p of preds) {
-            const { class: klass, confidence, bbox } = p
-            console.log(
-            `• ${klass}  conf=${Number(confidence).toFixed(3)}  bbox=[${bbox?.map(n => Number(n).toFixed(2)).join(', ')}]`
-            )
-        }
-        if (!preds.length) console.log('(빈 결과)')
-        console.groupEnd()
-        } catch (e) {
-        console.log(prefix, data)
-        }
+  function prettyLog(prefix, data) {
+    try {
+      const preds = data?.predictions ?? []
+      console.group(prefix)
+      console.log('총 개수:', preds.length)
+      for (const p of preds) {
+        const { class: klass, confidence, bbox } = p
+        console.log(
+          `• ${klass}  conf=${Number(confidence).toFixed(3)}  bbox=[${bbox?.map(n => Number(n).toFixed(2)).join(', ')}]`
+        )
+      }
+      if (!preds.length) console.log('(빈 결과)')
+      console.groupEnd()
+    } catch (e) {
+      console.log(prefix, data)
     }
+  }
 
   /** aiOn이 켜져 있을 때 1회 실행 */
   async function runOnceAll(aiOnRef) {
@@ -89,9 +105,9 @@ export function useAIAnalysis({ createAIAnalyzeService, endpoint, isPublish, ses
       if (isPublish.value) {
         aiTagStore.addFromPredictions(sessionId, localRes)
       }
-
+      refreshDetectedGroups()
       // 구독자들
-      for (const [streamId, { svc, video, canvas }] of subAnalyzers.entries()) {
+      for (const [streamId, { svc }] of subAnalyzers.entries()) {
         const subRes = await svc.once()
         prettyLog(`[AI][sub:${streamId}]`, subRes)
       }
@@ -113,7 +129,13 @@ export function useAIAnalysis({ createAIAnalyzeService, endpoint, isPublish, ses
       }
     } else {
       if (intervalId) { clearInterval(intervalId); intervalId = null }
+      // 🔻 즉시 전부 지우기 (로컬 캔버스 + 구독자 캔버스 + 서비스 내부 캔버스)
       onClearOverlays?.()
+      try { localAnalyzer.clearOverlay?.() } catch {}
+      for (const { svc } of subAnalyzers.values()) try { svc.clearOverlay?.() } catch {}
+      setSelectedClass(null)
+      detectedGroups.value = []
+      setSelectedClass(null)
     }
   }
 
@@ -150,6 +172,23 @@ export function useAIAnalysis({ createAIAnalyzeService, endpoint, isPublish, ses
     subAnalyzers.clear()
   }
 
+  // 패널용: 로컬 분석기의 class별 그룹 리스트를 돌려줌
+  // 필요하면 구독자들의 그룹을 합산하는 로직으로 확장 가능
+  function getDetectedList() {
+    const groups = localAnalyzer.getGroups?.()
+    console.log("getDetectedList groups 보기: ", groups)
+    return Array.isArray(groups) ? groups : []
+  }
+
+  // 선택 토글: null이면 전체 보기
+  function setSelectedClass(code) {
+    selectedClass.value = code || null
+    localAnalyzer.select?.(selectedClass.value)
+    for (const { svc } of subAnalyzers.values()) {
+      svc.select?.(selectedClass.value)
+    }
+  }
+
   return {
     // 객체/레퍼런스
     localAnalyzer,
@@ -164,5 +203,11 @@ export function useAIAnalysis({ createAIAnalyzeService, endpoint, isPublish, ses
     clearAllOverlays,
     onStreamDestroyed,
     destroy,
+
+    // 패널 연동용 API
+    selectedClass,       // 현재 선택된 코드 (Ref)
+    setSelectedClass,    // 선택 적용 (로컬/구독자 모두)
+    detectedGroups,
+    refreshDetectedGroups
   }
 }
