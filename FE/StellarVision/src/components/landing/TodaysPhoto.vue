@@ -67,9 +67,6 @@ onMounted(async () => {
 
 .page {
   min-height: 100vh;
-  background-size: cover;
-  background-image: linear-gradient(rgba(11, 12, 16, 0.7), rgba(11, 12, 16, 0.7));
-  background-position: center;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -99,7 +96,6 @@ onMounted(async () => {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(11, 12, 16, 0.7);
   z-index: -1;
 }
 

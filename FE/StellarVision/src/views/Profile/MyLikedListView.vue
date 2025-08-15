@@ -12,18 +12,8 @@
       </div>
 
       <div class="px-4 pt-12 pb-6">
-        <div class="navigation-links">
-          <RouterLink :to="{ name: 'MyVideoListView', params: { id: myId } }" >
-            내 비디오
-          </RouterLink>
-          <span>|</span>
-          <RouterLink :to="{ name: 'MyLikedListView', params: { id: myId } }" class="active" >
-            좋아요한 영상
-          </RouterLink>
-        </div>
-
         <h2 class="text-2xl mb-2 text-center font-pretendard">
-          My Liked Video
+          은하 마음관
         </h2>
         <hr class="border-t-2 border-neutral-200 w-full mt-2" />
       </div>
@@ -118,8 +108,23 @@ import { useRoute, useRouter } from 'vue-router';
 import { useStreamingStore } from '@/stores/streaming.js';
 import commonApi from '@/api/commonApi';
 import bg from '@/assets/pictures/stellabot/spaceBackground.avif';
-import defaultBg from '@/assets/pictures/stellabot/nova.png';
+import defaultBg from '@/assets/pictures/stellabot/novaStar2.png';
 import { useAccountStore } from '@/stores/account';
+
+const props = defineProps({
+  profileEmail: {
+    type: String,
+    required: true
+  },
+  profilePk: {
+    type: [String, Number],
+    required: true
+  },
+  recentVideos: {
+    type: Array,
+    default: () => []
+  }
+});
 
 const route = useRoute();
 const router = useRouter();
@@ -133,18 +138,27 @@ const allVideos = ref([]);
 const likedVideos = ref([]);
 const isLoading = ref(false);
 
-// 별자리 썸네일 자동 매핑
+// 별자리 썸네일 자동 매핑 - 수정된 부분
 let STAR_IMAGES = {};
 let STAR_BY_KEY = {};
 
+// 안전하게 이미지 로드
 try {
-  // Vite의 import.meta.glob을 사용하여 동적으로 이미지 로드
   STAR_IMAGES = import.meta.glob('@/assets/pictures/stars/*.{png,jpg,jpeg,webp}', {
     eager: true,
     import: 'default'
   });
+  
+  // 파일명 기준으로 매핑 테이블 구성
+  for (const path in STAR_IMAGES) {
+    const filename = path.split('/').pop().replace(/\.(png|jpg|jpeg|webp)$/i, '');
+    const normalizedKey = normalizeKoConstellation(filename);
+    STAR_BY_KEY[normalizedKey] = STAR_IMAGES[path];
+  }
+  
 } catch (error) {
   STAR_IMAGES = {};
+  STAR_BY_KEY = {};
 }
 
 // 태그 없을 시 기본 썸네일
@@ -152,33 +166,45 @@ const defaultImg = defaultBg;
 
 // 공백제거, 소문자화, xx자리에서 '자리'를 삭제
 function normalizeKoConstellation(s) {
+  if (!s || typeof s !== 'string') return '';
   const normalized = s.replace(/\s+/g, '').replace(/자리$/u, '').toLowerCase();
-  console.log(`🔄 정규화: "${s}" -> "${normalized}"`);
   return normalized;
 }
 
-// 별 이름 앞자리로 찾기, 파일명 기준으로 매핑 테이블 구성
-for (const path in STAR_IMAGES) {
-  const filename = path.split('/').pop().replace(/\.(png|jpg|jpeg|webp)$/i, '');
-  const normalizedKey = normalizeKoConstellation(filename);
-  STAR_BY_KEY[normalizedKey] = STAR_IMAGES[path];
-}
-
-// 별자리 딕셔너리
+// 별자리 딕셔너리 (별칭 처리)
 const ALIASES = {
-  // '큰곰': '큰곰자리',
+  '큰곰': '큰곰',
+  '작은곰': '작은곰', 
+  '백조': '백조',
+  '전갈': '전갈',
+  // 필요에 따라 더 추가
 };
 
+// 수정된 pickStarThumbByTags 함수
 function pickStarThumbByTags(tagList, fallback) {
-  for (const t of tagList || []) {
+  if (!tagList || !Array.isArray(tagList) || tagList.length === 0) {
+    return fallback;
+  }
+
+  for (const t of tagList) {
     const raw = typeof t === 'string' ? t : (t.tagName || '');
     if (!raw) continue;
+    let key = normalizeKoConstellation(raw);
+    if (ALIASES[key]) {
+      key = ALIASES[key];
+    }
+
+    if (STAR_BY_KEY[key]) {
+      return STAR_BY_KEY[key];
+    } 
   }
   return fallback;
 }
 
-// 비디오 썸네일 결정하는 함수
+// 비디오 썸네일 결정하는 함수 - 수정됨
 const getVideoThumbnail = (video) => {
+  console.log('🎬 비디오 썸네일 결정:', video.id, video.tags);
+  
   // 태그가 있는 경우 별자리 이미지 사용
   if (video.tags && video.tags.length > 0) {
     const starThumbnail = pickStarThumbByTags(video.tags, null);
@@ -194,34 +220,46 @@ const myId = computed(() => {
   return id;
 });
 
+function goVideoList() {
+  router.push({
+    name: 'MyVideoListView', 
+    params: { id: props.profileEmail },
+    state: { profilePk: props.profilePk }
+  });
+}
+
+
+// 수정된 태그 로드 함수
 const fetchTagsForVideos = async (videosList) => {
   if (!videosList || videosList.length === 0) return videosList;
-
   const tagPromises = videosList.map(async (video) => {
     try {
       const res = await commonApi.get(`/videos/${video.id}/tags`);
-      return { ...video, tags: res.data.data?.tags || [] };
+      const tags = res.data.data?.tags || [];
+      return { ...video, tags };
     } catch (err) {
-      console.error(`비디오 ${video.id}의 태그를 불러오는 데 실패했습니다:`, err);
+      console.error(`비디오 ${video.id}의 태그 로드 실패:`, err);
       return { ...video, tags: [] };
     }
   });
 
-  return Promise.all(tagPromises);
+  const videosWithTags = await Promise.all(tagPromises);
+  return videosWithTags;
 };
 
 const fetchUserVideos = async (userId) => {
   try {
     isLoading.value = true;
+    // 사용자의 모든 비디오 가져오기
     const res = await commonApi.get(`/videos/search?userId=${userId}`);
     let videos = res.data.data?.videos || [];
 
     // 태그 정보를 추가로 불러오기
     videos = await fetchTagsForVideos(videos);
-
     allVideos.value = videos;
     return videos;
   } catch (err) {
+    console.error('사용자 비디오 로드 실패:', err);
     allVideos.value = [];
     return [];
   } finally {
@@ -230,7 +268,11 @@ const fetchUserVideos = async (userId) => {
 };
 
 const filterLikedVideos = (videos) => {
-  const filtered = videos.filter(video => video.liked === true);
+  const filtered = videos.filter(video => {
+    const isLiked = video.liked === true || video.liked === 1;
+    console.log(`비디오 ${video.id}: liked=${video.liked}, 결과=${isLiked}`);
+    return isLiked;
+  });
   likedVideos.value = filtered;
   return filtered;
 };
@@ -253,6 +295,7 @@ const formatDate = (dateString) => {
 
 // asset 폴더에 없는 사진일 경우
 const handleImageError = (event) => {
+  console.log('기본 이미지');
   event.target.src = defaultImg;
 };
 
@@ -264,6 +307,7 @@ const handleUnlike = async (videoId) => {
   try {
     const res = await commonApi.delete(`/videos/${videoId}/likes`);
     if (res.status === 200) {
+      // 전체 비디오 목록에서도 업데이트
       const originalVideo = allVideos.value.find(v => v.id === videoId);
       if (originalVideo) {
         originalVideo.liked = false;
@@ -271,6 +315,7 @@ const handleUnlike = async (videoId) => {
       likedVideos.value = likedVideos.value.filter(v => v.id !== videoId);
     }
   } catch (error) {
+    console.error('좋아요 취소 실패:', error);
     alert('좋아요 취소 중 오류가 발생했습니다.');
   }
 };
@@ -348,34 +393,6 @@ onMounted(async () => {
   transform: scale(1.1);
 }
 
-.navigation-links {
-  display: flex;
-  justify-content: center;
-  gap: 15px;
-  margin-bottom: 20px;
-  font-size: 16px;
-}
-
-.navigation-links a {
-  color: rgba(255, 255, 255, 0.7);
-  text-decoration: none;
-  padding: 8px 16px;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-}
-
-.navigation-links a:hover,
-.navigation-links a.active {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.navigation-links span {
-  color: rgba(255, 255, 255, 0.5);
-  display: flex;
-  align-items: center;
-}
-
 .stars-background h2 {
   margin-top: 20px !important;
   margin-bottom: 40px !important;
@@ -423,9 +440,47 @@ onMounted(async () => {
   }
 }
 
+.detail-button {
+  font-family: 'Pretendard', 'sans-serif';
+  font-size: 18px;
+  text-decoration: none;
+  font-weight: 700;
+  transition: color 0.3s ease;
+  padding: 8px 16px;
+  cursor: pointer;
+
+  &:hover {
+    color: #f2f2f2;
+  }
+}
+
+.navigation-links {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 20px;
+  font-size: 16px;
+  margin-left: 10px;
+}
+
+.navigation-links a {
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.navigation-links a:hover,
 .navigation-links a.active {
   color: #ffffff;
   background: rgba(255, 255, 255, 0.1);
+}
+
+.navigation-links span {
+  color: rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
 }
 
 .empty-state {
@@ -676,5 +731,4 @@ onMounted(async () => {
     transform: translateY(0);
   }
 }
-
 </style>
