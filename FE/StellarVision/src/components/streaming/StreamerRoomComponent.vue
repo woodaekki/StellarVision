@@ -1,7 +1,7 @@
 <!-- src/components/room/StreamerRoomComponent.vue -->
 <script setup>
 import { defineProps } from 'vue'
-import { DoorOpen, Camera, Download, MessageCircle, Mic, MicOff, Square, SquareStop } from 'lucide-vue-next'
+import { DoorOpen, Camera, Download, MessageCircle, Mic, MicOff, Square, SquareStop, ScreenShare, ScreenShareOff } from 'lucide-vue-next'
 
 const props = defineProps({
   // 영상/구독 관련
@@ -43,6 +43,12 @@ const props = defineProps({
 
   // 종료/나가기
   handleEndRoom: { type: Function, required: true },
+
+  // ===== 화면공유 추가 =====
+  isScreenSharing: { type: Boolean, required: true },
+  toggleScreenShare: { type: Function, required: true },
+  // 빠른 연타 방지(선택): 부모에서 screenShare.isBusy.value 내려주면 버튼 비활성화됨
+  isScreenBusy: { type: Boolean, default: false },
 })
 
 </script>
@@ -89,6 +95,18 @@ const props = defineProps({
 
     <!-- 버튼 바 -->
     <div class="absolute left-1/2 bottom-6 -translate-x-1/2 flex gap-4 z-10">
+      <!-- 화면공유 -->
+      <button
+        @click="toggleScreenShare"
+        :disabled="isScreenBusy"
+        :title="isScreenSharing ? '화면공유 중지' : '화면공유 시작'"
+        class="text-white rounded-full p-4 disabled:opacity-50"
+        :class="isScreenSharing ? 'bg-emerald-600' : 'bg-slate-700'"
+      >
+        <component :is="isScreenSharing ? ScreenShareOff : ScreenShare" />
+      </button>
+
+
       <!-- 캡쳐/다운로드 토글 버튼(하나) -->
       <button
         @click="onCaptureOrDownload"

@@ -21,11 +21,12 @@ export default function openviduService(streamId, userName, onError = () => {}) 
 
   // 원격 스트림 생성 시
   session.on('streamCreated', e => {
+    // 스트리머(호스트)는 원격 오디오 끔(에코 방지), 시청자는 켬
     const sub = session.subscribe(e.stream, undefined, {
-      subscribeToAudio : false,
-      subscribeToVideo : true,
-      insertMode : 'APPEND'
-    }) // 일단 구독만
+      subscribeToAudio: !isPublish.value,
+      subscribeToVideo: true,
+      insertMode: 'APPEND',
+    })
     subscribers.value.push(sub)
 
     // 이미 컨테이너가 준비돼 있으면 즉시 붙이기
@@ -72,7 +73,8 @@ export default function openviduService(streamId, userName, onError = () => {}) 
     try {
       el.setAttribute('playsinline', 'true')
       el.setAttribute('autoplay', 'true')
-      el.muted = true
+      // 스트리머는 원격 소리 끄기, 시청자는 켜기
+      el.muted = !!isPublish.value
     } catch (_) {}
 
     sub.addVideoElement(el)
@@ -107,6 +109,7 @@ export default function openviduService(streamId, userName, onError = () => {}) 
           resolution: '640x480',
           frameRate: 30,
           insertMode: 'APPEND',
+          mirror: false,
         })
         // 퍼블리셔 프리뷰 DOM에 붙이기
         if (publisherTarget) {
