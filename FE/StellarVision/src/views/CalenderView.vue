@@ -4,7 +4,7 @@
 
     <div class="stars-background">
       <div class="px-4 pt-3 pb-6">
-        <h2 class="text-2xl mb-2 text-center font-pretendard">은하 천체일정관</h2>
+        <h2 class="text-2xl mb-2 text-center font-pretendard">은하 천체 일정관</h2>
         <hr class="border-t-2 border-neutral-100 w-full mt-2" />
       </div>
 

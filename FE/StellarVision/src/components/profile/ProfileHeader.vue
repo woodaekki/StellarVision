@@ -66,7 +66,7 @@
           v-if="editMode && profileInfo?.profileImageUrl"
           @click="deleteProfileImage"
         />
-        <RouterLink to="/badge" class="btn">도감</RouterLink>
+        <RouterLink to="/badge" class="btn">내 뱃지</RouterLink>
         <EditButton
           v-if="isOwner"
           :is-editing="editMode"
