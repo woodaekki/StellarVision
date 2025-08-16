@@ -1,7 +1,7 @@
 // src/composables/streaming/useUpscale.js
 import { ref, computed } from 'vue'
 
-export function useUpscale({ upscaleService, startDownloadToast }) {
+export function useUpscale({ upscaleService, onUpscaleStart, onUpscaleEnd }) {
   const upscaledUrl = ref(null)
   const isDownloading = ref(false)
   const isUpscaling = ref(false)
@@ -25,7 +25,7 @@ export function useUpscale({ upscaleService, startDownloadToast }) {
   }
 
   async function captureVideoFrame(videoEl, type = 'image/jpeg', quality = 0.92) {
-    if (!videoEl || !videoEl.videoWidth || !videoEl.videoHeight) {
+    if (!videoEl || videoEl.readyState < 2 || !videoEl.videoWidth || !videoEl.videoHeight) {
       throw new Error('비디오 준비가 안 됨(loadedmetadata 이후 시도)')
     }
     const canvas = document.createElement('canvas')
@@ -42,10 +42,10 @@ export function useUpscale({ upscaleService, startDownloadToast }) {
     })
   }
 
-  async function captureAndUpscale(pickTargetVideoEl, toast, intervalRef, visibleRef, progressRef) {
+  async function captureAndUpscale(pickTargetVideoEl) {
     if (isUpscaling.value) return
     try {
-      startDownloadToast?.('이미지 업스케일 중...') // 진행 토스트
+      onUpscaleStart?.()
       isUpscaling.value = true
       if (upscaledUrl.value?.startsWith('blob:')) {
         URL.revokeObjectURL(upscaledUrl.value)
@@ -62,24 +62,20 @@ export function useUpscale({ upscaleService, startDownloadToast }) {
       upscaledUrl.value = url
     } finally {
       isUpscaling.value = false
+      onUpscaleEnd?.()
     }
   }
 
-  async function downloadUpscaled(toast, intervalRef, visibleRef) {
+  async function downloadUpscaled() {
     if (!upscaledUrl.value || isDownloading.value) return
     isDownloading.value = true
     try {
       const filename = buildFilenameFromUrl(upscaledUrl.value, `upscaled_${Date.now()}.jpg`)
-      const res = await fetch(upscaledUrl.value, {})
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      const blob = await res.blob()
-      const objUrl = URL.createObjectURL(blob)
       const a = document.createElement('a')
-      a.href = objUrl
+      a.href = upscaledUrl.value
       a.download = filename
       document.body.appendChild(a)
       a.click(); a.remove()
-      URL.revokeObjectURL(objUrl)
       resetUpscaled()
     } catch (err) {
       // 실패 시 새 탭 오픈 + 토스트 에러
@@ -88,21 +84,17 @@ export function useUpscale({ upscaleService, startDownloadToast }) {
       a.target = '_blank'
       a.rel = 'noopener'
       document.body.appendChild(a); a.click(); a.remove()
-      if (intervalRef.value) { clearInterval(intervalRef.value); intervalRef.value = null }
-      toast.add({severity:'error', summary:'다운로드 실패', detail: err?.message ?? 'unknown', life:3000})
-      toast.removeGroup('download')
-      visibleRef.value = false
     } finally {
       isDownloading.value = false
     }
   }
 
-  function makeOnCaptureOrDownload(pickTargetVideoEl, toast, intervalRef, visibleRef, progressRef) {
+  function makeOnCaptureOrDownload(pickTargetVideoEl) {
     return async () => {
       if (hasUpscaled.value) {
-        await downloadUpscaled(toast, intervalRef, visibleRef)
+        await downloadUpscaled()
       } else {
-        await captureAndUpscale(pickTargetVideoEl, toast, intervalRef, visibleRef, progressRef)
+        await captureAndUpscale(pickTargetVideoEl)
       }
     }
   }

@@ -13,8 +13,6 @@
   import { createScreenShareService } from '@/services/screenShareService'
   import { useToast } from 'primevue/usetoast'
   import Toast from 'primevue/toast'
-  import ProgressBar from 'primevue/progressbar'
-  import Button from 'primevue/button'
   import welcomImg from '@/assets/pictures/stellabot/logo.png'
   import aiOffImg from '@/assets/pictures/stellabot/aioff.png'
   import aiOnImg from '@/assets/pictures/stellabot/aiOn.png'
@@ -43,9 +41,6 @@
   console.log('route.query', route.query)
   // 알림창 전용 객체
   const toast = useToast()
-  const visible = ref(false);
-  const progress = ref(0);
-  const interval = ref();
   const WELCOME_TOAST_KEY = `roomview_welcome_shown:${sessionId}`  // 세션별로 첫 입장 시
 
   // 녹화 전용 객체
@@ -66,10 +61,13 @@
     isUpscaling,
     hasUpscaled,
     resetUpscaled,
-    captureAndUpscale,
     downloadUpscaled,
     makeOnCaptureOrDownload
-  } = useUpscale({ upscaleService, startDownloadToast })
+  } = useUpscale({ 
+      upscaleService, 
+      onUpscaleStart: () => showUpscaleBusy('고화질 업스케일링 중...', '잠시만 기다려 주세요'),
+      onUpscaleEnd: hideUpscaleBusy, 
+    })
 
   // 모달의 상태 변수
   const previewOpen = ref(false)
@@ -148,31 +146,6 @@
     wireSessionEvents,
   } = useEndModal({ session, endRoom, leave, router, isPublish })
 
-  // 다운로드 알림 띄우기
-  function startDownloadToast(summary = '이미지 캡쳐 중입니다...'){
-    toast.add({
-      severity: 'custom',
-      summary,
-      group: 'download',
-      styleClass: 'backdrop-blur-lg rounded-2xl'
-    })
-    visible.value = true
-    progress.value = 0
-    // 임의로 진행하는 가짜 진행 바입니다 대충 5초? 정도 걸리게 해놨음. 더 천천히 하길 원한다면 +=7을 조절하면 됨
-    if (interval.value) clearInterval(interval.value)
-    interval.value = setInterval(()=>{
-      if (progress.value <= 100) {
-        progress.value +=4
-      }
-      if (progress.value >=100) {
-        progress.value = 100
-        clearInterval(interval.value)
-      }
-      }, 300)
-  }
-
-
-
   watch([localVideo, overlayLocal], ([v, ov]) => {
     if (v && ov) {
       try { attachLocal(v, ov) } catch (e) { console.debug('[AI] local attach failed', e) }
@@ -196,13 +169,7 @@
     return localVideo.value
   }
 
-  const onCaptureOrDownload = makeOnCaptureOrDownload(
-    pickTargetVideoEl, // 어떤 비디오를 캡쳐할지
-    toast,             // 에러 토스트 출력 위해
-    interval,          // 진행 토스트 인터벌 참조
-    visible,           // 진행 토스트 visible
-    progress,          // 진행 토스트 progress
-  )
+  const onCaptureOrDownload = makeOnCaptureOrDownload(pickTargetVideoEl)
 
     // AI 오버레이 붙이는 래퍼
   const attachSubElWithAI = attachSubElWithAIFactory(baseAttachSubEl)
@@ -357,6 +324,25 @@
     el.style.transform = sharing ? 'none' : 'scaleX(-1)' // 공유중엔 해제, 웹캠일 땐 거울
   }, { immediate: true })
 
+  function showUpscaleBusy(
+    summary = '고화질 업스케일링 중...',
+    detail = '잠시만 기다려 주세요'
+  ) {
+    toast.add({
+      severity: 'custom',
+      summary,
+      detail,
+      group: 'busy',
+      life: 0,            // 수동으로 닫을 때까지 유지
+      closable: false,
+      styleClass: 'backdrop-blur-lg rounded-2xl'
+    })
+  }
+
+  function hideUpscaleBusy() {
+    toast.removeGroup('busy')
+  }
+
   onUnmounted(() => {
     destroy();  // AI/overlay 정리
     resetUpscaled() // 업스케일 blob 정리
@@ -456,24 +442,25 @@
       </transition>
 
     </div>
-    <!-- 업스케일링 토스트 -->
-    <Toast position="top-center" group="download" @close="visible = false">
-      <template #container="{ message, closeCallback }">
-        <section class="flex flex-col p-4 gap-4 w-full bg-primary/70 rounded-xl">
-          <div class="flex items-center gap-4">
-            <i class="pi pi-cloud-download text-white text-2xl"></i>
-            <span class="font-bold text-base text-white">{{ message.summary }}</span>
-          </div>
-          <div class="flex flex-col gap-2">
-            <ProgressBar :value="progress" :showValue="false" :style="{ height: '4px' }" class="!bg-primary/80" />
-            <label class="text-sm font-bold text-white">{{ progress }}% 진행 중</label>
-          </div>
-          <div class="flex gap-3 justify-end text-white">
-            <Button size="small" label="닫기" @click="closeCallback" />
+    <!-- 업스케일링 로딩 토스트 -->
+    <Toast position="top-center" group="busy">
+      <template #container="{ message }">
+        <section
+          class="white-jelly-panel flex items-center gap-3"
+        >
+          <img
+            src="@/assets/pictures/stellabot/logo.png"
+            alt="Nova walking"
+            class="w-7 h-10"
+          />
+          <div class="flex flex-col">
+            <span class="font-bold leading-tight">{{ message.summary }}</span>
+            <small class="opacity-80">{{ message.detail }}</small>
           </div>
         </section>
       </template>
     </Toast>
+
 
     <!-- 환영 토스트: 중앙 정렬 -->
     <Toast position="center" group="welcome">
@@ -534,7 +521,7 @@
     <UpscalePreviewComponent
       v-model="previewOpen"
       :src="upscaledUrl || ''"
-      @download="downloadUpscaled(toast, interval, visible)"
+      @download="downloadUpscaled()"
       @closed="resetUpscaled"
     />
 <!--  -->
@@ -560,4 +547,36 @@
 }
 
 .chat-slide-enter-active, .chat-slide-leave-active { will-change: transform; }
+
+.white-jelly-panel {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 20px 24px;
+  max-width: 800px;    /* ✅ 최대 가로 폭 */
+  max-height: 100vh;    /* ✅ 최대 세로 높이 */
+  overflow: auto;      /* 내용 넘치면 스크롤 */
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  box-shadow:
+    inset 3px 3px 6px rgba(255 255 255 / 0.5),
+    inset -3px -3px 6px rgba(0 0 0 / 0.1);
+
+  border: 1.2px solid rgba(255, 255, 255, 0.2);
+
+  color: #fff !important;
+
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  letter-spacing: 0.02em;
+
+  transition: box-shadow 0.3s ease;
+  cursor: default;
+}
+
+.white-jelly-panel:hover {
+  box-shadow:
+    inset 5px 5px 10px rgba(255 255 255 / 0.7),
+    inset -5px -5px 10px rgba(0 0 0 / 0.15);
+}
 </style>
