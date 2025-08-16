@@ -4,15 +4,17 @@
 
     <div class="stars-background">
         <div class="back-button">
-          <RouterLink :to="`/profile/${userInfo?.email}`" class="no-underline relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-[#f2f2f2] after:w-0 after:transition-all after:duration-300 hover:after:w-full font-pretendard">
+          <!-- 뒤로가기 버튼 -->
+          <button @click="goBackToProfile" class="back-btn">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M15 18l-6-6 6-6" />
             </svg>
-          </RouterLink>
+          </button>
         </div>
 
       <div class="px-4 pt-12 pb-6">
-        <div class="navigation-links">
+        <!-- 본인 프로필일 때만 네비게이션 링크 표시 -->
+        <div v-if="canEditDelete" class="navigation-links">
           <RouterLink :to="{ name: 'MyVideoListView', params: { id: userInfo?.email } }" class="active">
             아카이브
           </RouterLink>
@@ -37,8 +39,8 @@
 
       <div v-else-if="!loading && (!videos || videos.length === 0)" class="empty-state">
         <div class="empty-icon">🎥</div>
-        <h3>아직 업로드한 영상이 없습니다.</h3>
-        <p>나만의 멋진 영상을 업로드해보세요!</p>
+        <h3>{{ canEditDelete ? '아직 업로드한 영상이 없습니다.' : '업로드된 영상이 없습니다.' }}</h3>
+        <p>{{ canEditDelete ? '나만의 멋진 영상을 업로드해보세요!' : '이 사용자는 아직 영상을 업로드하지 않았습니다.' }}</p>
         <RouterLink :to="{ name: 'MainView' }" class="browse-button">
           영상 둘러보기
         </RouterLink>
@@ -70,7 +72,8 @@
             <div class="video-info">
               <div class="video-header">
                 <h3 class="video-title">{{ video.originalFilename }}</h3>
-                <div class="button-group">
+                <!-- 편집/삭제 권한이 있을 때만 버튼 표시 -->
+                <div v-if="canEditDelete" class="button-group">
                   <button
                     @click.stop="handleEditVideo(video)"
                     class="edit-button"
@@ -137,6 +140,7 @@
 import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import commonApi from '@/api/commonApi';
+import axiosApi from '@/api/axiosApi';
 import bg from '@/assets/pictures/stellabot/spaceBackground.avif';
 import defaultBg from '@/assets/pictures/stellabot/novaStar2.png';
 import { useAccountStore } from '@/stores/account';
@@ -154,7 +158,65 @@ const observerTarget = ref(null);
 const INITIAL_PAGE_SIZE = 11;
 const INFINITE_SCROLL_PAGE_SIZE = 12;
 
-// 별자리 썸네일 자동 매핑 - 수정된 부분
+// URL에서 가져온 이메일로 현재 보고 있는 프로필의 소유자 체크
+const memberEmail = computed(() => route.params.id);
+// history state에서 가져온 memberId 
+const memberId = ref(window.history.state?.profilePk);
+// 실제 프로필 소유자의 정보 
+const profileOwner = ref(null);
+
+// 뒤로가기 
+const goBackToProfile = () => {
+  router.push({
+    path: `/profile/${memberEmail.value}`,
+    state: { profilePk: memberId.value }
+  })
+}
+
+// 편집/삭제 권한 체크 
+const canEditDelete = computed(() => {
+  // 로그인하지 않은 경우
+  if (!accountStore.isLogin) {
+    return false;
+  }
+
+  // 내 프로필 정보가 없는 경우
+  if (!accountStore.myProfile) {
+    return false;
+  }
+
+  // 이메일로 비교 
+  const emailMatch = accountStore.myProfile?.email === memberEmail.value;
+  
+  // memberId로 두 번째 비교 
+  const idMatch = memberId.value && accountStore.myProfile?.memberId === memberId.value;
+  
+  // profileOwner와 마지막으로 비교 
+  const ownerMatch = profileOwner.value && accountStore.myProfile?.memberId === profileOwner.value.memberId;
+  
+  const result = emailMatch || idMatch || ownerMatch;
+  
+  return result;
+});
+
+// 프로필 소유자 정보를 가져오는 함수
+const fetchProfileOwner = async () => {
+  try {
+    // 이메일로 프로필 정보 조회
+    const response = await axiosApi.get(`/profiles/email/${memberEmail.value}`);
+    profileOwner.value = response.data.data;
+    
+    // memberId가 없었다면 여기서 설정
+    if (!memberId.value && profileOwner.value) {
+      memberId.value = profileOwner.value.memberId;
+    }
+  } catch (error) {
+    console.error('프로필 소유자 정보 가져오기 실패:', error);
+    // 이메일이 잘못되었거나 사용자가 존재하지 않는 경우
+  }
+};
+
+// 별자리 썸네일 자동 매핑 
 let STAR_IMAGES = {};
 let STAR_BY_KEY = {};
 
@@ -188,12 +250,11 @@ function normalizeKoConstellation(s) {
   return normalized;
 }
 
-// 별자리 딕셔너리 (별칭 처리)
+// 별자리 딕셔너리 
 const ALIASES = {
-  '큰곰': '큰곰'
+  
 };
 
-// 수정된 pickStarThumbByTags 함수
 function pickStarThumbByTags(tagList, fallback) {
   if (!tagList || !Array.isArray(tagList) || tagList.length === 0) {
     return fallback;
@@ -210,33 +271,25 @@ function pickStarThumbByTags(tagList, fallback) {
 
     // STAR_BY_KEY에서 해당 키로 이미지 찾기
     if (STAR_BY_KEY[key]) {
-      console.log(`🌟 태그 "${raw}"에 대해 별자리 이미지 발견: ${key}`);
+      console.log(`태그 "${raw}"에 대해 별자리 이미지 발견: ${key}`);
       return STAR_BY_KEY[key];
     }
   }
-  
-  console.log('🔍 태그에 매칭되는 별자리 이미지 없음:', tagList.map(t => typeof t === 'string' ? t : t.tagName));
   return fallback;
 }
 
-// 비디오 썸네일 결정하는 함수 - 수정됨
+// 비디오 썸네일 결정하는 함수 
 const getVideoThumbnail = (video) => {
-  console.log('🎬 비디오 썸네일 결정:', video.id, video.tags);
   
   // 태그가 있는 경우 별자리 이미지 사용
   if (video.tags && video.tags.length > 0) {
     const starThumbnail = pickStarThumbByTags(video.tags, null);
     if (starThumbnail) {
-      console.log('✅ 별자리 썸네일 사용:', starThumbnail);
       return starThumbnail;
     }
   }
-  
-  console.log('📷 기본 썸네일 사용');
   return defaultImg;
 };
-
-const memberId = ref(window.history.state?.profilePk);
 
 const videos = ref([]);
 
@@ -259,8 +312,9 @@ const fetchTagsForVideos = async (videosList) => {
 const fetchVideos = async (pageNum = 0) => {
   if (loadingMore.value || !hasMore.value) return;
 
+  // memberId가 없으면 fetchVideos 실행하지 않음
   if (!memberId.value || memberId.value === 'undefined' || memberId.value === null) {
-    console.error('유효하지 않은 사용자 ID:', memberId.value);
+    console.log('memberId가 없어서 fetchVideos 중단:', memberId.value);
     loading.value = false;
     return;
   }
@@ -300,6 +354,11 @@ const fetchVideos = async (pageNum = 0) => {
 };
 
 const handleEditVideo = (video) => {
+  if (!canEditDelete.value) {
+    alert('편집 권한이 없습니다. 본인 프로필에서만 영상을 편집할 수 있습니다.');
+    return;
+  }
+  
   router.push({ name: 'UpdateTagView', params: { id: video.id } });
 };
 
@@ -330,10 +389,17 @@ const goToVideoDetail = (videoId) => {
 };
 
 const handleDeleteVideo = async (video) => {
+  if (!canEditDelete.value) {
+    alert('삭제 권한이 없습니다. 본인 프로필에서만 영상을 삭제할 수 있습니다.');
+    return;
+  }
+  
   if (!confirm('정말로 이 영상을 삭제하시겠습니까?')) return;
+  
   try {
     await commonApi.delete(`/videos/${video.id}`);
     videos.value = videos.value.filter(v => v.id !== video.id);
+
     alert('영상이 성공적으로 삭제되었습니다.');
   } catch (error) {
     console.error('영상 삭제 실패:', error);
@@ -377,11 +443,12 @@ watch(() => route.params.id, (newId) => {
 
 onMounted(async () => {
   preventScrollRestore();
-
+  await accountStore.fetchMyProfile();
+  // 프로필 소유자 정보 가져오는 부분 
+  await fetchProfileOwner();
   if (memberId.value && memberId.value !== 'undefined' && memberId.value !== null) {
     await fetchVideos(0);
   } else {
-    console.error('유효하지 않은 사용자 ID:', memberId.value);
     loading.value = false;
   }
 
@@ -488,6 +555,8 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
 }
+
+
 
 .stars-background h2 {
   margin-top: 20px !important;
