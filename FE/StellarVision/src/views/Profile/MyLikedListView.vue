@@ -138,9 +138,9 @@ const userInfo = computed(() => accountStore.userInfo)
 
 // URL에서 가져온 이메일 (현재 보고 있는 프로필의 소유자)
 const memberEmail = computed(() => route.params.id);
-// history state에서 가져온 memberId (있을 수도 없을 수도 있음)
+// history state에서 가져온 memberId 
 const memberId = ref(window.history.state?.profilePk);
-// 실제 프로필 소유자의 정보 (API에서 가져올 예정)
+// 실제 프로필 소유자의 정보 
 const profileOwner = ref(null);
 
 // 뒤로가기 메서드 추가
@@ -151,45 +151,34 @@ const goBackToProfile = () => {
   })
 }
 
-// 좋아요 취소 권한 체크 (은하 영상관과 동일한 로직)
+// 좋아요 취소 권한 체크 
 const canUnlike = computed(() => {
-  console.log('=== canUnlike 권한 체크 ===');
-  console.log('accountStore.isLogin:', accountStore.isLogin);
-  console.log('accountStore.myProfile:', accountStore.myProfile);
-  console.log('memberEmail.value:', memberEmail.value);
-  console.log('memberId.value:', memberId.value);
-  console.log('profileOwner.value:', profileOwner.value);
-  
   // 로그인하지 않은 경우
   if (!accountStore.isLogin) {
-    console.log('❌ 로그인하지 않음');
+    console.log('로그인하지 않음');
     return false;
   }
 
-  // 내 프로필 정보가 없는 경우
-  if (!accountStore.myProfile) {
-    console.log('❌ 내 프로필 정보 없음');
+  // 사용자 정보가 없는 경우
+  if (!userInfo.value && !accountStore.myProfile) {
+    console.log('사용자 정보 없음');
     return false;
   }
   
-  console.log('myProfile.email:', accountStore.myProfile?.email);
-  console.log('myProfile.memberId:', accountStore.myProfile?.memberId);
+  // userInfo 또는 myProfile에서 이메일 가져오기
+  const myEmail = userInfo.value?.email || accountStore.myProfile?.email;
   
-  // 이메일로 비교 (가장 확실한 방법)
-  const emailMatch = accountStore.myProfile?.email === memberEmail.value;
-  console.log('이메일 매치:', emailMatch);
+  // 이메일로 비교 
+  const emailMatch = myEmail === memberEmail.value;
   
-  // memberId로 비교 (보조 수단)
-  const idMatch = memberId.value && accountStore.myProfile?.memberId === memberId.value;
-  console.log('ID 매치:', idMatch);
+  // memberId로 비교 
+  const myMemberId = userInfo.value?.memberId || accountStore.myProfile?.memberId;
+  const idMatch = memberId.value && myMemberId === memberId.value;
   
-  // profileOwner와 비교 (추가 보조 수단)
-  const ownerMatch = profileOwner.value && accountStore.myProfile?.memberId === profileOwner.value.memberId;
-  console.log('소유자 매치:', ownerMatch);
+  // profileOwner와 비교 
+  const ownerMatch = profileOwner.value && myMemberId === profileOwner.value.memberId;
   
   const result = emailMatch || idMatch || ownerMatch;
-  console.log('최종 권한 결과:', result);
-  console.log('========================');
   
   return result;
 });
@@ -207,12 +196,9 @@ const fetchProfileOwner = async () => {
       memberId.value = profileOwner.value.memberId;
     }
     
-    console.log('프로필 소유자 정보:', profileOwner.value);
-    console.log('설정된 memberId:', memberId.value);
   } catch (error) {
     console.error('프로필 소유자 정보 가져오기 실패:', error);
-    // 이메일이 잘못되었거나 사용자가 존재하지 않는 경우
-    // 에러 처리는 필요에 따라 추가
+  
   }
 };
 
@@ -259,7 +245,6 @@ const ALIASES = {
   
 };
 
-// 수정된 pickStarThumbByTags 함수
 function pickStarThumbByTags(tagList, fallback) {
   if (!tagList || !Array.isArray(tagList) || tagList.length === 0) {
     return fallback;
@@ -280,7 +265,7 @@ function pickStarThumbByTags(tagList, fallback) {
   return fallback;
 }
 
-// 비디오 썸네일 결정하는 함수 - 수정됨
+// 비디오 썸네일 결정하는 함수 
 const getVideoThumbnail = (video) => {
   // 태그가 있는 경우 별자리 이미지 사용
   if (video.tags && video.tags.length > 0) {
@@ -381,18 +366,13 @@ const goToVideoDetail = (videoId) => {
 };
 
 const handleUnlike = async (videoId) => {
-  console.log('=== handleUnlike 호출 ===');
-  console.log('canUnlike.value:', canUnlike.value);
-  console.log('videoId:', videoId);
-  
   if (!canUnlike.value) {
-    console.log('좋아요 취소 권한 없음');
+    
     alert('좋아요 취소 권한이 없습니다. 본인 프로필에서만 좋아요를 취소할 수 있습니다.');
     return;
   }
   
   try {
-    console.log('좋아요 취소 API 호출 중...');
     const res = await commonApi.delete(`/videos/${videoId}/likes`);
     if (res.status === 200) {
       // 전체 비디오 목록에서도 업데이트
@@ -401,7 +381,6 @@ const handleUnlike = async (videoId) => {
         originalVideo.liked = false;
       }
       likedVideos.value = likedVideos.value.filter(v => v.id !== videoId);
-      console.log('좋아요 취소 성공');
     }
   } catch (error) {
     console.error('좋아요 취소 실패:', error);
@@ -410,6 +389,7 @@ const handleUnlike = async (videoId) => {
 };
 
 onMounted(async () => {
+  // 먼저 내 프로필 정보를 가져오기
   await accountStore.fetchMyProfile();
 
   // 프로필 소유자 정보 가져오기
