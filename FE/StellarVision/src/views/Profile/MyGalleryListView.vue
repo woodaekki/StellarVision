@@ -5,11 +5,12 @@
       <div class="header-and-back-container">
         <div class="back-button-container">
           <div class="back-button-icon">
-            <RouterLink :to="`/profile/${memberEmail}`" class="no-underline relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-[#f2f2f2] after:w-0 after:transition-all after:duration-300 hover:after:w-full font-pretendard">
+            <!-- 현재 보고 있는 프로필로 돌아가기 (memberId state 포함) -->
+            <button @click="goBackToProfile" class="back-button">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M15 18l-6-6 6-6" />
               </svg>
-            </RouterLink>
+            </button>
           </div>
         </div>
         <div class="header-container">
@@ -19,7 +20,8 @@
       <hr class="divider" />
       <div class="content-container">
         <div class="gallery-grid">
-          <div class="upload-box" @click="triggerGalleryUpload">
+          <!-- 업로드 권한이 있을 때만 업로드 박스 표시 -->
+          <div v-if="canUpload" class="upload-box" @click="triggerGalleryUpload">
             <span>+</span>
             <input
               type="file"
@@ -59,7 +61,8 @@
                 <span class="tag-loading-text">태그 로딩중...</span>
               </div>
             </div>
-            <button class="delete-button" @click.stop="deletePhoto(item.id)">
+            <!-- 삭제 권한이 있을 때만 삭제 버튼 표시 -->
+            <button v-if="canUpload" class="delete-button" @click.stop="deletePhoto(item.id)">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
                 <path
                   d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"
@@ -120,9 +123,11 @@ import axiosApi from '@/api/axiosApi';
 import bg from '@/assets/pictures/stellabot/spaceBackground.avif';
 import { useRouter, useRoute } from 'vue-router'
 import icon from '@/assets/pictures/stellabot/nova.png';
+
 const accountStore = useAccountStore();
 const badgeStore = useBadgeStore();
 const route = useRoute();
+const router = useRouter();
 const pageRef = ref(null);
 const galleryInput = ref(null);
 const observerTarget = ref(null);
@@ -140,13 +145,68 @@ const isNearBottom = ref(false);
 const lastScrollTop = ref(0);
 const scrollVelocity = ref(0);
 const isThrottling = ref(false);
+
+// URL에서 가져온 이메일을 가져와 프로필의 소유자를 확인 
 const memberEmail = computed(() => route.params.id);
 const memberId = ref(window.history.state?.profilePk);
-const canUpload = computed(() => accountStore.isLogin);
+// 실제 프로필 소유자의 정보를 담은 변수 
+const profileOwner = ref(null);
+
+// 뒤로 가기 버튼 관련 함수 
+const goBackToProfile = () => {
+  router.push({
+    path: `/profile/${memberEmail.value}`,
+    state: { profilePk: memberId.value }
+  })
+}
+
+// 수정된 canUpload computed 속성
+const canUpload = computed(() => {  
+  // 로그인하지 않은 경우
+  if (!accountStore.isLogin) {
+    console.log('로그인하지 않음');
+    return false;
+  }
+
+  // 내 프로필 정보가 없는 경우
+  if (!accountStore.myProfile) {
+    console.log('내 프로필 정보 없음');
+    return false;
+  }
+ 
+  // 이메일로 비교 
+  const emailMatch = accountStore.myProfile?.email === memberEmail.value;
+  
+  // memberId로 2번째 비교
+  const idMatch = memberId.value && accountStore.myProfile?.memberId === memberId.value;
+  
+  // profileOwner로 한번 더 비교 
+  const ownerMatch = profileOwner.value && accountStore.myProfile?.memberId === profileOwner.value.memberId;
+  const result = emailMatch || idMatch || ownerMatch;
+  return result;
+});
 
 const isTagModalVisible = ref(false);
 const currentTags = ref([]);
 const currentPhotoName = ref('');
+
+// 프로필 소유자 정보를 가져오는 함수
+const fetchProfileOwner = async () => {
+  try {
+    console.log('프로필 소유자 정보 가져오기 시작');
+    // 이메일로 프로필 정보 조회
+    const response = await axiosApi.get(`/profiles/email/${memberEmail.value}`);
+    profileOwner.value = response.data.data;
+    
+    // memberId가 없었다면 여기서 설정
+    if (!memberId.value && profileOwner.value) {
+      memberId.value = profileOwner.value.memberId;
+    }
+    // 이메일이 잘못되었거나 사용자가 존재하지 않는 경우
+  } catch (error) {
+    console.error('프로필 소유자 정보 가져오기 실패:', error);
+  }
+};
 
 const formatDate = (dateString) => {
   try {
@@ -183,6 +243,12 @@ const fetchPhotos = async (force = false) => {
   }
 
   if (!force && (isThrottling.value || now - lastFetchTime.value < fetchCooldown)) {
+    return;
+  }
+
+  // memberId가 없으면 fetchPhotos 실행하지 않음
+  if (!memberId.value) {
+    console.log('memberId가 없어서 fetchPhotos 중단');
     return;
   }
 
@@ -256,15 +322,12 @@ const closeTagModal = () => {
   currentPhotoName.value = '';
 };
 
-
 const triggerGalleryUpload = async () => {
   if (!canUpload.value) {
-    alert('업로드 권한이 없습니다. 로그인 후 다시 시도해주세요.');
+    alert('업로드 권한이 없습니다. 본인 프로필에서만 사진을 업로드할 수 있습니다.');
     return;
   }
-  if (!memberId.value) {
-    await accountStore.fetchMyProfile();
-  }
+  
   if (!memberId.value) {
     alert('프로필 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
     return;
@@ -336,20 +399,24 @@ const viewPhoto = async (photoId) => {
 
 const deletePhoto = async (photoId) => {
   if (!canUpload.value) {
-    alert('삭제 권한이 없습니다. 로그인 후 다시 시도해주세요.');
+    alert('삭제 권한이 없습니다. 본인 프로필에서만 사진을 삭제할 수 있습니다.');
     return;
   }
+  
   if (!confirm('정말로 이 사진을 삭제하시겠습니까?')) return;
+  
   try {
+    console.log('삭제 API 호출 중...');
     await axiosApi.delete(`/photos/${photoId}`);
     photos.value = photos.value.filter((p) => p.id !== photoId);
-    alert('사진이 성공적으로 삭제되었습니다.');
+    alert('사진이 삭제되었습니다.');
   } catch (e) {
     console.error(`사진(ID: ${photoId}) 삭제 실패:`, e);
     alert('사진 삭제에 실패했습니다. 다시 시도해주세요.');
   }
 };
 
+// 무한 스크롤 함수 
 const getScrollMetrics = () => {
   const scrollElement = document.documentElement;
   const scrollTop = Math.max(
@@ -558,9 +625,13 @@ let initialCheckInterval = null;
 onMounted(async () => {
   preventScrollRestore();
   await accountStore.fetchMyProfile();
+  // 프로필 소유자 정보 가져오기
+  await fetchProfileOwner();
 
   if (memberId.value) {
     await fetchPhotos(true);
+  } else {
+    console.log('memberId가 없음, fetchPhotos 건너뜀');
   }
 
   await setupInfiniteScroll();
