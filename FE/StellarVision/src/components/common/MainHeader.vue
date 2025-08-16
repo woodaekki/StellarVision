@@ -15,9 +15,11 @@
           </RouterLink>
         </div>
         <template v-if="isLogin">
-          <RouterLink :to="`/profile/${userInfo?.email}`" class="no-underline relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-[#f2f2f2] after:w-0 after:transition-all after:duration-300 hover:after:w-full font-pretendard">
+          <button 
+            @click="handleGoToMyProfile" 
+            class="no-underline relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-[#f2f2f2] after:w-0 after:transition-all after:duration-300 hover:after:w-full font-pretendard bg-transparent border-none text-white cursor-pointer">
             {{ userInfo?.name }}님
-          </RouterLink>
+          </button>
           <button @click="handleLogout" class="no-underline relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-[#f2f2f2] after:w-0 after:transition-all after:duration-300 hover:after:w-full font-pretendard bg-transparent border-none text-white cursor-pointer inline-block">로그아웃</button>
         </template>
         <template v-else>
@@ -31,13 +33,14 @@
 
 <script setup>
 import { Video } from 'lucide-vue-next';
-import { RouterLink, useRoute } from 'vue-router';
+import { RouterLink, useRoute, useRouter } from 'vue-router';
 import { computed } from 'vue'
 import logo from "@/assets/pictures/stellabot/logo.png"
 import calender from "@/assets/pictures/stellabot/calender.png"
 import { useAccountStore } from "@/stores/account.js"
 
 const route = useRoute()
+const router = useRouter()
 const account = useAccountStore()
 const isLogin = computed(() => account.isLogin)
 const userInfo = computed(() => account.userInfo)
@@ -55,6 +58,19 @@ const headerClasses = computed(() => {
 
 const handleLogout = () => {
   account.logOut()
+}
+
+const handleGoToMyProfile = () => {
+  const targetPath = `/profile/${userInfo.value?.email}`
+  
+  // 현재 경로와 비교해서
+  if (route.path === targetPath) {
+    // 같은 경로면 강제 새로고침
+    window.location.reload()
+  } else {
+    // 다른 경로면 직접 URL 변경하기
+    window.location.href = targetPath
+  }
 }
 </script>
 
