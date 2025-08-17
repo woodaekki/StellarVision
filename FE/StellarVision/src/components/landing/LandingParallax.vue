@@ -19,18 +19,24 @@
             <!-- HERO -->
             <div v-if="s.type==='hero'" class="hero">
               <div class="hero__top">
-                <h1 class="hero__title">{{ s.title }}</h1>
-                <p class="hero__subtitle">{{ s.subtitle }}</p>
+                <h1 class="hero__title opacity-0 animate-slideFadeIn">
+                  {{ s.title }}
+                </h1>
+                <p class="hero__subtitle opacity-0 animate-slideFadeIn [animation-delay:.18s]">
+                  {{ s.subtitle }}
+                </p>
               </div>
               <div class="hero__bottom">
-                <p class="hero__tagline">{{ s.tagline }}</p>
+                <p class="hero__tagline opacity-0 animate-slideFadeIn [animation-delay:.32s]">
+                  {{ s.tagline }}
+                </p>
               </div>
             </div>
 
             <!-- CARD -->
             <div v-else-if="s.type==='card'" class="card-holder">
               <div class="card-wrap">
-                <article class="card">
+                <article class="card" :class="{ 'card--no-image': i === steps.length - 1 }">
                   <div class="card__glass" aria-hidden="true"></div>
 
                   <div class="card__grid">
@@ -79,7 +85,9 @@
             aria-label="다음"
             title="다음 (아래로)"
           >▼</button>
+
         </div>
+        <StartButton :class="['start-button', { 'is-anchored': isLast }]" />
       </div>
     </div>
 
@@ -96,18 +104,24 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import StartButton from './StartButton.vue'
 
 const props = defineProps({
-  visible: { type: Boolean, default: true },  // 인트로 중 숨김 제어
-  steps: { type: Array, required: true }      // [{type:'hero'|'card', ...}]
+  visible: { 
+    type: Boolean, 
+    default: true 
+  },
+  steps: { 
+    type: Array, 
+    required: true 
+  }
 })
 
 const activeIndex = ref(0)
 const markerEls = ref([])
 let io = null
 
-/* ===== 스크롤 연동(버튼 클릭 시 실제 스크롤 이동) ===== */
 let scrollingLock = false
 const SCROLL_MS = 600
 
@@ -137,7 +151,6 @@ function getTop(el) {
   return r.top + window.scrollY
 }
 
-// 마커 위치로 부드럽게 스크롤
 async function scrollToMarker(i) {
   const el = markerEls.value[i]
   if (!el) return
@@ -149,19 +162,18 @@ async function scrollToMarker(i) {
   }
 }
 
-// 버튼 핸들러: -1(위), +1(아래)
 async function go(delta) {
   if (scrollingLock) return
   const next = Math.max(0, Math.min(activeIndex.value + delta, props.steps.length - 1))
   if (next === activeIndex.value) return
   scrollingLock = true
-  activeIndex.value = next            // 즉시 UI 반영(비활성 상태 등)
-  await scrollToMarker(next)          // 실제 스크롤도 연동
+  activeIndex.value = next            // 즉시 UI 반영
+  await scrollToMarker(next)          // 실제 스크롤 연동
   scrollingLock = false
-  // activeIndex는 IntersectionObserver가 스크롤 결과에 따라 다시 보정합니다.
 }
 
-/* ===== 활성 인덱스 추적(IO 기반) ===== */
+const isLast = computed(() => activeIndex.value === props.steps.length - 1)
+
 onMounted(async () => {
   await nextTick()
 
@@ -193,23 +205,19 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-/* ===== 레이아웃 공통 ===== */
 .parallax { position: relative; }
 .stage { position: sticky; top: 0; height: 100dvh; overflow: hidden; }
 .stage-inner { position: relative; width: 100%; height: 100%; }
 
-/* ===== 스텝(히어로/카드) =====
-   blur가 깨지지 않도록 transform은 자식에게만 적용 */
 .step { position: absolute; inset: 0; }
 .step > * {
   transition: opacity 300ms ease, transform 300ms ease;
   will-change: opacity, transform;
 }
-.step.is-active > * { opacity: 1; transform: none; } /* 활성: transform 없음 → backdrop-filter 정상 */
+.step.is-active > * { opacity: 1; transform: none; }
 .step.is-inactive > * { opacity: 0; transform: translate3d(0, 1rem, 0) scale(0.95); }
 .step--center { display: grid; place-items: center; }
 
-/* ===== HERO ===== */
 .hero { position: relative; width: 100%; height: 84dvh; pointer-events: none; user-select: none; }
 .hero__top {
   position: absolute; left: 50%; transform: translateX(-50%);
@@ -228,20 +236,18 @@ onBeforeUnmount(() => {
 .hero__subtitle { margin-top: .75rem; font-size: clamp(16px, 2.4vw, 28px); }
 .hero__tagline  { font-size: clamp(14px, 2vw, 22px); }
 
-/* ===== CARD ===== */
 .card-holder { pointer-events: none; }
 .card-wrap   {
   width: 100%;
   height: 80%;
-  max-width: 56rem;                 /* 가로만 확장 */
+  max-width: 56rem; 
   padding-left: 2rem; padding-right: 2rem;
   pointer-events: auto;
 }
-@media (min-width: 1024px) { .card-wrap { max-width: 64rem; } }  /* lg */
-@media (min-width: 1280px) { .card-wrap { max-width: 72rem; } }  /* xl */
-@media (min-width: 768px)  { .card-wrap { padding-left: 3rem; padding-right: 3rem; } } /* md */
+@media (min-width: 1024px) { .card-wrap { max-width: 64rem; } }
+@media (min-width: 1280px) { .card-wrap { max-width: 72rem; } }
+@media (min-width: 768px)  { .card-wrap { padding-left: 3rem; padding-right: 3rem; } } 
 
-/* 강한 스머지(blur↑, 투과↓, 밝기/대비/채도↓) */
 .card {
   position: relative; overflow: hidden; border-radius: 1.5rem; color: #fff;
   background: rgba(20, 24, 28, 0.32);
@@ -249,7 +255,7 @@ onBeforeUnmount(() => {
   -webkit-backdrop-filter: blur(90px) brightness(0.65) contrast(0.68) saturate(0.80);
   border: 1px solid rgba(255,255,255,0.16);
   box-shadow: 0 24px 48px rgba(0,0,0,0.30);
-  padding: 2rem;            /* 세로 높이는 기존 내용 기준 유지 */
+  padding: 2rem;
 }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .card { background: rgba(20,24,28,0.55); } /* 미지원 환경 fallback */
@@ -299,6 +305,31 @@ onBeforeUnmount(() => {
 
 .card__actions { margin-top: 1.25rem; display: flex; flex-wrap: wrap; gap: .75rem; }
 
+.card--no-image .card__grid {
+  text-align: center;
+  min-width: 60dvh;
+}
+
+.card--no-image .card__actions {
+  justify-content: center;
+}
+
+@media (min-width: 768px) {
+  .card--no-image .card__grid {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    grid-template-columns: 1fr;
+  }
+
+  .card--no-image .card__title,
+  .card--no-image .card__body {
+    grid-column: auto;
+    align-self: auto;
+  }
+}
+
 /* 버튼 */
 .btn {
   display: inline-flex; align-items: center;
@@ -310,7 +341,7 @@ onBeforeUnmount(() => {
 .btn--ghost { border: 1px solid rgba(255,255,255,0.3); color: #fff; }
 .btn--ghost:hover { background: rgba(255,255,255,0.10); }
 
-/* ===== 마커 ===== */
+/* 마커 */
 .marker { height: 100dvh; }
 @supports not (height: 100dvh) {
   .stage  { height: 100vh; }
@@ -335,7 +366,7 @@ onBeforeUnmount(() => {
   height: 40px;
   border: 1px solid rgba(255,255,255,0.25);
   border-radius: 9999px;
-  background: rgba(17,24,39,0.45); /* slate-900 45% */
+  background: rgba(17,24,39,0.45);
   color: #fff;
   font-weight: 700;
   line-height: 1;
@@ -359,4 +390,28 @@ onBeforeUnmount(() => {
 /* (선택) 위/아래 버튼 간 미세한 시각 차별 */
 .nav-btn.up   { }
 .nav-btn.down { }
+
+
+.start-button {
+  position: fixed;
+  right: clamp(16px, 4vw, 48px);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + clamp(16px, 4vw, 48px));
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.start-button.is-anchored {
+  position: absolute;
+}
+
+@layer utilities {
+  @keyframes slideFadeIn {
+    from { opacity: 0; transform: translateY(1.2rem); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .animate-slideFadeIn {
+    animation: slideFadeIn .8s ease-out forwards;
+  }
+}
+
 </style>

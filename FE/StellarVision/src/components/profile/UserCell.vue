@@ -14,25 +14,32 @@
 <script setup>
 import { useRouter } from 'vue-router'
 
-const props = defineProps({
-  user: {
-    type: Object,
-    required: true
+const props = defineProps(
+  { user:
+    {
+      type: Object,
+      required: true
+    }
   }
-})
+)
 
 const emit = defineEmits(['select'])
 
 const router = useRouter()
 
-function goToUser() {
+async function goToUser() {
   emit('select')
-  router.push({
-    path: `/profile/${props.user.email}`,
-    state: { profilePk: props.user.memberId }
-  })
+  try {
+    await router.push({
+      path: `/profile/${props.user.email}`,
+      state: { profilePk: props.user.memberId }
+    })
+    window.location.reload() // 라우터 이동이 성공하면 페이지 새로고침
+  } catch (err) {
+  }
 }
 </script>
+
 
 <style scoped>
 .user-cell {
