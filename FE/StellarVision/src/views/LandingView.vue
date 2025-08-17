@@ -23,8 +23,6 @@
         :steps="steps"
         :visible="contentVisible"
       />
-
-      <StartButton class="start-button" />
     </section>
 
     <section class="min-h-screen px-5 pt-12 pb-0 bg-gradient-to-b from-transparent to-black/20">
@@ -37,17 +35,19 @@
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import LandingParallax from '@/components/landing/LandingParallax.vue'
 import LandingGlobe from '@/components/landing/LandingGlobe.vue'
-import StartButton from '@/components/landing/StartButton.vue'
 import TodaysPhoto from '@/components/landing/TodaysPhoto.vue'
+import DetectionIcon from '@/assets/pictures/landing/detection_icon.png'
+import StreamingIcon from '@/assets/pictures/landing/streaming_icon.png'
+import UpscalingIcon from '@/assets/pictures/landing/upscaling_icon.png'
 
-const showIntro   = ref(true)
-const introRef    = ref(null)
-const loopRef     = ref(null)
-const introEnded  = ref(false)
-const loopReady   = ref(false)
-const globeReady  = ref(false)
+const showIntro = ref(true)
+const introRef = ref(null)
+const loopRef = ref(null)
+const introEnded = ref(false)
+const loopReady = ref(false)
+const globeReady = ref(false)
 const loopVisible = ref(false)
-const globeVisible= ref(false)
+const globeVisible = ref(false)
 
 const contentVisible = computed(() =>
   !showIntro.value && loopVisible.value && globeVisible.value
@@ -64,19 +64,19 @@ const steps = ref([
     type: 'card',
     title: '별빛을 공유하며 연결되는 우주',
     body: '실시간 스트리밍 서비스를 통해 자신이 나누고 싶은 밤하늘을 지구 반대편 사람과도 공유하세요.\n또한 비, 구름, 공해 등으로 별이 보이지 않을 때,\nStellarVision을 켜 누군가의 멋진 밤하늘을 함께 볼 수 있습니다.',
-    image: '/images/sample-1.jpg'
+    image: StreamingIcon
   },
   {
     type: 'card',
     title: '별자리를 탐지하는 AI와 함께',
     body: '지금 바라보는 하늘에 어떤 별자리가 있는지 궁금하신가요?\n우리의 친절한 AI 친구 NOVA가 도와드립니다!\nAI 인식 기능을 통해 스트리밍 중 보이는 별자리가 무엇인지 알려드립니다.',
-    image: '/images/sample-2.jpg'
+    image: DetectionIcon
   },
   {
     type: 'card',
     title: '아름다운 하늘을 사진으로',
     body: '스트리밍 중 마음에 드는 밤하늘의 장면을 캡쳐하여 배경화면으로.\n업스케일링으로 아름다운 고화질 이미지를 제공 받을 수 있습니다.',
-    image: '/images/sample-3.jpg'
+    image: UpscalingIcon
   },
   {
     type: 'card',
@@ -185,14 +185,6 @@ html, body {
 }
 .globe-holder.is-visible {
   opacity: 1;
-}
-
-.start-button {
-  position: absolute;
-  right: clamp(16px, 4vw, 48px);
-  bottom: calc(env(safe-area-inset-bottom, 0px) + clamp(16px, 4vw, 48px));
-  z-index: 5;
-  pointer-events: auto;
 }
 
 .todays-photo-container {

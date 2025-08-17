@@ -41,7 +41,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import Badge from '@/components/badge/Badge.vue'
 import badgeData from '@/data/badgeData.json'
 import { useAccountStore } from '@/stores/account'
@@ -50,10 +51,11 @@ import axios from 'axios'
 
 const accountStore = useAccountStore()
 const badgeStore = useBadgeStore()
-const memberId = computed(() => accountStore.myProfile?.memberId)
+const route = useRoute()
 
 const data = ref([])
 const badgeList = ref([])
+const profileId = ref(null)
 
 const collectedCount = computed(() =>
   badgeList.value.filter(b => b.collected).length
@@ -68,14 +70,32 @@ function updateBadgeList() {
 }
 
 onMounted(async () => {
-  const token = localStorage.getItem('jwt')
-  const response = await axios.get('https://i13c106.p.ssafy.io/api/collections', {
-    headers: { Authorization: `Bearer ${token}` }
-  })
-  data.value = response.data.data || {}
+  const stateProfilePk = route.state?.profilePk || window.history.state?.profilePk
 
   await accountStore.fetchMyProfile()
-  if (memberId.value) await badgeStore.fetchCollectedBadges(memberId.value)
+  const myMemberId = accountStore.myProfile?.memberId
+
+  profileId.value = stateProfilePk || myMemberId || nullg
+
+  const token = localStorage.getItem('jwt')
+  try {
+    const response = await axios.get('https://i13c106.p.ssafy.io/api/collections', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    data.value = response.data.data || {}
+    console.log('collections API 호출 결과:', data.value);
+  } catch (error) {
+    console.error('collections API 호출 실패:', error);
+  }
+
+  if (profileId.value) {
+    try {
+      await badgeStore.fetchCollectedBadges(profileId.value)
+    } catch (error) {
+      console.error('뱃지 목록 조회 API 호출 실패:', error);
+    }
+  }
+
   updateBadgeList()
 })
 

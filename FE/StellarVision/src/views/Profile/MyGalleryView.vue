@@ -18,8 +18,11 @@
           />
           <p class="content-info photo-title">{{ photo.name }}</p>
         </div>
-        <div v-if="recentPhotos.length === 0" class="empty-frame">
+        <div v-if="recentPhotos.length === 0 && !loading" class="empty-frame">
           <p class="empty-text">업로드한 사진이 없습니다.</p>
+        </div>
+        <div v-if="loading" class="empty-frame">
+          <p class="empty-text">사진을 불러오는 중...</p>
         </div>
       </div>
     </div>
@@ -27,7 +30,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import axiosApi from '@/api/axiosApi'
 
@@ -37,29 +40,40 @@ const router = useRouter()
 
 const props = defineProps({
   profilePk: {
-    type: Number,
+    type: [Number, Object], // ref 객체도 받을 수 있도록 수정
     required: true
   },
   profileEmail: {
-      type: String,
-      required: false
+    type: String,
+    required: true // required로 변경
   }
 })
 
-const memberId = props.profilePk
+// profilePk가 ref인지 확인하고 적절히 처리
+const memberId = computed(() => {
+  if (typeof props.profilePk === 'object' && props.profilePk.value !== undefined) {
+    return props.profilePk.value; // ref 객체인 경우
+  }
+  return props.profilePk; // 일반 값인 경우
+})
 
 // 최근 사진 3장만 표시
 const recentPhotos = computed(() => photos.value.slice(0, 3))
 
 const fetchPhotos = async () => {
-  if (!memberId) {
+  const currentMemberId = memberId.value;
+  
+  if (!currentMemberId) {
+    console.log('memberId가 없어서 fetchPhotos 중단');
     loading.value = false
     return
   }
+  
   loading.value = true
   try {
-    const { data } = await axiosApi.get(`profiles/${memberId}/photos`, {
-      params: { page: 0, size: 3 }, // size를 3으로 수정
+    console.log('사진 가져오기 시도, memberId:', currentMemberId);
+    const { data } = await axiosApi.get(`profiles/${currentMemberId}/photos`, {
+      params: { page: 0, size: 3 },
     })
     if (data.data?.photos) {
       photos.value = data.data.photos.map((p) => ({
@@ -68,11 +82,14 @@ const fetchPhotos = async () => {
         name: p.originalFilename,
         date: p.createdAt.split('T')[0],
       }))
+      console.log('사진 가져오기 성공:', photos.value.length, '개');
     } else {
       photos.value = []
+      console.log('사진 데이터가 없음');
     }
   } catch (e) {
-    console.error('사진 목록을 불러오는 데 실패했습니다 (AxiosError):', e)
+    console.error('사진 목록을 불러오는 데 실패했습니다:', e)
+    photos.value = []
   } finally {
     loading.value = false
   }
@@ -85,16 +102,32 @@ const handlePhotoClick = (photo) => {
 }
 
 const goGalleryList = () => {
-  router.push(
-    { name: 'MyGalleryListView', 
+  const currentMemberId = memberId.value;
+  router.push({
+    name: 'MyGalleryListView', 
     params: { id: props.profileEmail },
-    state: { profilePk: memberId } 
+    state: { profilePk: currentMemberId } 
   })
 }
 
+// memberId 변화 감지
+watch(memberId, (newMemberId, oldMemberId) => {
+  console.log('memberId 변화 감지:', oldMemberId, '->', newMemberId);
+  if (newMemberId && newMemberId !== oldMemberId) {
+    fetchPhotos();
+  }
+}, { immediate: false })
+
 onMounted(async () => {
-  if (memberId) {
-    fetchPhotos()
+  console.log('MyGalleryView mounted');
+  console.log('props.profilePk:', props.profilePk);
+  console.log('props.profileEmail:', props.profileEmail);
+  console.log('computed memberId:', memberId.value);
+  
+  if (memberId.value) {
+    await fetchPhotos()
+  } else {
+    console.log('memberId가 없어서 fetchPhotos 건너뜀');
   }
 })
 </script>

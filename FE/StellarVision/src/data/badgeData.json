@@ -69,7 +69,7 @@
     "description": "Scorpio tells the tale of Orion, a great hunter who boasted he could kill all beasts. The Earth goddess sent a scorpion to stop him, and it succeeded. Zeus placed both Orion and the scorpion in the sky, but on opposite sides to avoid further conflict.",
     "koreanDescription": "전갈자리는 모든 짐승을 죽일 수 있다고 자만한 사냥꾼 오리온을 막기 위해 대지의 여신이 보낸 전갈의 이야기입니다. 제우스는 둘을 하늘에 올려 반대편에 두었습니다.",
     "imageName": "Cons-Scorpio",
-    "id":73
+    "id": 73
   },
   {
     "name": "Sagittarius",
@@ -78,7 +78,7 @@
     "description": "Sagittarius is associated with the centaur Chiron, a wise and kind teacher. Though immortal, he was wounded and could not heal. Wishing to end his suffering, he gave up his immortality, and Zeus placed him in the sky as Sagittarius.",
     "koreanDescription": "사수자리는 현명하고 친절한 켄타우로스 키론과 관련이 있습니다. 불사의 존재였지만 치유되지 않는 상처를 입었고, 고통을 끝내기 위해 불멸성을 포기하자 제우스가 별자리로 만들었습니다.",
     "imageName": "Cons-Sagittarius",
-    "id":72
+    "id": 72
   },
   {
     "name": "Capricorn",
@@ -87,7 +87,7 @@
     "description": "Capricorn is linked to the goat-fish deity Pan. When the monster Typhon attacked the gods, Pan dove into the Nile, his lower half becoming a fish. His cleverness and bravery earned him a place among the stars.",
     "koreanDescription": "염소자리는 염소-물고기 신 판과 관련이 있습니다. 티폰이 신들을 공격했을 때, 그는 나일강으로 뛰어들어 하반신이 물고기로 변했고, 그의 기지가 별자리로 이어졌습니다.",
     "imageName": "placeholder",
-    "id":16
+    "id": 16
   },
   {
     "name": "Aquarius",
@@ -96,7 +96,7 @@
     "description": "Aquarius is often connected to Ganymede, a beautiful mortal youth. Zeus abducted him to serve as cupbearer to the gods on Mount Olympus. Honoring his role, Zeus placed him in the heavens as Aquarius, the water-bearer.",
     "koreanDescription": "물병자리는 제우스가 납치한 아름다운 소년 가니메데와 관련이 있습니다. 그는 올림푸스에서 술을 따르는 역할을 하며 하늘의 별자리가 되었습니다.",
     "imageName": "placeholder",
-    "id":4
+    "id": 4
   },
   {
     "name": "Pisces",
@@ -105,7 +105,7 @@
     "description": "Pisces symbolizes the story of Aphrodite and her son Eros. When fleeing the monster Typhon, they transformed into fish and tied themselves together with rope. Their devotion was immortalized as the constellation Pisces.",
     "koreanDescription": "물고기자리는 아프로디테와 아들 에로스가 괴물 티폰을 피해 물고기로 변해 서로를 줄로 묶은 이야기에서 유래합니다. 그들의 헌신이 별자리가 되었습니다.",
     "imageName": "Cons-Pisces",
-    "id":66
+    "id": 66
   },
   {
     "name": "Cetus",
@@ -114,7 +114,7 @@
     "description": "Cetus is a sea monster constellation often associated with the myth of Andromeda and Perseus.",
     "koreanDescription": "고래자리는 안드로메다와 페르세우스의 신화에 등장하는 바다 괴물로 알려져 있습니다.",
     "imageName": "Cons-Cetus",
-    "id":21
+    "id": 21
   },
   {
     "name": "Auriga",
@@ -123,7 +123,7 @@
     "description": "Auriga represents a charioteer and is known for containing the bright star Capella.",
     "koreanDescription": "마차부자리는 마부를 상징하며, 밝은 별 카펠라를 포함하고 있는 것으로 유명합니다.",
     "imageName": "Cons-Auriga",
-    "id":8
+    "id": 8
   },
   {
     "name": "Bootes",
@@ -132,7 +132,7 @@
     "description": "Bootes is the herdsman constellation, most notable for the bright star Arcturus.",
     "koreanDescription": "목동자리는 목자를 상징하는 별자리로, 밝은 별 아크투루스로 유명합니다.",
     "imageName": "Cons-Bootes",
-    "id":9
+    "id": 9
   },
   {
     "name": "Caelum",
@@ -141,7 +141,7 @@
     "description": "Caelum represents a sculptor’s chisel and is one of the faintest constellations in the sky.",
     "koreanDescription": "조각칼자리는 조각가의 끌을 나타내며, 하늘에서 가장 어두운 별자리 중 하나입니다.",
     "imageName": "Cons-Caelum",
-    "id":10
+    "id": 10
   },
   {
     "name": "Cassiopeia",
@@ -150,7 +150,7 @@
     "description": "Cassiopeia is a prominent W-shaped constellation representing the vain queen in Greek mythology.",
     "koreanDescription": "카시오페이아자리는 그리스 신화 속 허영심 많은 여왕을 상징하는 W자 모양의 눈에 띄는 별자리입니다.",
     "imageName": "Cons-Cassiopeia",
-    "id":18
+    "id": 18
   },
   {
     "name": "Centaurus",
@@ -159,7 +159,7 @@
     "description": "Centaurus is a large and bright constellation representing the half-human, half-horse centaur.",
     "koreanDescription": "센타우루스자리는 반인반마의 전설적 존재인 켄타우로스를 상징하는 크고 밝은 별자리입니다.",
     "imageName": "Cons-Centaurus",
-    "id":19
+    "id": 19
   },
   {
     "name": "Cepheus",
@@ -168,6 +168,105 @@
     "description": "Cepheus represents a king in Greek mythology and is closely associated with Cassiopeia.",
     "koreanDescription": "세페우스자리는 그리스 신화 속 왕을 상징하며, 카시오페이아자리와 밀접한 관련이 있습니다.",
     "imageName": "Cons-Cepheus",
-    "id":20
+    "id": 20
+  },
+  {
+    "id": 31,
+    "name": "Cygnus",
+    "koreanName": "백조자리",
+    "abbreviation": "Cyg",
+    "description": "Cygnus, the Swan, is said to be the form Zeus took to seduce Leda. The constellation is a well-known feature of the northern summer sky.",
+    "koreanDescription": "백조자리는 제우스가 레다를 유혹하기 위해 취한 백조의 모습을 상징한다고 전해집니다. 북반구 여름 하늘에서 잘 알려진 별자리입니다.",
+    "imageName": "Cons-Cygnus"
+  },
+  {
+    "id": 5,
+    "name": "Aquila",
+    "koreanName": "독수리자리",
+    "abbreviation": "Aql",
+    "description": "Aquila represents the eagle of Zeus that carried his thunderbolts and was responsible for abducting Ganymede.",
+    "koreanDescription": "독수리자리는 제우스의 번개를 나르는 독수리 또는 소년 가니메데를 납치한 독수리를 상징합니다.",
+    "imageName": "placeholder"
+  },
+  {
+    "id": 32,
+    "name": "Delphinus",
+    "koreanName": "돌고래자리",
+    "abbreviation": "Del",
+    "description": "Delphinus, the Dolphin, was placed in the sky by Poseidon as a reward for guiding him to the sea nymph Amphitrite.",
+    "koreanDescription": "돌고래자리는 포세이돈이 바다의 요정 암피트리테에게 자신을 안내해 준 돌고래에게 보상으로 하늘에 올려준 별자리입니다.",
+    "imageName": "placeholder"
+  },
+  {
+    "id": 40,
+    "name": "Hercules",
+    "koreanName": "헤라클레스자리",
+    "abbreviation": "Her",
+    "description": "Hercules is a large constellation representing the hero Heracles, who is shown kneeling and facing west, as if prepared to fight.",
+    "koreanDescription": "헤라클레스자리는 무릎을 꿇고 서쪽을 향해 싸울 준비를 하는 것처럼 보이는 영웅 헤라클레스를 상징하는 거대한 별자리입니다.",
+    "imageName": "Cons-Hercules"
+  },
+  {
+    "id": 52,
+    "name": "Lyra",
+    "koreanName": "거문고자리",
+    "abbreviation": "Lyr",
+    "description": "Lyra represents the lyre of Orpheus, a legendary musician. After his death, the gods placed his lyre in the heavens.",
+    "koreanDescription": "거문고자리는 전설적인 음악가 오르페우스의 리라를 상징합니다. 그의 죽음 이후, 신들은 그의 리라를 하늘에 올려놓았습니다.",
+    "imageName": "placeholder"
+  },
+  {
+    "id": 71,
+    "name": "Sagitta",
+    "koreanName": "화살자리",
+    "abbreviation": "Sge",
+    "description": "Sagitta represents the arrow shot by Hercules at the eagle of Zeus or at the Stymphalian birds.",
+    "koreanDescription": "화살자리는 헤라클레스가 제우스의 독수리나 스팀팔로스의 새들을 향해 쏜 화살을 상징합니다.",
+    "imageName": "Cons-Sagitta"
+  },
+  {
+    "id": 88,
+    "name": "Vulpecula",
+    "koreanName": "여우자리",
+    "abbreviation": "Vul",
+    "description": "Vulpecula is a small, faint constellation representing a fox carrying a goose in its jaws.",
+    "koreanDescription": "여우자리는 입에 거위를 물고 있는 여우를 상징하는 작고 어두운 별자리입니다.",
+    "imageName": "Cons-Vulpecula"
+  },
+  {
+    "id": 34,
+    "name": "Draco",
+    "koreanName": "용자리",
+    "abbreviation": "Dra",
+    "description": "Draco, the Dragon, represents the dragon Ladon, who guarded the golden apples in the Garden of the Hesperides. It was slain by Hercules.",
+    "koreanDescription": "용자리는 헤스페리데스의 정원에서 황금 사과를 지키다가 헤라클레스에게 죽임을 당한 용 라돈을 상징합니다.",
+    "imageName": "placeholder"
+  },
+  {
+    "id": 59,
+    "name": "Ophiuchus",
+    "koreanName": "뱀주인자리",
+    "abbreviation": "Oph",
+    "description": "Ophiuchus, the Serpent Bearer, represents the healer Asclepius, who was so skilled he could bring the dead back to life. He is depicted holding a serpent.",
+    "koreanDescription": "뱀주인자리는 죽은 사람을 살릴 만큼 뛰어난 의술을 가진 치유의 신 아스클레피우스를 상징합니다. 그는 뱀을 들고 있는 모습으로 묘사됩니다.",
+    "imageName": "Cons-Ophiuchus"
+  },
+  {
+    "id": 75,
+    "name": "Scutum",
+    "koreanName": "방패자리",
+    "abbreviation": "Sct",
+    "description": "Scutum, the Shield, was named by a Polish astronomer to honor King John III Sobieski after his victory in the Battle of Vienna.",
+    "koreanDescription": "방패자리는 폴란드 천문학자가 빈 전투의 승리를 기념하여 얀 3세 소비에스키 왕에게 경의를 표하며 명명한 별자리입니다.",
+    "imageName": "placeholder"
+  },
+  {
+    "id": 76,
+    "name": "Serpens",
+    "koreanName": "뱀자리",
+    "abbreviation": "Ser",
+    "description": "Serpens, the Serpent, is the serpent held by Ophiuchus. It is the only constellation divided into two parts: Serpens Caput (the head) and Serpens Cauda (the tail).",
+    "koreanDescription": "뱀자리는 뱀주인자리가 들고 있는 뱀을 상징합니다. 뱀의 머리(Serpens Caput)와 뱀의 꼬리(Serpens Cauda) 두 부분으로 나뉜 유일한 별자리입니다.",
+    "imageName": "placeholder"
   }
 ]

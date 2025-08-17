@@ -66,7 +66,10 @@
           v-if="editMode && profileInfo?.profileImageUrl"
           @click="deleteProfileImage"
         />
-        <RouterLink to="/badge" class="btn">내 뱃지</RouterLink>
+        <button
+            class="btn"
+            @click="goToBadgePage"
+          >뱃지</button>
         <EditButton
           v-if="isOwner"
           :is-editing="editMode"
@@ -92,7 +95,7 @@
 
 <script setup>
 import { ref, computed, watch, unref } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import EditButton from './EditButton.vue';
 import FollowButton from './FollowButton.vue';
 import DeleteProfileImageButton from './DeleteProfileImageButton.vue';
@@ -127,6 +130,7 @@ const emit = defineEmits([
 ]);
 
 const route = useRoute();
+const router = useRouter();
 const profileStore = useProfileStore();
 const userInfo = JSON.parse(localStorage.getItem('userInfo'));
 const isOwner = computed(() => userInfo?.email === route.params.id);
@@ -234,6 +238,15 @@ const openModal = (type) => {
   showFollowModal.value = true;
 };
 const modalList = computed(() => (modalType.value === 'following' ? props.profileFollowings : props.profileFollowers));
+
+function goToBadgePage() {
+  if (memberId.value) {
+    router.push({
+      path: '/badge',
+      state: { profilePk: memberId.value }
+    });
+  }
+};
 </script>
 
 <style scoped>

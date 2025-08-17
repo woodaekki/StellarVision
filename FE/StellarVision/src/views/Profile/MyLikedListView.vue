@@ -4,11 +4,12 @@
 
     <div class="stars-background">
       <div class="back-button">
-        <RouterLink :to="`/profile/${userInfo?.email}`" class="no-underline relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-[#f2f2f2] after:w-0 after:transition-all after:duration-300 hover:after:w-full font-pretendard">
+        <!-- 수정된 뒤로가기 버튼 -->
+        <button @click="goBackToProfile" class="back-btn">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M15 18l-6-6 6-6" />
           </svg>
-        </RouterLink>
+        </button>
       </div>
 
       <div class="px-4 pt-12 pb-6">
@@ -60,7 +61,9 @@
             <div class="video-info">
               <div class="video-header">
                 <h3 class="video-title">{{ video.originalFilename }}</h3>
+                <!-- 좋아요 취소 권한이 있을 때만 버튼 표시 -->
                 <button
+                  v-if="canUnlike"
                   @click.stop="handleUnlike(video.id)"
                   class="unlike-button"
                   title="좋아요 취소"
@@ -107,6 +110,7 @@ import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useStreamingStore } from '@/stores/streaming.js';
 import commonApi from '@/api/commonApi';
+import axiosApi from '@/api/axiosApi';
 import bg from '@/assets/pictures/stellabot/spaceBackground.avif';
 import defaultBg from '@/assets/pictures/stellabot/novaStar2.png';
 import { useAccountStore } from '@/stores/account';
@@ -129,9 +133,74 @@ const props = defineProps({
 const route = useRoute();
 const router = useRouter();
 const streamingStore = useStreamingStore();
-const memberEmail = computed(() => route.params.id);
 const accountStore = useAccountStore();
 const userInfo = computed(() => accountStore.userInfo)
+
+// URL에서 가져온 이메일 (현재 보고 있는 프로필의 소유자)
+const memberEmail = computed(() => route.params.id);
+// history state에서 가져온 memberId 
+const memberId = ref(window.history.state?.profilePk);
+// 실제 프로필 소유자의 정보 
+const profileOwner = ref(null);
+
+// 뒤로가기 메서드 추가
+const goBackToProfile = () => {
+  router.push({
+    path: `/profile/${memberEmail.value}`,
+    state: { profilePk: memberId.value }
+  })
+}
+
+// 좋아요 취소 권한 체크 
+const canUnlike = computed(() => {
+  // 로그인하지 않은 경우
+  if (!accountStore.isLogin) {
+    console.log('로그인하지 않음');
+    return false;
+  }
+
+  // 사용자 정보가 없는 경우
+  if (!userInfo.value && !accountStore.myProfile) {
+    console.log('사용자 정보 없음');
+    return false;
+  }
+  
+  // userInfo 또는 myProfile에서 이메일 가져오기
+  const myEmail = userInfo.value?.email || accountStore.myProfile?.email;
+  
+  // 이메일로 비교 
+  const emailMatch = myEmail === memberEmail.value;
+  
+  // memberId로 비교 
+  const myMemberId = userInfo.value?.memberId || accountStore.myProfile?.memberId;
+  const idMatch = memberId.value && myMemberId === memberId.value;
+  
+  // profileOwner와 비교 
+  const ownerMatch = profileOwner.value && myMemberId === profileOwner.value.memberId;
+  
+  const result = emailMatch || idMatch || ownerMatch;
+  
+  return result;
+});
+
+// 프로필 소유자 정보를 가져오는 함수
+const fetchProfileOwner = async () => {
+  try {
+    console.log('프로필 소유자 정보 가져오기 시작');
+    // 이메일로 프로필 정보 조회
+    const response = await axiosApi.get(`/profiles/email/${memberEmail.value}`);
+    profileOwner.value = response.data.data;
+    
+    // memberId가 없었다면 여기서 설정
+    if (!memberId.value && profileOwner.value) {
+      memberId.value = profileOwner.value.memberId;
+    }
+    
+  } catch (error) {
+    console.error('프로필 소유자 정보 가져오기 실패:', error);
+  
+  }
+};
 
 const pageRef = ref(null);
 const allVideos = ref([]);
@@ -171,16 +240,11 @@ function normalizeKoConstellation(s) {
   return normalized;
 }
 
-// 별자리 딕셔너리 (별칭 처리)
+// 별자리 딕셔너리 
 const ALIASES = {
-  '큰곰': '큰곰',
-  '작은곰': '작은곰', 
-  '백조': '백조',
-  '전갈': '전갈',
-  // 필요에 따라 더 추가
+  
 };
 
-// 수정된 pickStarThumbByTags 함수
 function pickStarThumbByTags(tagList, fallback) {
   if (!tagList || !Array.isArray(tagList) || tagList.length === 0) {
     return fallback;
@@ -201,10 +265,8 @@ function pickStarThumbByTags(tagList, fallback) {
   return fallback;
 }
 
-// 비디오 썸네일 결정하는 함수 - 수정됨
+// 비디오 썸네일 결정하는 함수 
 const getVideoThumbnail = (video) => {
-  console.log('🎬 비디오 썸네일 결정:', video.id, video.tags);
-  
   // 태그가 있는 경우 별자리 이미지 사용
   if (video.tags && video.tags.length > 0) {
     const starThumbnail = pickStarThumbByTags(video.tags, null);
@@ -215,11 +277,6 @@ const getVideoThumbnail = (video) => {
   return defaultImg;
 };
 
-const myId = computed(() => {
-  const id = route.params.id;
-  return id;
-});
-
 function goVideoList() {
   router.push({
     name: 'MyVideoListView', 
@@ -228,8 +285,7 @@ function goVideoList() {
   });
 }
 
-
-// 수정된 태그 로드 함수
+// 태그 로드 함수
 const fetchTagsForVideos = async (videosList) => {
   if (!videosList || videosList.length === 0) return videosList;
   const tagPromises = videosList.map(async (video) => {
@@ -252,14 +308,20 @@ const fetchUserVideos = async (userId) => {
     isLoading.value = true;
     // 사용자의 모든 비디오 가져오기
     const res = await commonApi.get(`/videos/search?userId=${userId}`);
+    console.log('API 응답:', res.data);
+    
     let videos = res.data.data?.videos || [];
+    console.log('전체 비디오 수:', videos.length);
 
     // 태그 정보를 추가로 불러오기
     videos = await fetchTagsForVideos(videos);
     allVideos.value = videos;
+    
+    console.log('태그 포함 비디오 로드 완료:', videos.length);
     return videos;
   } catch (err) {
     console.error('사용자 비디오 로드 실패:', err);
+    console.error('에러 상세:', err.response?.data || err.message);
     allVideos.value = [];
     return [];
   } finally {
@@ -270,9 +332,9 @@ const fetchUserVideos = async (userId) => {
 const filterLikedVideos = (videos) => {
   const filtered = videos.filter(video => {
     const isLiked = video.liked === true || video.liked === 1;
-    console.log(`비디오 ${video.id}: liked=${video.liked}, 결과=${isLiked}`);
     return isLiked;
   });
+  
   likedVideos.value = filtered;
   return filtered;
 };
@@ -304,6 +366,12 @@ const goToVideoDetail = (videoId) => {
 };
 
 const handleUnlike = async (videoId) => {
+  if (!canUnlike.value) {
+    
+    alert('좋아요 취소 권한이 없습니다. 본인 프로필에서만 좋아요를 취소할 수 있습니다.');
+    return;
+  }
+  
   try {
     const res = await commonApi.delete(`/videos/${videoId}/likes`);
     if (res.status === 200) {
@@ -321,9 +389,43 @@ const handleUnlike = async (videoId) => {
 };
 
 onMounted(async () => {
-  if (myId.value) {
-    const videos = await fetchUserVideos(myId.value);
-    filterLikedVideos(videos);
+  // 먼저 내 프로필 정보를 가져오기
+  await accountStore.fetchMyProfile();
+
+  // 프로필 소유자 정보 가져오기
+  await fetchProfileOwner();
+
+  // memberId 또는 memberEmail로 비디오 로드 시도
+  let targetId = memberId.value;
+  if (!targetId || targetId === 'undefined' || targetId === null) {
+    targetId = memberEmail.value;
+  }
+
+  if (targetId && targetId !== 'undefined' && targetId !== null) {
+    const videos = await fetchUserVideos(targetId);
+    
+    if (videos && videos.length > 0) {
+      filterLikedVideos(videos);
+    } else {
+      
+      if (profileOwner.value && profileOwner.value.memberId) {
+        try {
+          const profileRes = await commonApi.get(`profiles/${profileOwner.value.memberId}/videos`);
+          let profileVideos = profileRes.data.data?.videos || [];
+          
+          if (profileVideos.length > 0) {
+            profileVideos = await fetchTagsForVideos(profileVideos);
+            allVideos.value = profileVideos;
+            filterLikedVideos(profileVideos);
+          }
+        } catch (profileError) {
+          console.error('프로필 기반 비디오 로드 실패:', profileError);
+        }
+      }
+    }
+  } else {
+    console.log('targetId가 없어서 비디오 로드 불가능');
+    isLoading.value = false;
   }
 });
 </script>
