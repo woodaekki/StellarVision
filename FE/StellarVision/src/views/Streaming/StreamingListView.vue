@@ -107,7 +107,7 @@ import { storeToRefs } from 'pinia';
 import router from '@/router';
 import { CornerDownLeft } from 'lucide-vue-next';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
-import bgImage from '@/assets/pictures/stellabot/noResult.png';
+import bgImage from '@/assets/pictures/stellabot/novaStar2.png';
 import streamingService from '@/services/streamingService';
 import { useAccountStore } from '@/stores/account';
 
