@@ -158,7 +158,7 @@ public class PhotoServiceImpl implements PhotoService {
         AiPhotoRequest requestBody = new AiPhotoRequest(photoId, imageUrl);
 
         AiPhotoResponse response = aiWebClient.post()
-                .uri("https://susang-fastapi.my/api/detect/photo")
+                .uri("https://i13c106.p.ssafy.io/api/detect/photo")
                 .header("Content-Type", "application/json")
                 .bodyValue(requestBody)
                 .retrieve()
