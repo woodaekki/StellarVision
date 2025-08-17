@@ -1,5 +1,5 @@
 # 🪐 StellarVision
-<img src="./docs/assets/images/Thumbnail.png" alt="썸네일" style="width:70%;"/>
+<img src="./docs/assets/images/Thumbnail.png" alt="썸네일" style="width:50%;"/>
 
 
 ## ⭐ 프로젝트 소개
