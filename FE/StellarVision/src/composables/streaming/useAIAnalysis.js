@@ -17,7 +17,7 @@ export function useAIAnalysis({ createAIAnalyzeService, endpoint, isPublish, ses
   const subAnalyzers = new Map() // streamId -> { svc, canvas }
 
   // 내부 주기 실행 제어
-  const INTERVAL_MS = 10 * 1000
+  const INTERVAL_MS = 60 * 1000
   let intervalId = null
   let inFlight = false
 
