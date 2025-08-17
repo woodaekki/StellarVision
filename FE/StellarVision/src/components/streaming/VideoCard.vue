@@ -82,14 +82,13 @@
 
 <script setup>
 import {  computed, onMounted, ref, watch } from 'vue';
-import defaultLogo from '@/assets/pictures/wallpaper/11.jpg'
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime'
 import 'dayjs/locale/ko'
 import commonApi from '@/api/commonApi';
 import { Star } from 'lucide-vue-next';
 import { useStreamingStore } from '@/stores/streaming';
-import defaultBg from '@/assets/pictures/stellabot/nova.png'
+import defaultBg from '@/assets/pictures/stellabot/novaStar2.png'
 import swan from '@/assets/pictures/stars/백조자리.jpg'
 import scorpion from '@/assets/pictures/stars/전갈자리.jpg'
 import router from '@/router';
