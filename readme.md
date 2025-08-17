@@ -68,6 +68,9 @@
 
 <br/>
 
+## ⭐ 아키텍처
+<img src="./docs/assets/images/아키텍처.jpg" alt="아키텍처" width="70%"/>
+
 ## 💛 프로젝트 산출물
 
 - [기능명세서](./docs/기능명세서.md)
