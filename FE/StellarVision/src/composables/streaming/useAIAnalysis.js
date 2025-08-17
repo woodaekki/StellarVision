@@ -24,10 +24,70 @@ export function useAIAnalysis({ createAIAnalyzeService, endpoint, isPublish, ses
   // [ADDED] 현재 선택된 별자리 코드(예: 'Ori'). null이면 전체
   const selectedClass = ref(null)
   const detectedGroups = ref([])
+  const isEnabled = ref(false)
+
+  // 구독자 오버레이 캔버스 보이기/숨기기
+ function setCanvasesVisible(visible) {
+   for (const { canvas } of subAnalyzers.values()) {
+     if (canvas) canvas.style.opacity = visible ? '' : '0';
+   }
+ }
+
+ // 가장 확실한 캔버스 초기화(버퍼 날림)
+ function hardClearCanvas(cnv) {
+   if (!cnv) return;
+   const w = cnv.width; cnv.width = 0; cnv.width = w;
+ }
+
+ // 로컬/구독자 전부 하드 클리어
+ function hardClearAll() {
+   try { localAnalyzer.clearOverlay?.() } catch {}
+   for (const { svc, canvas } of subAnalyzers.values()) {
+     try { svc.clearOverlay?.() } catch {}
+     hardClearCanvas(canvas)
+   }
+ }
+
+  // 그룹 머지 유틸: code 기준으로 병합
+  function mergeGroupBuckets(buckets) {
+    const byCode = new Map()
+    for (const list of buckets) {
+      if (!Array.isArray(list)) continue
+      for (const item of list) {
+        const code = item.code ?? item.class ?? item.id
+        if (!code) continue
+        const prev = byCode.get(code)
+        // count / maxConf / lastSeen 등 존재하는 필드만 보수적으로 병합
+        if (!prev) {
+          byCode.set(code, { ...item })
+        } else {
+          prev.count = Math.max(
+            Number(prev.count ?? 0),
+            Number(item.count ?? 0)
+          )
+          prev.maxConf = Math.max(
+            Number(prev.maxConf ?? 0),
+            Number(item.maxConf ?? item.confidence ?? 0)
+          )
+          // lastSeen 이나 기타 필드가 있다면 보존(최신/최대 등 정책 택1)
+          if (item.lastSeen && (!prev.lastSeen || item.lastSeen > prev.lastSeen)) {
+            prev.lastSeen = item.lastSeen
+          }
+        }
+      }
+    }
+    return Array.from(byCode.values())
+  }
 
   function refreshDetectedGroups() {
-    const g = localAnalyzer.getGroups?.()
-    detectedGroups.value = Array.isArray(g) ? g : []
+    const buckets = []
+    // 1) 로컬 분석기
+    buckets.push(localAnalyzer.getGroups?.() || [])
+    // 2) 모든 구독자 분석기
+    for (const { svc } of subAnalyzers.values()) {
+      buckets.push(svc.getGroups?.() || [])
+    }
+    detectedGroups.value = mergeGroupBuckets(buckets)
   }
 
   /** 로컬 비디오/오버레이 붙이기 (loadedmetadata 보장) */
@@ -96,7 +156,7 @@ export function useAIAnalysis({ createAIAnalyzeService, endpoint, isPublish, ses
 
   /** aiOn이 켜져 있을 때 1회 실행 */
   async function runOnceAll(aiOnRef) {
-    if (!aiOnRef.value || inFlight) return
+    if (!aiOnRef.value || !isEnabled.value || inFlight) return
     inFlight = true
     try {
       // 로컬
@@ -105,12 +165,13 @@ export function useAIAnalysis({ createAIAnalyzeService, endpoint, isPublish, ses
       if (isPublish.value) {
         aiTagStore.addFromPredictions(sessionId, localRes)
       }
-      refreshDetectedGroups()
+    
       // 구독자들
       for (const [streamId, { svc }] of subAnalyzers.entries()) {
         const subRes = await svc.once()
         prettyLog(`[AI][sub:${streamId}]`, subRes)
       }
+      refreshDetectedGroups()
     } finally {
       inFlight = false
     }
@@ -123,19 +184,29 @@ export function useAIAnalysis({ createAIAnalyzeService, endpoint, isPublish, ses
    */
   function watchAI(aiOnRef, onClearOverlays) {
     if (aiOnRef.value) {
+      isEnabled.value = true
+      setCanvasesVisible(true)
       runOnceAll(aiOnRef) // 즉시 1회
       if (!intervalId) {
         intervalId = window.setInterval(() => runOnceAll(aiOnRef), INTERVAL_MS)
       }
     } else {
+      isEnabled.value = false 
       if (intervalId) { clearInterval(intervalId); intervalId = null }
       // 🔻 즉시 전부 지우기 (로컬 캔버스 + 구독자 캔버스 + 서비스 내부 캔버스)
+      try { localAnalyzer.pause?.() } catch {}
+      try { localAnalyzer.stop?.() } catch {}
+      for (const { svc } of subAnalyzers.values()) {
+         try { svc.pause?.() } catch {}
+        try { svc.stop?.() } catch {}
+      }
+      // 로컬 캔버스 클리어(부모) + 내부/구독자 전부 하드 클리어
       onClearOverlays?.()
-      try { localAnalyzer.clearOverlay?.() } catch {}
-      for (const { svc } of subAnalyzers.values()) try { svc.clearOverlay?.() } catch {}
-      setSelectedClass(null)
+      hardClearAll()
+      // 패널/선택 초기화 + 시각 잔상 방지
       detectedGroups.value = []
       setSelectedClass(null)
+      setCanvasesVisible(false)
     }
   }
 
@@ -175,9 +246,7 @@ export function useAIAnalysis({ createAIAnalyzeService, endpoint, isPublish, ses
   // 패널용: 로컬 분석기의 class별 그룹 리스트를 돌려줌
   // 필요하면 구독자들의 그룹을 합산하는 로직으로 확장 가능
   function getDetectedList() {
-    const groups = localAnalyzer.getGroups?.()
-    console.log("getDetectedList groups 보기: ", groups)
-    return Array.isArray(groups) ? groups : []
+    return detectedGroups.value
   }
 
   // 선택 토글: null이면 전체 보기
@@ -187,6 +256,17 @@ export function useAIAnalysis({ createAIAnalyzeService, endpoint, isPublish, ses
     for (const { svc } of subAnalyzers.values()) {
       svc.select?.(selectedClass.value)
     }
+    // 1) 기존 도형 완전 제거
+   try { localAnalyzer.clearOverlay?.() } catch {}
+   for (const { svc } of subAnalyzers.values()) try { svc.clearOverlay?.() } catch {}
+   // OFF면 여기서 종료
+   if (!isEnabled.value) return
+   // 2) 새 필터로 즉시 1프레임 렌더 → 패널/오버레이 동기화
+   Promise.resolve().then(async () => {
+     try { await localAnalyzer.once?.() } catch {}
+     for (const { svc } of subAnalyzers.values()) { try { await svc.once?.() } catch {} }
+     refreshDetectedGroups()
+   })
   }
 
   return {
