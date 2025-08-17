@@ -1,5 +1,5 @@
 # 🪐 StellarVision
-<img src="./docs/assets/images/thumbnail.PNG" alt="썸네일" style="width:70%;"/>
+<img src="./docs/assets/images/Thumbnail.png" alt="썸네일" style="width:70%;"/>
 
 
 ## ⭐ 프로젝트 소개
@@ -7,16 +7,16 @@
 
 밤하늘의 별을 집에서 편하게 보면서, 그 별자리의 이름까지 알 수 있는 서비스가 있다면 얼마나 좋을까요? <br/>
 
-현대 사회에서 빛공해, 구름 등으로 인한 힘든 천체 구경, 어떻게 해결할 수 있을까요? 천체의 별자리를 구분하기 어려워 답답하시지 않나요? <br/>
+현대 사회에서 빛공해, 구름 등으로 인한 힘든 천체 구경, 어떻게 해결할 수 있을까요? <br/> 천체의 별자리를 구분하기 어려워 답답하시지 않나요? <br/>
 
-이제 StellarVision으로 그 불편함을 해소해보세요! StellarVision과 함께하면 밤하늘을 더 정확하고 편하게 볼 수 있습니다😄
+이제 StellarVision으로 그 불편함을 해소해보세요! <br/>StellarVision과 함께하면 밤하늘을 더 정확하고 편하게 볼 수 있습니다😄
 
----
+<br/>
 
 ## ⭐ 프로젝트 기간
 2025.07.07 ~ 2025.08.18 (7주)
 
----
+<br/>
 
 ## ⭐ 주요 기능
 - **실시간 천체 스트리밍 서비스**
@@ -42,6 +42,8 @@
 - **올해의 천체 일정**
   - 올해의 특별한 연월일식 일정 확인 가능 
 
+<br/>
+
 ## ⭐ 기술 스택
 
 ### ⚙️ Backend
@@ -66,11 +68,15 @@
 - **Figma** (UI/UX 디자인)
 - **Notion** (문서 관리)
 
+<br/>
+
 ## 💛 프로젝트 산출물
 
 - [기능명세서](./docs/기능명세서.md)
 - [API명세서](./docs/API명세서.md)
 - [ERD](./docs/ERD.md)
+
+<br/>
 
 ## ⭐ 프로젝트 폴더 구조
 ### Back-end
@@ -185,14 +191,20 @@ src/
 ```
 </details>
 
+<br/>
+
 ## ⭐ 팀원 소개
-| ![방준엽](./docs/assets/images/방준엽.PNG) | ![구인완](./docs/assets/images/구인완.PNG) | ![양정현](./docs/assets/images/양정현.PNG) | ![김선우](./docs/assets/images/김선우.PNG) | ![임정원](./docs/assets/images/임정원.PNG) | ![신성규](./docs/assets/images/신성규.PNG) |
+| ![방준엽](./docs/assets/images/방준엽.png) | ![구인완](./docs/assets/images/구인완.png) | ![양정현](./docs/assets/images/양정현.png) | ![김선우](./docs/assets/images/김선우.png) | ![임정원](./docs/assets/images/임정원.png) | ![신성규](./docs/assets/images/신성규.png) |
 |------------------------------------------|------------------------------------------|------------------------------------------|------------------------------------------|------------------------------------------|------------------------------------------|
 | Back End                         | Back End                                  | AI                                       | Front End                                | Front End                                | Front End                                |
 
 
+<br/>
+
 ## ⭐ 프로젝트 결과물
 - [최종발표자료](./docs/StellarVision_최종발표_PPT.pptx)
 - [영상포트폴리오](./docs/영상포트폴리오_.mp4)
+
+<br/>
 
 ## ⭐ 화면 구성

@@ -1,3 +1,3 @@
 # ERD
 
-![ERD](./assets/images/ERD.PNG)
+![ERD](./assets/images/ERD.png)
